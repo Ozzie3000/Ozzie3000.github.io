@@ -1,0 +1,49 @@
+#slider {
+    width: 920px;
+    height: 500px;
+    overflow: hidden;
+}
+
+#slider .slides {
+    display: block;
+    width: 6000px;
+    height: 500px;
+    margin: 0;
+    padding: 0;
+}
+
+#slider .slide {
+    float: left;
+    list-style-type: none;
+    width: 920px;
+    height: 500px;
+}
+
+/* helper css, since we don't have images */
+
+.slide1{
+  background-image: url(http://imgs.abduzeedo.com/files/articles/20_beautiful_landscape_wallpapers/landscape-wallpaper-11a.jpg);
+  background-repeat:no-repeat;
+  background-size:cover;
+}
+
+.slide2 {
+  background-image: url(http://imgs.abduzeedo.com/files/articles/20_beautiful_landscape_wallpapers/landscape-wallpaper-1.jpg);
+  background-repeat:no-repeat;
+  background-size:cover;
+}
+.slide3 {
+  background-image: url(http://imgs.abduzeedo.com/files/articles/20_beautiful_landscape_wallpapers/landscape-wallpaper-12.jpg);
+  background-repeat:no-repeat;
+  background-size:cover;
+}
+.slide4 {
+  background-image: url(http://imgs.abduzeedo.com/files/articles/20_beautiful_landscape_wallpapers/landscape-wallpaper-13.jpg);
+  background-repeat:no-repeat;
+  background-size:cover;
+}
+.slide5 {
+  background-image: url(http://imgs.abduzeedo.com/files/articles/20_beautiful_landscape_wallpapers/landscape-wallpaper-18.jpg);
+  background-repeat:no-repeat;
+  background-size:cover;
+  }
