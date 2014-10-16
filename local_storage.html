@@ -13,6 +13,7 @@
 		background-repeat: no-repeat;
 		background-position: center center;
 		font-size: 1.3em;
+		color: white;
 	}
 	h3{ color: white; font-family: sans-serif; text-align: center;}
 	#divfruit_1{ position: absolute; left: 400px; top: 100px;}
@@ -21,6 +22,18 @@
 	#divfruit_4{ position: absolute; left: 475px; top: 175px;}
 	option{color: blue;}
 	selected{color: red;}
+	div.footer{
+		color: white; 
+		font-family: sans-serif; 
+		font-size: 16px; 
+		text-align: center; 
+		bottom: 7%;
+		width:100%;
+		height:80px;
+		position:absolute;
+		bottom:0;
+		left:0;
+	}
 </style>
 <script type="text/javascript">
 	function store_pic(pic, divnum){
@@ -113,6 +126,9 @@
 			document.getElementById("divfruit_4").innerHTML='<img src="' + fruit_4 + '">';
 		}
 	</script>
+	</div>
+	<div class="footer">
+		<footer>Ozzie3000. <br />Persistent local storage even when you hit refresh or ALT F5. Select a fruit in each category and watch the fun happen. I even set up JS events to update the image just by your mouse moving out of the category. Try it out.  Hit teh Clear graphic button, then simply move your mouse past each category without clicking anything.  BAM!!!</footer>
 	</div>
 </body>
 </html>
