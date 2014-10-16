@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>HTML5 | Local storage fruit arrangement</title>
+<meta charset="utf-8">
+<meta name="description" content="HTML5 demos" />
+<style type="text/css">
+	body{ 
+		background-color: #eeeeee;
+		background: url("..//pictures/background-wallpapers-60.png");
+		background-attachment: fixed;
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: center center;
+		font-size: 1.3em;
+	}
+	h3{ color: white; font-family: sans-serif; text-align: center;}
+	#divfruit_1{ position: absolute; left: 400px; top: 100px;}
+	#divfruit_2{ position: absolute; left: 475px; top: 100px;}
+	#divfruit_3{ position: absolute; left: 400px; top: 175px;}
+	#divfruit_4{ position: absolute; left: 475px; top: 175px;}
+	option{color: blue;}
+	selected{color: red;}
+</style>
+<script type="text/javascript">
+	function store_pic(pic, divnum){
+		var pic_detail = document.getElementById(pic).value;
+		localStorage.setItem(pic, pic_detail);
+		document.getElementById("divfruit_" + divnum).innerHTML='<img src="' + pic_detail + '">';
+	}
+	function get_pic(divnum){
+		var the_pic = localStorage.getItem("fruit" + divnum);
+		document.getElementById("divfruit_" + divnum).innerHTML='<img src="' + the_pic + '">';
+	}
+	function clear_pic() {
+		for (i=1; i<5; i++){
+			localStorage.removeItem('fruit_' + i);
+			document.getElementById('divfruit_' + i).innerHTML="";
+		}
+	}
+</script>
+</head>
+<body>
+	<h3 style="margin-bottom:2px;">7.2 Fruit arrangement with local storage</h3>
+	<input type="button" value="Refreshness" onclick="location.reload()" />
+	<br /><br />
+
+	<div>
+		Fruit Bowl
+		<br /><br />
+		Select <select id="fruit_1" onchange="store_pic('fruit_1',1);" onmouseout="store_pic('fruit_1',1);">
+						<option value="http://assets.inhabitat.com/wp-content/blogs.dir/1/files/2013/03/Red-Apple-75x75.jpeg" selected="selected">apple</option>
+						<option value="http://img1.wikia.nocookie.net/__cb20090626021601/mafiawars/images/a/a0/Standard_75x75_collect_fruit_banana_01.gif">banana</option>
+						<option value="http://remus.org/wp-content/uploads/2013/06/howard-strawberry-farm.jpg">strawberry</option>
+						<option value="http://farm6.staticflickr.com/5012/5427691534_4c0420cdc9_s.jpg">watermelon</option>
+					 </select>
+		<br /><br />
+		Select <select id="fruit_2" onchange="store_pic('fruit_2',2);" onmouseout="store_pic('fruit_2',2);">
+						<option value="http://assets.inhabitat.com/wp-content/blogs.dir/1/files/2013/03/Red-Apple-75x75.jpeg">apple</option>
+						<option value="http://img1.wikia.nocookie.net/__cb20090626021601/mafiawars/images/a/a0/Standard_75x75_collect_fruit_banana_01.gif" selected="selected">banana</option>
+						<option value="http://remus.org/wp-content/uploads/2013/06/howard-strawberry-farm.jpg">strawberry</option>
+						<option value="http://farm6.staticflickr.com/5012/5427691534_4c0420cdc9_s.jpg">watermelon</option>
+					 </select>
+		<br /><br />
+		Select <select id="fruit_3" onchange="store_pic('fruit_3',3);" onmouseout="store_pic('fruit_3',3);">
+						<option value="http://assets.inhabitat.com/wp-content/blogs.dir/1/files/2013/03/Red-Apple-75x75.jpeg">apple</option>
+						<option value="http://img1.wikia.nocookie.net/__cb20090626021601/mafiawars/images/a/a0/Standard_75x75_collect_fruit_banana_01.gif">banana</option>
+						<option value="http://remus.org/wp-content/uploads/2013/06/howard-strawberry-farm.jpg" selected="selected">strawberry</option>
+						<option value="http://farm6.staticflickr.com/5012/5427691534_4c0420cdc9_s.jpg">watermelon</option>
+					 </select>
+		<br /><br />
+		Select <select id="fruit_4" onchange="store_pic('fruit_4',4);" onmouseout="store_pic('fruit_4',4);">
+						<option value="http://assets.inhabitat.com/wp-content/blogs.dir/1/files/2013/03/Red-Apple-75x75.jpeg">apple</option>
+						<option value="http://img1.wikia.nocookie.net/__cb20090626021601/mafiawars/images/a/a0/Standard_75x75_collect_fruit_banana_01.gif">banana</option>
+						<option value="http://remus.org/wp-content/uploads/2013/06/howard-strawberry-farm.jpg">strawberry</option>
+						<option value="http://farm6.staticflickr.com/5012/5427691534_4c0420cdc9_s.jpg" selected="selected">watermelon</option>
+					 </select>
+		<br /><br />
+
+		<input type="button" value="Clear Graphics" onclick="clear_pic();">
+		<br /><br />
+
+		<div id="divfruit_1"></div>
+		<div id="divfruit_2"></div>
+		<div id="divfruit_3"></div>
+		<div id="divfruit_4"></div>
+
+	<script type="text/javascript">
+		//restore the arrangement of fruit when page opens
+		//or display default config
+		var fruit_1 = localStorage.getItem("fruit_1");
+		var fruit_2 = localStorage.getItem("fruit_2");
+		var fruit_3 = localStorage.getItem("fruit_3");
+		var fruit_4 = localStorage.getItem("fruit_4");
+		if (fruit_1 == null){
+			document.getElementById("divfruit_1").innerHTML='<img src="http://assets.inhabitat.com/wp-content/blogs.dir/1/files/2013/03/Red-Apple-75x75.jpeg">';
+		} else {
+			document.getElementById("divfruit_1").innerHTML='<img src="' + fruit_1 + '">';
+		}
+		if (fruit_2 == null){
+			document.getElementById("divfruit_2").innerHTML='<img src="http://img1.wikia.nocookie.net/__cb20090626021601/mafiawars/images/a/a0/Standard_75x75_collect_fruit_banana_01.gif">';
+		} else {
+			document.getElementById("divfruit_2").innerHTML='<img src="' + fruit_2 + '">';
+		}
+		if (fruit_3 == null){
+			document.getElementById("divfruit_3").innerHTML='<img src="http://remus.org/wp-content/uploads/2013/06/howard-strawberry-farm.jpg">';
+		} else {
+			document.getElementById("divfruit_3").innerHTML='<img src="' + fruit_3 + '">';
+		}
+		if (fruit_4 == null){
+			document.getElementById("divfruit_4").innerHTML='<img src="http://farm6.staticflickr.com/5012/5427691534_4c0420cdc9_s.jpg">';
+		} else {
+			document.getElementById("divfruit_4").innerHTML='<img src="' + fruit_4 + '">';
+		}
+	</script>
+	</div>
+</body>
+</html>
