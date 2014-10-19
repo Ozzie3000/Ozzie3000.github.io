@@ -68,6 +68,9 @@
 		bottom:0;
 		left:0;
 	}
+	.stand_out{
+		background-color: whitesmoke;
+	}
 </style>
 <script type="text/javascript">
 
@@ -96,8 +99,10 @@
 		<img src="http://decisiveminds.com/dm/wp-content/uploads/2012/07/IP-shoppingcart.jpg" />
 	</div>
 
-	<div id="dollarsign">$</div>
-	<div id="cost">0.00</div>
+	<div class="stand_out">
+		<div id="dollarsign">$</div>
+		<div id="cost">0.00</div>
+	</div>
 <script type="text/javascript">
 	function drag(drag_object, e){
 		e.dataTransfer.setData("Text", drag_object.id);
