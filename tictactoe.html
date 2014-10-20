@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>HTML5 | </title>
+<meta charset="utf-8">
+<meta name="description" content="HTML5 demos" />
+<style type="text/css">
+	body{ 
+		background-color: #eeeeee;
+		background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");
+		background-attachment: fixed;
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: center center;
+	}
+	h3{ color: white; font-family: sans-serif; text-align: center;}
+	td{
+		border-style: solid;
+		border-width: 100px;
+		height: 100px;
+		background-color: yellow;
+	}
+	#xo{
+		
+	}
+	#O{
+		position: absolute;
+		padding-top: 10px;
+		width: 100px;
+		height: 240px;
+		top: 60px;
+		right: 10px;
+		background-color: silver;
+		
+	}
+	#X{
+		position: absolute; 
+		padding-top: 10px;
+		width: 100px;
+		height: 240px;
+		top: 320px;
+		right: 10px;
+		background-color: goldenrod;
+	}
+	#tictactoetable{
+		position: absolute;
+		top: 80px;
+		left: 300px;
+	}
+</style>
+<script type="text/javascript">
+
+</script>
+</head>
+<body>
+	<h3>8.3 Tic Tac Toe</h3>
+	<input type="button" value="Refreshness" onclick="location.reload()" />
+	<br /><br />
+
+	<div id="xo">
+		<div id="O"
+			ondrop="drop(this, event)"
+			ondragenter="return false"
+			ondragover="return false">
+			<div id="o1" draggable="true" ondragstart="drag(this, event)"><img src="http://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Letter_o.svg/50px-Letter_o.svg.png" alt="O"></div>
+			<div id="o2" draggable="true" ondragstart="drag(this, event)"><img src="http://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Letter_o.svg/50px-Letter_o.svg.png" alt="O"></div>
+			<div id="o3" draggable="true" ondragstart="drag(this, event)"><img src="http://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Letter_o.svg/50px-Letter_o.svg.png" alt="O"></div>
+			<div id="o4" draggable="true" ondragstart="drag(this, event)"><img src="http://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Letter_o.svg/50px-Letter_o.svg.png" alt="O"></div>
+		</div>
+
+
+		<div id="X"
+			ondrop="drop(this, event)"
+			ondragenter="return false"
+			ondragover="return false">
+			<div id="x1" draggable="true" ondragstart="drag(this, event)"><img src="https://lh4.googleusercontent.com/-3X70oHKoMXM/AAAAAAAAAAI/AAAAAAAAAAA/1930n-q-zR4/photo.jpg?sz=50" alt="X"></div>
+			<div id="x2" draggable="true" ondragstart="drag(this, event)"><img src="https://lh4.googleusercontent.com/-3X70oHKoMXM/AAAAAAAAAAI/AAAAAAAAAAA/1930n-q-zR4/photo.jpg?sz=50" alt="X"></div>
+			<div id="x3" draggable="true" ondragstart="drag(this, event)"><img src="https://lh4.googleusercontent.com/-3X70oHKoMXM/AAAAAAAAAAI/AAAAAAAAAAA/1930n-q-zR4/photo.jpg?sz=50" alt="X"></div>
+			<div id="x4" draggable="true" ondragstart="drag(this, event)"><img src="https://lh4.googleusercontent.com/-3X70oHKoMXM/AAAAAAAAAAI/AAAAAAAAAAA/1930n-q-zR4/photo.jpg?sz=50" alt="X"></div>
+		</div>
+	</div>
+
+	<div id="tictactoetable">
+		<table>
+			<tr>
+				<td id="box1" ondrop="drop(this, event)" ondragenter="return false" ondragover="return false">&nbsp;</td>
+				<td id="box2" ondrop="drop(this, event)" ondragenter="return false" ondragover="return false">&nbsp;</td>
+				<td id="box3" ondrop="drop(this, event)" ondragenter="return false" ondragover="return false">&nbsp;</td>
+			</tr>
+			<td id="box4" ondrop="drop(this, event)" ondragenter="return false" ondragover="return false">&nbsp;</td>
+				<td id="box5" ondrop="drop(this, event)" ondragenter="return false" ondragover="return false">&nbsp;</td>
+				<td id="box6" ondrop="drop(this, event)" ondragenter="return false" ondragover="return false">&nbsp;</td>
+			</tr>
+			<td id="box7" ondrop="drop(this, event)" ondragenter="return false" ondragover="return false">&nbsp;</td>
+				<td id="box8" ondrop="drop(this, event)" ondragenter="return false" ondragover="return false">&nbsp;</td>
+				<td id="box9" ondrop="drop(this, event)" ondragenter="return false" ondragover="return false">&nbsp;</td>
+			</tr>
+		</table>
+	<br /><br />
+	&nbsp;&nbsp;
+	<a href="http://www.amazon.com">Buy me stuff</a>
+
+<script type="text/javascript">
+	function drag(drag_object, e){
+		e.dataTransfer.setData('Text', drag_object.id);
+	}
+	function drop(drop_target, e, elementname){
+		var id = e.dataTransfer.getData('Text');
+		drop_target.appendChild(document.getElementById(id));
+		e.preventDefault();
+	}
+</script>
+</body>
+</html>
+
