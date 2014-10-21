@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>HTML5 | A Google map</title>
+<meta charset="utf-8">
+<meta name="description" content="HTML5 demos" />
+<style type="text/css">
+	body{ 
+		background-color: #eeeeee;
+		/* local */
+		/*background: url("..//pictures/background-wallpapers-60.png"); */
+		/* not local */
+		//background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");
+		background: url("http://host2post.com/server13/photos/pxEcaC16L764vM~/15-really-cool-world-map-wallpapers.jpg");
+		background-attachment: fixed;
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: center center;
+		color: white;
+		font-size: 18px;
+	}
+	h3{ color: white; font-family: sans-serif; text-align: center; font-size: 26px;}
+	#map{
+		width: 700px;
+		height: 700px;
+	}
+</style>
+<!-- API here we come  -->
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false">
+</script>
+<script type="text/javascript">
+	function find_you(){
+		if(!navigator.geolocation.getCurrentPosition(show_Position, failed_to_find, {maximumAge: 32000, timeout: 16000})){
+			document.getElementById("error").innerHTML="This browser does not support geolocation. Or you may need to adjust location settings and refresh.";
+		}
+	}
+	function show_Position(location){
+		var latitude = location.coords.latitude;
+		var longitude = location.coords.longitude;
+		var accuracy = location.coords.accuracy;
+		//map time
+		var position = new google.maps.LatLng(latitude,longitude);
+		//build in options
+		var myOptions = {
+			zoom: 13,
+			center: position,
+			mapTypeId: google.maps.MapTypeId.SATELITTE
+		};
+		//well let's see it already
+		var map = new google.maps.Map(document.getElementById("map"), myOptions);
+		document.getElementById("horizontal").innerHTML = "Your latitude is: " + latitude;
+		document.getElementById("vertical").innerHTML = "Your longitude is: " + longitude;
+		document.getElementById("deviation").innerHTML = "Accurate within: " + accuracy + " meters";
+	}
+	function failed_to_find(locationError){
+		document.getElementById("error").innerHTML = "Sorry a determination could not be made. You may have location detection disabled."
+		var error_message = document.getElementById("error");
+		switch(locationError.code){
+			case locationError.PERMISSION_DENIED:
+				error_message.innerHTML="Your position could not be provided due to \"PERMISSION DENIED\"";
+				break;
+			case locationError.POSITION_UNAVAILABLE:
+				error_message.innerHTML="Your position is not available at this time. Try a different from a different location.";
+				break;
+			case locationError.TIMEOUT:
+				error_message.innerHTML="Your request has taken too long and has timed out.";
+				break;
+			default:
+				error_message.innerHTML="An unexpected error has occured. blaaaaaaaaaaaah.  Not a very helpful message, but it did not fit the other categories."
+		}
+	}
+
+</script>
+</head>
+<body>
+	<h3>Cartographer anyone?</h3>
+	<input type="button" value="Refreshness" onclick="location.reload()" />
+	<br /><br />
+	<script type="text/javascript">find_you();</script>
+	<div>Latitude goes here: <p id="horizontal">&nbsp;</p></div>
+	<div>Longitude goes here: <p id="vertical">&nbsp;</p></div>
+	<div>Accuracy goes here: <p id="deviation">&nbsp;</p></div>
+	<div>Error goes here: </br>Or Map below: <p id="error">&nbsp;</p></div>
+
+	<div id="map"></div>
+
+<script type="text/javascript">
+
+</script>
+</body>
+</html>
