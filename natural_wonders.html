@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>HTML5 | A Google map</title>
+<meta charset="utf-8">
+<meta name="description" content="HTML5 demos" />
+<style type="text/css">
+	body{ 
+		background-color: #eeeeee;
+		/* local */
+		/*background: url("..//pictures/background-wallpapers-60.png"); */
+		/* not local */
+		/*background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");  */
+		background: url("http://host2post.com/server13/photos/pxEcaC16L764vM~/15-really-cool-world-map-wallpapers.jpg");
+		background-attachment: fixed;
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: center center;
+		color: white;
+		font-size: 18px;
+	}
+	#map{
+		width:75%;
+		height:800px;
+		display: table;
+    margin: 0 auto;
+	}
+	h1{ color: white; font-family: sans-serif; text-align: center; font-size: 26px;}
+	p{ text-align: center;}
+	/******* responsive  *****/
+	@media screen and (max-width: 479px){#map{height: 200px;}}
+	@media screen and (min-width: 480px) and (max-width: 599px){#map{height: 300px;}}
+	@media screen and (min-width: 600px) and (max-width: 720px){#map{height: 400px;}}
+	@media screen and (min-width: 721px) and (max-width: 840px){#map{height: 500px;}}
+	@media screen and (min-width: 841px) and (max-width: 960px){#map{height: 600px;}}
+	@media screen and (min-width: 961px) and (max-width: 1080px){#map{height: 700px;}}
+</style>
+<!--set the api -->
+<script src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<script>
+	function findYou(){
+		if(navigator.geolocation.getCurrentPosition(showPosition, noLocation, {maximumAge : 1200000, timeout : 30000})){
+	 }else{
+		document.getElementById("lat").innerHTML="This browser does not support geolocation. Or you may need to adjust location settings and click 'Refreshness'.";
+		}
+	}
+	function showPosition(location){
+		var latitude = location.coords.latitude;
+		var longitude = location.coords.longitude;
+		var accuracy = location.coords.accuracy;
+		//build the map
+		var position = new google.maps.LatLng(latitude, longitude);
+		//build the options
+		var myOptions = {
+      zoom:2,
+      center: position,
+      mapTypeId: google.maps.MapTypeId.HYBRID
+    };
+		//display the map
+		var map = new google.maps.Map(document.getElementById("map"),
+	        myOptions);
+			
+		var houseIcon = 'http://demo.woothemes.com/estate/wp-content/themes/estate/images/ico-property/ico-size-big.png';
+		var point = new google.maps.Marker({
+		icon: houseIcon,
+		position: position,
+		map: map,
+		title:"You are sitting/standing right around here somewhere"});
+		
+		var canyon= new google.maps.Marker({
+		position: new google.maps.LatLng(35.9766,-113.7717),
+		map: map,
+		title:"Grand Canyon, USA"});
+		
+		var paricutin= new google.maps.Marker({
+		position: new google.maps.LatLng(19.5948,-102.4331),
+		map: map,
+		title:"Paricutin, Mexico"});
+		19.5948
+		
+		var victoria= new google.maps.Marker({
+		position: new google.maps.LatLng(-17.928,25.826),
+		map: map,
+		title:"Victoria Falls, Zimbabwe"});
+
+		var reef= new google.maps.Marker({
+		position: new google.maps.LatLng(-17.98,146.76),
+		map: map,
+		title:"Great Barrier Reef, Austrailia"});
+
+		var harbor= new google.maps.Marker({
+		position: new google.maps.LatLng(-22.8424,-43.1502),
+		map: map,
+		title:"Harbor Rio De Janerio, Brazil"});
+		
+		var everest= new google.maps.Marker({
+		position: new google.maps.LatLng(27.98783,86.92476),
+		map: map,
+		title:"Mount Everest Peak, Nepal"});
+
+		document.getElementById("horizontal").innerHTML="Your latitude is " + latitude;
+		document.getElementById("vertical").innerHTML="Your longitude is " + longitude;
+		document.getElementById("deviation").innerHTML="Accurate within " + accuracy + " meters";
+	}
+	function noLocation(locationError){
+		switch(locationError.code)
+		{
+		case locationError.PERMISSION_DENIED:
+			document.getElementById("horizontal").innerHTML="Your position could not be provided due to \"PERMISSION DENIED\".";
+				break;
+		case locationError.POSITION_UNAVAILABLE:
+			document.getElementById("horizontal").innerHTML="Your position is not available at this time. Try a different from a different location.";
+				break;
+	 case locationError.TIMEOUT: 
+			document.getElementById("horizontal").innerHTML="Your request has taken too long and has timed out.";
+				break;
+		default:
+			document.getElementById("horizontal").innerHTML="An unexpected error has occured. blaaaaaaaaaaaah.  Not a very helpful message, but it did not fit the other categories.";
+		}
+	}
+</script>
+</head> 
+<body>
+	<h1>Your Location and Natural Wonders of the World</h1>
+	<input type="button" value="Refreshness" onclick="location.reload()" />
+	<br /><br />
+<script>
+	window.setTimeout("findYou()", 3000);
+</script>
+	<table width="100%">
+		<tr>
+			<td><p id="horizontal"/></td>
+			<td><p id="vertical">&nbsp;</p></td>
+			<td><p id="deviation">&nbsp;</p></td>
+		</tr>
+	</table>
+
+	<div id="map"></div>
+	<br /><br /><br />
+</body>
+</html>
