@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>HTML5 | </title>
+<meta charset="utf-8">
+<meta name="description" content="HTML5 demos" />
+<style type="text/css">
+	body{ 
+		background-color: #eeeeee;
+		/* local */
+		/*background: url("..//pictures/background-wallpapers-60.png"); */
+		/* not local */
+		/*background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");  */
+		background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");
+		background-attachment: fixed;
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: center center;
+		color: white;
+		font-size: 18px;
+	}
+	h1{ color: white; font-family: sans-serif; text-align: center; font-size: 24px;}
+	h2{text-align: center;}
+	img.music_scale{
+		position:absolute;
+		left:150px;
+		top:195px;
+		z-index:1;
+		width: 600px;
+		height: 155px;
+	}
+	
+	img.arrow{
+		position:absolute;
+		z-index:2;
+		-webkit-animation:moveArrow 10s linear 2s;
+		-moz-animation:moveArrow 10s linear 2s;
+		-o-animation:moveArrow 10s linear 2s;
+		animation:moveArrow 10s linear 2s;
+	}
+
+@-webkit-keyframes moveArrow{
+		0%	{left:200px;top:200px;}
+		10% {left:255px;top:280px;}
+		20% {left:307px;top:265px;}
+		30% {left:353px;top:240px;}
+		40% {left:400px;top:215px;}
+		50% {left:451px;top:190px;}
+		60%	{left:509px;top:280px;}
+		70% {left:557px;top:265px;}
+		80% {left:607px;top:240px;}
+		90% {left:655px;top:215px;}
+		100% {left:706px;top:190px;}
+	}
+	@-moz-keyframes moveArrow{
+		0%	{left:200px;top:200px;}
+		10% {left:255px;top:280px;}
+		20% {left:307px;top:265px;}
+		30% {left:353px;top:240px;}
+		40% {left:400px;top:215px;}
+		50% {left:451px;top:190px;}
+		60%	{left:509px;top:280px;}
+		70% {left:557px;top:265px;}
+		80% {left:607px;top:240px;}
+		90% {left:655px;top:215px;}
+		100% {left:706px;top:190px;}
+	}
+	@-o-keyframes moveArrow{
+		0%	{left:200px;top:200px;}
+		10% {left:255px;top:280px;}
+		20% {left:307px;top:265px;}
+		30% {left:353px;top:240px;}
+		40% {left:400px;top:215px;}
+		50% {left:451px;top:190px;}
+		60%	{left:509px;top:280px;}
+		70% {left:557px;top:265px;}
+		80% {left:607px;top:240px;}
+		90% {left:655px;top:215px;}
+		100% {left:706px;top:190px;}
+	}
+
+	@keyframes moveArrow{
+		0%	{left:200px;top:200px;}
+		10% {left:255px;top:280px;}
+		20% {left:307px;top:265px;}
+		30% {left:353px;top:240px;}
+		40% {left:400px;top:215px;}
+		50% {left:451px;top:190px;}
+		60%	{left:509px;top:280px;}
+		70% {left:557px;top:265px;}
+		80% {left:607px;top:240px;}
+		90% {left:655px;top:215px;}
+		100% {left:706px;top:190px;}
+	}
+</style>
+<script type="text/javascript">
+
+</script>
+</head>
+<body onload="playmusic();">
+	<input type="button" value="Refreshness" onclick="location.reload()" />
+	<br /><br />
+	<h1>Music Scale</h1>
+	<h2>Every Good Boy does fine. "LISTEN: Don't forget about FACE!"</h2>
+	<img src="http://musicaltheatre.umwblogs.org/files/2009/01/treble-notes.gif" class="music_scale" alt="music scale" />
+	<img src="http://piq.codeus.net/static/media/userpics/piq_177391_25x25.png" class="arrow" alt="a pointer" />
+
+	<div style="margin-left:40px;">
+		<audio loop id="audio_1">
+			<source src="http://66.90.91.26:777/ost/legend-of-zelda-ocarina-of-time-original-sound-track/alzsgjjnfl/35-lost-woods.mp3">
+			Your browser needs an upgrade
+		</audio>
+	</div>
+
+
+<script type="text/javascript">
+function playmusic(){
+		document.getElementById("audio_1").play();
+	}
+</script>
+</body>
+</html>
