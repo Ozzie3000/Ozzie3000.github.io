@@ -47,7 +47,16 @@
 		animation:moveArrow 10s linear 2s infinite;
 	}
 
-@-webkit-keyframes moveArrow{
+	img.link_epona{
+		position:absolute;
+		z-index:2;
+		-webkit-animation:moveLink 14s  infinite alternate;
+		-moz-animation:moveLink 14s  infinite alternate;
+		-o-animation:moveLink 14s  infinite alternate;
+		animation:moveLink 14s  infinite alternate;
+	}
+
+	@-webkit-keyframes moveArrow{
 		0%	{left:200px;top:200px;}
 		10% {left:255px;top:280px;}
 		20% {left:307px;top:265px;}
@@ -100,6 +109,27 @@
 		90% {left:655px;top:215px;}
 		100% {left:706px;top:190px;}
 	}
+	/*** link's pic  ***/
+	@-webkit-keyframes moveLink{
+		0%	{left:5%; top:600px;}
+		100% {left:95%; top:600px;}
+	}
+	@-moz-keyframes moveLink{
+		0%	{left:200px;top:200px;}
+		100% {left:706px;top:190px;}
+	}
+	@-o-keyframes moveLink{
+		0%	{left:5%; top:600px;}
+		100% {left:95%; top:600px;}
+	}
+
+	@keyframes moveLink{
+		0%	{left:5%; top:600px;}
+		100% {left:95%; top:600px;}
+	}
+	.t_spacer{
+		margin-top: 200px;
+	}
 </style>
 <script type="text/javascript">
 
@@ -119,7 +149,13 @@
 			Your browser needs an upgrade
 		</audio>
 	</div>
-<br /><br /><br /><br /><br />
+<br /><br /><br />
+
+	<div class="t_spacer">
+		<img src="http://assets.diylol.com/hfs/b53/308/620/icon/1292744-link_riding_epona_zelda_ocarina_of_time_screenshot_super.jpg" class="link_epona" alt="Nintendo's Link riding Epona back and forth" />
+	</div>
+	<br /><br /><br /><br /><br />
+
 	<footer class="ending">...Ozzie3000... <br />Animation with the use of CSS.<br />  Background pic some cool pic I found @ http://host2post.com/server13/photos/pxEcaC16L764vM~/15-really-cool-world-map-wallpapers.jpg<br />The song? Do you even have to ask...<br /> </footer>
 
 <script type="text/javascript">
