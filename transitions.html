@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>HTML5 | Transitions</title>
+<meta charset="utf-8">
+<meta name="description" content="HTML5 demos" />
+<style type="text/css">
+	body{ 
+		background-color: #eeeeee;
+		/* local */
+		/*background: url("..//pictures/background-wallpapers-60.png"); */
+		/* not local */
+		/*background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");  */
+		background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");
+		background-attachment: fixed;
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: center center;
+		/*color: white;  */
+		font-size: 18px;
+	}
+	h1{ color: white; font-family: sans-serif; text-align: center; font-size: 24px;}
+	#p_box{
+		text-align: center;
+	}
+	div.box{
+		width: 420px;
+		height: 30px;
+		background-color: black;
+		-webkit-transition-property: background-color;
+		-webkit-transition-duration: 5s;
+		-webkit-transition-timing-function: ease-in;
+		-webkit-transistion-delay: 2s;
+	}
+	div.box:active{
+		background-color: blue;
+	}
+	.pic_frame{
+		display: table;
+		margin: 0 auto;
+		border: 50px solid brown;
+		width: 495px;
+		height: 560px;
+		-webkit-border-image: url("https://0.s3.envato.com/files/82227275/GR_fishbone_pattern_THUMB.jpg") 30 30 stretch;
+		-moz-border-mage: url("https://0.s3.envato.com/files/82227275/GR_fishbone_pattern_THUMB.jpg") 30 30 stretch;
+		-o-border-image: url("https://0.s3.envato.com/files/82227275/GR_fishbone_pattern_THUMB.jpg") 30 30 stretch;
+		border-image: url("https://0.s3.envato.com/files/82227275/GR_fishbone_pattern_THUMB.jpg") 30 30 stretch;
+	}
+	figure{
+		padding: 0px;
+		opacity: 0;
+		-webkit-transition: opacity 3s;
+		-moz-transition: opacity 3s;
+		-o-transition: opacity 3s;
+		transition: opacity 3s;
+	}
+	figure:hover{
+		opacity: 1;
+	}
+	#thank{
+		color: white;
+	}
+</style>
+<script type="text/javascript">
+	function actionMessage(){
+		document.getElementById("thank").innerHTML="Thank you for hovering!";
+	}
+	function setHandlers(){
+		document.getElementById("transit").addEventListener("webkitTransitionEnd", function(){actionMessage()}, false);
+		document.getElementById("transit").addEventListener("oTransitionEnd", function(){actionMessage()}, false);
+		document.getElementById("transit").addEventListener("mozTransitionEnd", function(){actionMessage}, false);
+		document.getElementById("transit").addEventListener("transitionEnd", function(){actionMessage()}, false);
+	}
+	window.onload = function(){setHandlers();};
+</script>
+</head>
+<body>
+	<input type="button" value="Refreshness" onclick="location.reload()" />
+	<br /><br />
+	<h1>Be specific with transistions</h1>
+	
+	<div class="box">
+		<p id="p_box">Hover inside the frame to see something else</p>
+	</div>
+
+	<p id="thank">Click and hold the black box for 5 seconds to receive direcions.</p>
+	<div class="pic_frame">
+		<figure id="transit">
+			<img src="http://media-cache-ec0.pinimg.com/736x/7c/85/05/7c850557ca327da670f21415a7d6b4f6.jpg" width="500" height="500">
+			<figcaption>This is a picture</figcaption>
+		</figure>
+	</div>
+
+
+<script type="text/javascript">
+
+</script>
+</body>
+</html>
