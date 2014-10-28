@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>HTML5 | Karaoke</title>
+<meta charset="utf-8">
+<meta name="description" content="HTML5 demos" />
+<style type="text/css">
+	body{ 
+		background-color: #eeeeee;
+		/* local */
+		/*background: url("..//pictures/background-wallpapers-60.png"); */
+		/* not local */
+		/*background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");  *
+		background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg"); */
+		background-attachment: fixed;
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: center center;
+		color: white;
+		font-size: 18px;
+	}
+	h1{ color: white; font-family: sans-serif; text-align: center; font-size: 24px;}
+
+	#line1{
+		position: absolute;
+		font-size: 0em;
+		z-index: 1;
+		-webkit-animation: showline 2s ease-in-out 0s;
+		-moz--animation: showline 2s ease-in-out 0s;
+		-o-animation: showline 2s ease-in-out 0s;
+		animation: showline 2s ease-in-out 0s;
+	}
+	#line2{
+		position:absolute;
+		font-size:0em;
+		z-index:1;
+		-webkit-animation: showline 2.5s ease-in-out 2s;
+		-moz--animation: showline 2.5s ease-in-out 2s;
+		-o-animation: showline 2.5s ease-in-out 2s;
+		animation: showline 2.5s ease-in-out 2s;
+	}
+	#line3{
+		position:absolute;
+		font-size:0em;
+		z-index:1;
+		-webkit-animation: showline 2s ease-in-out 4.8s;
+		-moz--animation: showline 2s ease-in-out 4.8s;
+		-o-animation: showline 2s ease-in-out 4.8s;
+		animation: showline 2s ease-in-out 4.8s;
+	}
+	#line4{
+		position:absolute;
+		font-size:0em;
+		z-index:1;
+		-webkit-animation: showline 4s ease-in-out 6.8s;
+		-moz--animation: showline 4s ease-in-out 6.8s;
+		-o-animation: showline 4s ease-in-out 6.8s;
+		animation: showline 4s ease-in-out 6.8s;
+	}
+	/************ line 1 ***************/
+	#word1-1{
+		color: black;
+		-webkit-animation: wordColor .5s ease-out 0s;
+		-moz-animation: wordColor .5s ease-out 0s;
+		-o-animation: wordColor .5s ease-out 0s;
+		animation: wordColor .5s ease-out 0s;
+	}
+	#word1-2{
+		color:black;
+		-webkit-animation: wordColor .5s ease-out .5s;
+		-moz-animation: wordColor .5s ease-out .5s;
+		-o-animation: wordColor .5s ease-out .5s;
+		animation: wordColor .5s ease-out .5s;
+	}
+	#word1-3{
+		color:black;
+		-webkit-animation:wordColor 1s ease-out 1s;
+		-moz-animation:wordColor 1s ease-out 1s;
+		-o-animation:wordColor 1s ease-out 1s;
+		animation:wordColor 1s ease-out 1s;
+	}
+	/************ line 2 ***************/
+	#word2-1{
+	color:black;
+	-webkit-animation:wordColor .6s ease-out 2s;
+	-moz-animation:wordColor .6s ease-out 2s;
+	-o-animation:wordColor .6s ease-out 2s;
+	animation:wordColor .6s ease-out 2s;
+	}
+	#word2-2{
+		color:black;
+		-webkit-animation:wordColor .6s ease-out 2.6s;
+		-moz-animation:wordColor .6s ease-out 2.6s;
+		-o-animation:wordColor .6s ease-out 2.6s;
+		animation:wordColor .6s ease-out 2.6s;
+	}
+	#word2-3{
+		color:black;
+		-webkit-animation:wordColor .6s ease-out 3.2s;
+		-moz-animation:wordColor .6s ease-out 3.2s;
+		-o-animation:wordColor .6s ease-out 3.2s;
+		animation:wordColor .6s ease-out 3.2s;
+	}
+	#word2-4{
+		color:black;
+		-webkit-animation:wordColor 1s ease-out 3.8s;
+		-moz-animation:wordColor 1s ease-out 3.8s;
+		-o-animation:wordColor 1s ease-out 3.8s;
+		animation:wordColor 1s ease-out 3.8s;
+	}
+	/************ line 3 ***************/
+	#word3-1{
+	color:black;
+		-webkit-animation:wordColor .5s ease-out 4.8s;
+		-moz-animation:wordColor .5s ease-out 4.8s;
+		-o-animation:wordColor .5s ease-out 4.8s;
+		animation:wordColor .5s ease-out 4.8s;
+	}
+	#word3-2{
+		color:black;
+		-webkit-animation:wordColor .5s ease-out 5.3s;
+		-moz-animation:wordColor .5s ease-out 5.3s;
+		-o-animation:wordColor .5s ease-out 5.3s;
+		animation:wordColor .5s ease-out 5.3s;
+	}
+	#word3-3{
+		color:black;
+		-webkit-animation:wordColor 1s ease-out 5.8s;
+		-moz-animation:wordColor 1s ease-out 5.8s;
+		-o-animation:wordColor 1s ease-out 5.8s;
+		animation:wordColor 1s ease-out 5.8s;
+	}
+	/************ line 4 ***************/
+	#word4-1{
+		color:black;
+		-webkit-animation:wordColor .6s ease-out 6.8s;
+		-moz-animation:wordColor .6s ease-out 6.8s;
+		-o-animation:wordColor .6s ease-out 6.8s;
+		animation:wordColor .6s ease-out 6.8s;
+	}
+	#word4-2{
+		color:black;
+		-webkit-animation:wordColor .6s ease-out 7.4s;
+		-moz-animation:wordColor .6s ease-out 7.4s;
+		-o-animation:wordColor .6s ease-out 7.4s;
+		animation:wordColor .6s ease-out 7.4s;
+	}
+	#word4-3{
+		color:black;
+		-webkit-animation:wordColor .6s ease-out 8s;
+		-moz-animation:wordColor .6s ease-out 8s;
+		-o-animation:wordColor .6s ease-out 8s;
+		animation:wordColor .6s ease-out 8s;
+	}
+	#word4-4{
+		color:black;
+		-webkit-animation:wordColor 2s ease-out 8.6s;
+		-moz-animation:wordColor 2s ease-out 8.6s;
+		-o-animation:wordColor 2s ease-out 8.6s;
+		animation:wordColor 2s ease-out 8.6s;
+	}
+
+	@-webkit-keyframes wordColor{
+		0% {color:black;}
+		1% {color:red;}
+		99% {color:red;}
+		100% {color:black;}
+	}
+	@-moz-keyframes wordColor{
+		0% {color:black;}
+		1% {color:red;}
+		99% {color:red;}
+		100% {color:black;}
+	}
+	@-o-keyframes wordColor{
+		0% {color:black;}
+		1% {color:red;}
+		99% {color:red;}
+		100% {color:black;}
+	}
+	@keyframes wordColor{
+		0% {color:black;}
+		1% {color:red;}
+		99% {color:red;}
+		100% {color:black;}
+	}
+
+	@-webkit-keyframes showline{
+		0% {font-size:0em;z-index:1;}
+		1% {font-size:2em;z-index:10;}
+		99% {font-size:2em;z-index:10;}
+		100% {font-size:0em;z-index:1;}
+	}
+	@-moz-keyframes showline{
+		0% {font-size:0em;z-index:1;}
+		1% {font-size:1em;z-index:10;}
+		99% {font-size:1em;z-index:10;}
+		100% {font-size:0em;z-index:1;}
+	}
+	@-o-keyframes showline{
+		0% {font-size:0em;z-index:1;}
+		1% {font-size:1em;z-index:10;}
+		99% {font-size:1em;z-index:10;}
+		100% {font-size:0em;z-index:1;}
+	}
+	@keyframes showline{
+		0% {font-size:0em;z-index:1;}
+		1% {font-size:1em;z-index:10;}
+		99% {font-size:1em;z-index:10;}
+		100% {font-size:0em;z-index:1;}
+	}
+
+	#line2{
+		position:absolute;
+		font-size:0;
+		z-index:2;
+	}
+	#line3{
+		position:absolute;
+		font-size:0;
+		z-index:3;
+	}
+	#line4{
+		position:absolute;
+		font-size:0;
+		z-index:4;
+	}
+</style>
+<script type="text/javascript">
+</script>
+</head>
+<body>
+	<input type="button" value="Reload page" onclick="location.reload()" />
+	<br /><br />
+	<h1>Karaoke anyone? Or multiple animations with CSS</h1>
+	
+	<audio id="audio_1" loop>
+	  <source src="../audio/romantic_guitar.ogg" type="audio/ogg" />
+	  <source src="../audio/romantic_guitar.mp3" type="audio/mpeg" />
+	  <source src="../audio/romantic_guitar.wav" type="audio/wav" />  
+		Your browser does not support the audio element
+  </audio>
+
+	<div id="line1">
+		<p>
+			<span id="word1-1">word</span>
+			<span id="word1-2">word</span>
+			<span id="word1-3">word</span>
+		</p>
+	</div>
+
+	<div id="line2">
+		<p>
+			<span id="word2-1">word</span>
+			<span id="word2-2">word</span>
+			<span id="word2-3">word</span>
+			<span id="word2-4">word</span>
+		</p>
+	</div>
+
+	<div id="line3">
+		<p>
+			<span id="word3-1">word</span>
+			<span id="word3-2">word</span>
+			<span id="word3-3">word</span>
+		</p>
+	</div>
+
+	<div id="line4">
+		<p>
+			<span id="word4-1">word</span>
+			<span id="word4-2">word</span>
+			<span id="word4-3">word</span>
+			<span id="word4-4">word</span>
+		</p>
+	</div>
+
+<br /><br />
+
+	
+
+<script type="text/javascript">
+	function playmusic(){
+		document.getElementById("audio_1").play();
+	}
+	setTimeout(playmusic(), 1000);
+</script>
+</body>
+</html>
