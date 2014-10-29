@@ -65,8 +65,9 @@ body{
 		this.randoNum = rando;
 		for (i=0; i<3; i++){
 			var guessA = prompt("Guess a number 0 - "+ceiling);
+			this.guessA = parseInt(guessA);
 			if(guessA == null){
-				document.getElementById("here0").innerHTML = "Please pick a number";
+				document.getElementById("here1").innerHTML = "Please pick a number";
 			}
 			if(guessA > randoNum){
 				document.getElementById("here3").innerHTML = "Nope: "+guessA+" is too high. Go lower.";
@@ -104,8 +105,10 @@ body{
 	<input type="button" value="1) pick the end range" onclick="picker();" id="b1" class="btn" />
 	<input type="button" value="2) Start!" onclick="numberz();" id="b2" class="btn"/>
 	<input type="button" value="3) what is the rando number" onclick="realNo();" id="b3" class="btn" />
-	<br />
+	
+	
 	<div id="special">
+		<br />
 		<section id="here0">&nbsp;</section>
 		<br />
 		<section id="here1">&nbsp;</section>
@@ -114,6 +117,7 @@ body{
 		<br />
 		<section id="here3">&nbsp;</section>
 	</div>
+	
 
 </body>
 </html>
