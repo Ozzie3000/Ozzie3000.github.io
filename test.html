@@ -21,3 +21,140 @@
 </body>
 </html>
 
+
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"></meta>
+<title>JS Guessing game</title>
+<style type="text/css">
+h1{
+	font-size: 26px;
+}
+h3{
+	font-size: 20px;
+}
+body{
+	font-size: 20px;
+}
+#re_btn{ display: inline-block;}
+
+#rere{
+	border-radius: 15px;
+	padding: 10px;
+	color: blue;
+	font-family: sans-serif;
+}
+#special{
+	font-size: 24px;
+	color: red;
+	font-family: Georgia;
+}
+#b1{ margin-left: 20px;}
+#b1, #b2, #b3{float: left; display: inline-block; padding: 20px; }
+#b1, #b2{margin-right: 45px;}
+.btn{
+  -webkit-border-radius: 20px;
+  -moz-border-radius: 20px;
+  border-radius: 20px;
+  font-size: 22px;
+}
+</style>
+<script type="text/javascript">
+/*	function numberz(){
+		var rando = Math.round(Math.random()*3);
+		this.randoNum = rando;
+		for (i=0; i<3; i++){
+			var guessA = prompt("Guess a number 0-500");
+			if(guessA == randoNum){
+				document.getElementById("here1").innerHTML = "Dude you are the man! "+randoNum+" was correct";
+				break;
+			}else{
+				if(guessA > randoNum){
+					document.getElementById("here2").innerHTML = "Nope: "+guessA+" is lower";
+				}
+				if(guessA < randoNum){
+					document.getElementById("here2").innerHTML = "Nope: "+guessA+" is higher";
+				}
+			}
+		}
+		alert(randoNum + " was the real number.");
+	}
+*/
+	function picker(){
+		var ceiling = prompt("Pick the highest possible number it could be");
+		this.ceiling = parseInt(ceiling);
+	}
+	
+	function numberz(){
+		var rando = Math.round(Math.random()*ceiling);
+		this.randoNum = rando;
+		for (i=0; i<3; i++){
+			doSetTimeout();
+			function guesser(){
+				if(guessA == null){
+					document.getElementById("here1").innerHTML = "Please pick a number";
+				}
+				if(guessA > randoNum){
+					document.getElementById("here3").innerHTML = "Nope: "+guessA+" is too high. Go lower.";
+				}
+				if(guessA < randoNum){
+					document.getElementById("here2").innerHTML = "Nope: "+guessA+" is too low. Go higher.";
+				}
+				if(guessA == randoNum){
+					document.getElementById("here1").innerHTML = "Dude you are the man! "+randoNum+" was correct";
+					i = 4;
+				}
+			}
+			guesser();
+		}
+	//	alert(randoNum + " was the real number.");
+	}
+
+	function realNo(){
+		alert(randoNum + " was the real number.");
+	}
+
+	function doSetTimeout() {
+	  setTimeout(function(){
+	   this.guessA = prompt("Guess a number 0 - "+ ceiling); guessA = parseInt(guessA);}, 3000);
+	}
+
+
+	  
+</script>
+</head>
+<body>
+	<h1>The guessing game.</h1>
+	<p>Instructions:</p>
+	<ol>
+		<li>You will guess a number between 0 and X; you pick x.</li>
+		<li>You will get 3 guesses</li>
+		<li>If you don't get it in 3 guesses try again.</li>
+	</ol>
+
+	<p id="re_btn">a refresh button because i'm lazy.... ha ha</p id="re_btn">
+	<input type="button" value="refresh the page" onclick="location.reload()" id="rere" />
+	<hr>
+	<br />
+
+	<input type="button" value="1) pick the end range" onclick="picker();" id="b1" class="btn" />
+	<input type="button" value="2) Start!" onclick="numberz();" id="b2" class="btn"/>
+	<input type="button" value="3) what is the rando number" onclick="realNo();" id="b3" class="btn" />
+	
+	
+	<div id="special">
+		<br />
+		<section id="here0">&nbsp;</section>
+		<br />
+		<section id="here1">&nbsp;</section>
+		<br />
+		<section id="here2">&nbsp;</section>
+		<br />
+		<section id="here3">&nbsp;</section>
+	</div>
+	
+
+</body>
+</html>
