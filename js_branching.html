@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>HTML5 | conditional branching b</title>
+<meta charset="utf-8">
+<meta name="description" content="HTML5 demos" />
+<style type="text/css">
+	body{ 
+		background-color: #eeeeee;
+		/* local */
+		/*background: url("..//pictures/background-wallpapers-60.png"); */
+		/* not local */
+		/*background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");  */
+		background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");
+		background-attachment: fixed;
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: center center;
+		color: white;
+		font-size: 18px;
+	}
+	h1{ color: white; font-family: sans-serif; text-align: center; font-size: 24px;}
+	#fbtn{ margin-left: 30px;}
+	.btn1{
+		padding: 15px;
+		margin-right: 20px;
+		-webkit-border-radius: 10px;
+		-moz-border-radius: 10px;
+		border-radius: 10px;
+	}
+	#rere:hover,.btn1:hover{
+		cursor: crosshair;
+		background: blue;
+	}
+	.results{
+		margin-left: 30px;
+		font-family: Georgia;
+		color: red;
+	}
+</style>
+<script type="text/javascript">
+
+</script>
+</head>
+<body>
+	<input id="rere" type="button" value="Refreshness" onclick="location.reload();" />
+	<br /><br />
+	<h1>more conditional branching</h1>
+
+	<input id="fbtn" class="btn1" type="button" value="Random Generator" onclick="rando();" />
+	<input class="btn1" type="button" value="show" onclick="show();" />
+	<div style="height:20px;"></div>
+
+	<div class="results">
+		<section id="here0">&nbsp;</section>
+		<br />
+		<section id="here1">&nbsp;</section>
+		<br />
+		<section id="here2">&nbsp;</section>
+	</div>
+
+
+<script type="text/javascript">
+	function rando(){
+		var a = (Math.floor(Math.random()*20));
+		this.a = parseInt(a);
+		document.getElementById("here0").innerHTML = "Too high";
+		document.getElementById("here1").innerHTML = "Just right";
+		document.getElementById("here2").innerHTML = "Too low";
+	}
+	function show(){
+		if(a>10){
+			document.getElementById("here0").innerHTML = "The variable a is greater than 10; a = "+a;
+		}else if(a == 10){
+			document.getElementById("here1").innerHTML = "The variable a is 10";
+		}else{
+			document.getElementById("here2").innerHTML = "The variable a is lower than 10; a = "+a;
+		}
+	}
+	
+</script>
+</body>
+</html>
