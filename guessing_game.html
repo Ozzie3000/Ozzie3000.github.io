@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"></meta>
+<title>JS Guessing game</title>
+<style type="text/css">
+#rere{
+	border-radius: 15px;
+	padding: 10px;
+	color: blue;
+	font-family: sans-serif;
+}
+#special{
+	font-size: 24px;
+	color: red;
+	font-family: Georgia;
+}
+</style>
+<script type="text/javascript">
+/*	function numberz(){
+		var rando = Math.round(Math.random()*3);
+		this.randoNum = rando;
+		for (i=0; i<3; i++){
+			var guessA = prompt("Guess a number 0-500");
+			if(guessA == randoNum){
+				document.getElementById("here1").innerHTML = "Dude you are the man! "+randoNum+" was correct";
+				break;
+			}else{
+				if(guessA > randoNum){
+					document.getElementById("here2").innerHTML = "Nope: "+guessA+" is lower";
+				}
+				if(guessA < randoNum){
+					document.getElementById("here2").innerHTML = "Nope: "+guessA+" is higher";
+				}
+			}
+		}
+		alert(randoNum + " was the real number.");
+	}
+*/
+	function picker(){
+		var youLike = prompt("Pick the highest possible number it could be");
+		this.ceiling = youLike;
+		
+	}
+	
+	function numberz(){
+		var rando = Math.round(Math.random()*ceiling);
+		this.randoNum = rando;
+		for (i=0; i<3; i++){
+			var guessA = prompt("Guess a number 0-500");
+			if(guessA > randoNum){
+				document.getElementById("here1").innerHTML = "Nope: "+guessA+" is too high. Go lower.";
+			}
+			if(guessA < randoNum){
+				document.getElementById("here1").innerHTML = "Nope: "+guessA+" is too low. Go higher.";
+			}
+			if(guessA == randoNum){
+				document.getElementById("here1").innerHTML = "Dude you are the man! "+randoNum+" was correct";
+				i = 4;
+			}
+		}
+	//	alert(randoNum + " was the real number.");
+	}
+
+	function realNo(){
+		alert(randoNum + " was the real number.");
+	}
+</script>
+</head>
+<body>
+	<h1>The guessing game.</h1>
+	<p>Instructions:</p>
+	<ol>
+		<li>I will think a number 0-whatever you like.</li>
+		<li>You will get 3 guesses</li>
+		<li>If you don't get it in 3 guess you're dumb...so dumb...so dumb.</li>
+	</ol>
+
+	<h3>a refresh button because i'm lazy.... ha ha</h3>
+	<input type="button" value="refrest the page" onclick="location.reload()" id="rere" />
+	<hr>
+	<br />
+
+	<input type="button" value="pick the end range" onclick="picker();" />
+	<br /><br />
+	<input type="button" value="Start!" onclick="numberz();" />
+	<br /><br />
+	<input type="button" value="what is the rando number" onclick="realNo();" />
+	<br /><br /><br /><br />
+	<div id="special">
+		<section id="here1">&nbsp;</section>
+		<br />
+		<section id="here1">&nbsp;</section>
+	</div>
+
+</body>
+</html>
