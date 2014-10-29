@@ -4,6 +4,9 @@
 <meta charset="utf-8"></meta>
 <title>JS Guessing game</title>
 <style type="text/css">
+h1{
+	font-size: 26px;
+}
 #rere{
 	border-radius: 15px;
 	padding: 10px;
@@ -16,8 +19,13 @@
 	font-family: Georgia;
 }
 #b1{ margin-left: 20px;}
-#b1, #b2, #b3{float: left; display: inline-block; padding: 20px; font-size: 18px;}
+#b1, #b2, #b3{float: left; display: inline-block; padding: 20px; font-size: 20px;}
 #b1, #b2{margin-right: 45px;}
+.btn{
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius:6px;
+}
 </style>
 <script type="text/javascript">
 /*	function numberz(){
@@ -81,16 +89,16 @@
 		<li>If you don't get it in 3 guess you're dumb...so dumb...so dumb.</li>
 	</ol>
 
-	<h3>a refresh button because i'm lazy.... ha ha</h3>
+	<h1>a refresh button because i'm lazy.... ha ha</h1>
 	<input type="button" value="refrest the page" onclick="location.reload()" id="rere" />
 	<hr>
 	<br />
 
-	<input type="button" value="1) pick the end range" onclick="picker();" id="b1"/>
+	<input type="button" value="1) pick the end range" onclick="picker();" id="b1" class="btn" />
 
-	<input type="button" value="2) Start!" onclick="numberz();" id="b2"/>
+	<input type="button" value="2) Start!" onclick="numberz();" id="b2" class="btn"/>
 
-	<input type="button" value="3) what is the rando number" onclick="realNo();" id="b3"/>
+	<input type="button" value="3) what is the rando number" onclick="realNo();" id="b3" class="btn" />
 	
 	<div id="special">
 		<section id="here0">&nbsp;</section>
