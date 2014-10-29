@@ -37,11 +37,12 @@
 		alert(randoNum + " was the real number.");
 	}
 */
-
+	function picker(){
 		var ceiling = prompt("Pick the highest possible number it could be");
-
+		this.ceiling = parseInt(ceiling);
+	}
 	
-	function numberz(ceiling){
+	function numberz(){
 		var rando = Math.round(Math.random()*ceiling);
 		this.randoNum = rando;
 		for (i=0; i<3; i++){
