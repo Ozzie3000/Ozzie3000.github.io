@@ -6,7 +6,7 @@
 <meta name="description" content="HTML5 demos" />
 <style type="text/css">
 	body{ 
-		background-color: #eeeeee;
+		background-color: #5AA8F6;
 		/* local */
 		/*background: url("..//pictures/background-wallpapers-60.png"); */
 		/* not local */
@@ -22,28 +22,36 @@
 	h1{ color: white; font-family: sans-serif; text-align: center; font-size: 24px;}
 	
 	.canvas_wrapper{
-		margin-top: 5%;
-		margin-left: 5%;
+		display: table;
+		margin: 0 auto;
 	}
 	#canvas_1{
 		background-color: white;
 		border: 5px blue solid;
+		display: table;
+		margin: 0 auto;
 	}
 	#desc{ font-family: Georgia; font-weight: 700; font-size: 18px; color: white; background-color: black; text-align: center;}
+	#rere{ display: table; margin: 0 auto; padding: 10px; font-size: 16px; font-family: Georgia, sans-serif;}
+	#rere:hover{ 
+		background-color: blue; 
+		color: red;
+		cursor: crosshair;
+	}
 </style>
 <script type="text/javascript">
 
 </script>
 </head>
 <body>
-	<input type="button" value="Refreshness" onclick="location.reload()" />
+	<input type="button"  id="rere" value="Refreshness" onclick="location.reload()" />
 	<br /><br />
 	<h1>Parallax</h1>
 	
 	<div class="canvas_wrapper">
 		<canvas id="canvas_1" width="400" height="600">try a different browser.</canvas>
 		<br /><br />
-		<p id="desc">Use the Left or Right arrows on your keyboard to scoll in either direction inside the frame.</p>
+		<p id="desc">Use the Left or Right arrows on your keyboard <br />to scoll in either direction inside the frame.</p>
 		<br /><br />
 	</div>
 
