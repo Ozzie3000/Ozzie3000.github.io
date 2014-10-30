@@ -31,8 +31,26 @@
 		display: table;
 		margin: 0 auto;
 	}
-	#desc{ font-family: Georgia; font-weight: 700; font-size: 18px; color: white; background-color: black; text-align: center;}
-	#rere{ display: table; margin: 0 auto; padding: 10px; font-size: 16px; font-family: Georgia, sans-serif;}
+	#desc{ font-family: Georgia; 
+		font-weight: 700; 
+		font-size: 18px; 
+		color: white; 
+		background-color: black; 
+		text-align: center;
+		-webkit-border-radius: 10px;
+		-moz-border-radius: 10px;
+		border-radius: 10px;
+	}
+	#rere{ 
+		display: table; 
+		margin: 0 auto; 
+		padding: 10px; 
+		font-size: 16px; 
+		font-family: Georgia, sans-serif;
+		-webkit-border-radius: 10px;
+		-moz-border-radius: 10px;
+		border-radius: 10px;
+	}
 	#rere:hover{ 
 		background-color: blue; 
 		color: red;
@@ -54,6 +72,10 @@
 		<p id="desc">Use the Left or Right arrows on your keyboard <br />to scoll in either direction inside the frame.</p>
 		<br /><br />
 	</div>
+
+	<footer class="ending">
+		Ozzie3000. <br />Parallax with the help of Javascript. <br /><br /> <a href="index.html">Back to Home page</a>
+	</footer>
 
 <script type="text/javascript">
 	var bkground = new Image(); //background images
