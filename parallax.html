@@ -10,8 +10,7 @@
 		/* local */
 		/*background: url("..//pictures/background-wallpapers-60.png"); */
 		/* not local */
-		/*background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");  */
-		//background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");
+
 		background-attachment: fixed;
 		background-size: cover;
 		background-repeat: no-repeat;
@@ -56,6 +55,13 @@
 		color: red;
 		cursor: crosshair;
 	}
+	.ending{
+		color: cyan; 
+		font-family: sans-serif; 
+		font-size: 16px; 
+		text-align: center; 
+		margin-top: 100px;
+	}
 </style>
 <script type="text/javascript">
 
@@ -87,8 +93,8 @@
 
 	canvas_1 = document.getElementById("canvas_1");
 	contex = canvas_1.getContext("2d");
-	bkground.src = "../pictures/trees.jpg";
-	foreground.src = "../pictures/waterfall.jpg";
+	bkground.src = "http://www.zeng-han.com/cs_southmountain/slides/Broken%20Trees%2004.jpg";
+	foreground.src = "http://www.oracionintercesora.org/waterfall-header-image.jpg";
 	setInterval(draw, 100);
 
 	window.addEventListener('keydown', doKeyDown,true);
