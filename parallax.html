@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>HTML5 | Parallax</title>
+<meta charset="utf-8">
+<meta name="description" content="HTML5 demos" />
+<style type="text/css">
+	body{ 
+		background-color: #eeeeee;
+		/* local */
+		/*background: url("..//pictures/background-wallpapers-60.png"); */
+		/* not local */
+		/*background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");  */
+		//background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");
+		background-attachment: fixed;
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: center center;
+		color: white;
+		font-size: 18px;
+	}
+	h1{ color: white; font-family: sans-serif; text-align: center; font-size: 24px;}
+	
+	.canvas_wrapper{
+		margin-top: 5%;
+		margin-left: 5%;
+	}
+	#canvas_1{
+		background-color: white;
+		border: 5px blue solid;
+	}
+	#desc{ font-family: Georgia; font-weight: 700; font-size: 18px; color: white; background-color: black; text-align: center;}
+</style>
+<script type="text/javascript">
+
+</script>
+</head>
+<body>
+	<input type="button" value="Refreshness" onclick="location.reload()" />
+	<br /><br />
+	<h1>Parallax</h1>
+	
+	<div class="canvas_wrapper">
+		<canvas id="canvas_1" width="400" height="600">try a different browser.</canvas>
+		<br /><br />
+		<p id="desc">Use the Left or Right arrows on your keyboard to scoll in either direction inside the frame.</p>
+		<br /><br />
+	</div>
+
+<script type="text/javascript">
+	var bkground = new Image(); //background images
+	var bkground_dx = 2; //how much to move the background image(s)
+	var bkground_x = 0; //x coordinate to slice background image
+	var foreground = new Image(); //stuff in the front
+	var foreground_dx = 5; //how much to move the foreground image(s)
+	var foreground_x = 0; //x coordinate to slice foreground image
+
+	canvas_1 = document.getElementById("canvas_1");
+	contex = canvas_1.getContext("2d");
+	bkground.src = "../pictures/trees.jpg";
+	foreground.src = "../pictures/waterfall.jpg";
+	setInterval(draw, 100);
+
+	window.addEventListener('keydown', doKeyDown,true);
+
+	function doKeyDown(e){
+		switch(e.keyCode){
+			case 37: /*Left arrow key number */
+				if ((bkground_x + bkground_dx) > 2){
+					bkground_x -= bkground_dx;
+				}else{
+					bkground_x = 400;
+				}
+				if ((foreground_x + foreground_dx) > 5){
+					foreground_x -= foreground_dx;
+				}else{
+					foreground_x = 398;
+				}
+			break;
+			case 39:  /*right arrow key number */
+				if ((bkground_x + bkground_dx) < (400 - bkground_dx)){
+					bkground_x += bkground_dx;
+				}else{
+					bkground_x = 0;
+				}
+				if ((foreground_x + foreground_dx) < (400 - foreground_dx)){
+					foreground_x += foreground_dx;
+				}else{
+					foreground_x = 0;
+				}
+				break;
+		} //end of switch
+	} //end of function doKeyDown
+
+	  
+	function draw(){
+		    contex.drawImage(bkground, bkground_x, 0, 400, 200, 0, 0, 400, 300);
+		contex.drawImage(foreground, foreground_x, 0, 400, 200, 0, 300, 400, 300);
+	}
+</script>
+</body>
+</html>
