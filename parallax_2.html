@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>HTML5 | parallax</title>
+<meta charset="utf-8">
+<meta name="description" content="HTML5 demos" />
+<style type="text/css">
+	body{ 
+		background-color: #eeeeee;
+		/* local */
+		/*background: url("..//pictures/background-wallpapers-60.png"); */
+		/* not local */
+		/*background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");  */
+		background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");
+		background-attachment: fixed;
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: center center;
+		color: white;
+		font-size: 18px;
+	}
+	h1{ color: white; font-family: sans-serif; text-align: center; font-size: 24px;}
+
+	.canvas_wrapper{
+		display: table;
+		margin: 3% auto 0 auto;
+	}
+	#canvas_1{
+		background-color: dddddd;
+		border: 5px blue solid;
+	}
+	.rere{
+		padding: 10px; 
+		font-family: Georgia, sans-serif; 
+		font-size: 16px; 
+		-webkit-border-radius: 10px;
+		-moz-border-radius: 10px;
+		border-radius: 10px;
+	}
+	.rere:hover{ background: blue; color: red; cursor: crosshair;}
+</style>
+<script type="text/javascript">
+</script>
+</head>
+<body>
+	<input type="button" class="rere" value="Refreshness" onclick="location.reload()" />
+	
+	<h1>Parallax 3</h1>
+	
+	<div class="canvas_wrapper">
+		<canvas id="canvas_1" width="600" height="700" title="3 different scrolling pics">Try a different browser</canvas>
+		<br /><br />
+	</div>
+
+
+<script type="text/javascript">
+	var h = 700; //canvas height we set up there
+	var w = 400; //canvas width we set up there
+	var sky = new Image(); //sky portion
+	var sky_dx = 4; //amount to scroll to help with parallax effect
+	var sky_x = 960; // x-coord to slice sky image
+	var skyline = new Image(); //skyline image
+	var skyline_dx = 7; //amount to move skyline image
+	var skyline_x = 560; //x-coord to slice skyline image
+	var wagon = new Image(); //the wagon
+	var wagon_x = 0; // x-coord for wagon
+	var wagon_y = 550; // y-coord for wagon
+	var wagonslice = 0; // x-coord to slice wagon image
+
+	canvas_1 = document.getElementById("canvas_1");
+	contex = canvas_1.getContext("2d");
+	/*
+	sky.src = "http://173.236.19.210/wp-content/uploads/2013/12/ipHeader.jpg";
+	skyline.src = "http://www.wildlifewilderness.com/img/fi/wolf.jpg";
+	wagon.src = "http://static.squarespace.com/static/52e6894de4b07d33024af993/t/5307eaf1e4b0efed6704c6c2/1392837200273/fcs%20grass%20border.png";
+ */
+ 	sky.src = "../pictures/mountains.jpg";
+	skyline.src = "../pictures/wolf.jpg";
+	wagon.src = "../pictures/grass2.png";
+
+	setInterval(draw, 1);
+	window.addEventListener("keydown", doKeyDown, true);
+
+	function rect(x,y,w,h){
+		contex.beginPath();
+		contex.rect(x,y,w,h);
+		contex.closePath();
+		contex.fill();
+		contex.stroke();
+	}
+
+	function doKeyDown(e){
+		switch (e.keyCode){
+			case 37:  /* code for left arrow */
+				if ((sky_x + sky_dx) > 2){
+					sky_x -= sky_dx;
+				}else{
+					sky_x = 960;
+				}
+				if ((skyline_x + skyline_dx) > 5){
+					skyline_x -= skyline_dx;
+				}else{
+					skyline_x = 960;
+				}
+				if (wagonslice > 0){
+					wagonslice -= 120;
+				}else {
+					wagonslice = 240;
+				}
+				break;
+			case 39: /* code for right arrow */
+				if ((sky_x + sky_dx) < (960 - sky_dx)){
+					sky_x += sky_dx;
+				}else{
+					sky_x = 0;
+				}
+				if ((skyline_x + skyline_dx) < (960 - skyline_dx)){
+					skyline_x += skyline_dx;
+				}else{
+					skyline_x = 0;
+				}
+				if (wagonslice < 240){
+					wagonslice += 120;
+				}else{
+					wagonslice = 0;
+				}
+				break;
+		} //end of switch
+	}  // end of doKeydown func
+
+	function draw(){
+		contex.fillStyle = "black";
+		rect(0,0,w,h);
+		contex.drawImage(sky, sky_x, 0, 1920, 250, 0, 0, 1920, 250);
+		contex.drawImage(skyline, skyline_x, 0, 1920, 500, 0, 250, 1920, 500);
+		contex.drawImage(wagon, wagonslice, 0, 960, 151, 0, 555, 960, 151);
+	}
+</script>
+</body>
+</html>
