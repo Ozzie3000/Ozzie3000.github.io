@@ -45,6 +45,19 @@
 		text-align: center; 
 		margin-top: 100px;
 	}
+
+	/*************** responsive******/
+	@media screen and (min-width: 1240px) and (max-width: 2000px){
+		.aside1{
+			float: left;
+			margin: 0 10% 0 10px;
+			color: white;
+			font-family: 'Oswald', Georgia, sans-serif;
+			font-size: 18px;
+			text-align: center;
+		}
+
+	}
 </style>
 <script type="text/javascript">
 </script>
@@ -60,6 +73,10 @@
 		<br /><br />
 	</div>
 
+	<aside class="aside1">
+		There are three different pictures in the canvas box.  Each one scrolls left or right at an increasing speed starting from the top.  Since the grass is closest to the viewer it should scroll at a faster rate.
+	</aside>
+
 	<footer class="ending">
 		Ozzie3000. <br />Parallax with the help of Javascript. I need to teach myself more about image layers to get the white opacity down to 0 in the grass picture.<br /><br /> <a href="index.html">Back to Home page</a>
 	</footer>
@@ -68,7 +85,7 @@
 	var h = 700; //canvas height we set up there
 	var w = 400; //canvas width we set up there
 	var sky = new Image(); //sky portion
-	var sky_dx = 4; //amount to scroll to help with parallax effect
+	var sky_dx = 3; //amount to scroll to help with parallax effect
 	var sky_x = 960; // x-coord to slice sky image
 	var skyline = new Image(); //skyline image
 	var skyline_dx = 7; //amount to move skyline image
