@@ -114,7 +114,7 @@ body{ width: 700px;}
     <section class="lucky_num" id="lucky_num">The answer is: </section>
     <input type="button" class="lucky_num" value="show it" onclick="showIt();">
   </div>
-
+<script type="text/javascript">document.getElementsByClassName(".lucky_num").hide();</script>
 
 
 <script src="https://code.jquery.com/jquery-2.1.1.js"></script>
@@ -133,7 +133,7 @@ body{ width: 700px;}
     }
 
 	$(function(){
-    $(".lucky_num").hide();
+    //$(".lucky_num").hide();
 
     function picker(){
       var ceiling = prompt("Pick the highest possible number it could be");
