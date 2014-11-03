@@ -64,7 +64,10 @@
 @media screen and (max-width: 479px){
     body{width: 479px;}
 }
-body{ width: 600px;} 
+@media screen and (min-width: 480px) and (max-width: 520px){
+    body{width: 500px;}
+}
+body{ width: 700px;} 
 </style>
 </head>
 <body>
@@ -87,7 +90,7 @@ body{ width: 600px;}
   Pick the end Range: <input type="text" id="domain"  />
   
   <br /><br />
-  <input type="text" id="guess_1" class="guessed" placeholder="Guess 1:" />
+  <input type="text" id="guess_1" class="guessed" placeholder="Guess 1:" size="6em" />
   <input type="text" id="guess_2" class="guessed" placeholder="Guess 2:" />
   <input type="text" id="guess_3" class="guessed" placeholder="Guess 3:" />
 
