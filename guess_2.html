@@ -114,7 +114,7 @@ body{ width: 700px;}
     <section id="here3">Too low: </section>
     <section id="too_low"></section>
     <br />
-    <section class="hidden" class="lucky_num" id="lucky_num">The answer is: </section>
+    <section class="lucky_num hidden" id="lucky_num">The answer is: </section>
     <input type="button" class="lucky_num" value="show it" onclick="showIt();">
   </div>
 <script type="text/javascript"></script>
@@ -190,7 +190,7 @@ body{ width: 700px;}
       g_1 = this.value;
       numberz();
       $(this).fadeOut(1500);
-      $(".body").removeClass(".hidden");
+      $("section").removeClass("hidden");
       $(".lucky_num").fadeIn(3000);
     });
 
