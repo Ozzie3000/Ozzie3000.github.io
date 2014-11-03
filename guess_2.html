@@ -12,6 +12,21 @@
 
 </script>
 <style type="text/css">
+body{
+  background-color: #eeeeee;
+    /* local */
+    background: url("..//pictures/background-wallpapers-60.png"); 
+    /* not local */
+    /*background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");  */
+    /*background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg"); */
+    background-attachment: fixed;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    color: white;
+    font-size: 18px;
+    padding-left: 10px;
+}
 @font-face {
   font-family: 'WebOswald';
   font-style: normal;
@@ -36,13 +51,14 @@
   position: absolute;
   margin-top: 40px;
   font-size: 24px;
-  color: red;
+  color: blue;
   font-family: Georgia;
+  font-weight: 700;
 }
-#perfecto{
+#perfecto, #lucky_num{
   font-family: 'Oswald', Georgia, sans-serif; 
   font-weight: 700;
-  color: blue;
+  color: white;
 }
 #b1{ margin-left: 20px;}
 #b1, #b2, #b3{float: left; display: inline-block; padding: 20px; }
@@ -86,9 +102,7 @@ body{ width: 700px;}
     <li>You will get 3 guesses</li>
     <li>If you don't get it in 3 guesses try again.</li>
   </ol>
-
-
-  <br /><br />
+  <br />
 
   Pick the end Range: <input type="text" id="domain"  />
   
