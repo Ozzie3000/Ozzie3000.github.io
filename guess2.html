@@ -51,7 +51,7 @@ body{
     position: absolute;
     margin-top: 40px;
     font-size: 24px;
-    color: blue;
+    color: #00ced1;
     font-family: Georgia;
     font-weight: 700;
   }
@@ -109,7 +109,7 @@ body{ width: 700px;}
   </ol>
   <br />
 
-  Pick the end Range: <input type="text" id="domain"  />
+  Pick the end Range: <input type="text" id="domain"  /> <span id="error_nan"></span>
   
   <br /><br />
   <input type="text" id="guess_1" class="guessed" placeholder="Guess 1:" />
@@ -121,7 +121,7 @@ body{ width: 700px;}
     <section></section>
   </div>
   <div id="special">
-    <section id="here0">Ok the end range is: </section>
+    <section id="here0">End range is: </section>
     <section id="picked"></section>
     <br />
     <section id="here1">Too high: </section>
@@ -210,11 +210,13 @@ body{ width: 700px;}
       ceiling = this.value;
       this.ceiling = Number(ceiling);
       if((isNaN(ceiling) == true) || (ceiling == "")){
+        $("#error_nan").text("please pick a NUMBERIC value");
         alert("please pick a NUMBERIC value");
       }else{
         $("#picked").delay(1500).text(this.value);
          mr_rando();
         $(this).fadeOut(1500);
+        $("#error_nan").fadeOut(1400);
         $("#guess_1, #guess_2, #guess_3").fadeIn(1500);
       }
       
