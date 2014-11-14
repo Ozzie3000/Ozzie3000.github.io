@@ -104,6 +104,8 @@ body{ width: 700px;}
 <body>
 
 	<input type="button" id="submit" value="Try again" onclick="location.reload();" />
+  <section class="lucky_num" id="lucky_num_id">The answer is: </section>
+  <input type="button" class="lucky_num" value="show it" onclick="showIt();">
 	<br />
 
   <h3>Guessing Game</h3>
@@ -140,8 +142,7 @@ body{ width: 700px;}
     <section id="here3">Too low: </section>
     <section id="too_low"></section>
     <br />
-    <section class="lucky_num hidden" id="lucky_num">The answer is: </section>
-    <input type="button" class="lucky_num" value="show it" onclick="showIt();">
+  
   </div>
 
   <footer class="ending">
@@ -170,7 +171,7 @@ body{ width: 700px;}
     }
 
     function showIt(){
-     document.getElementById("lucky_num").innerHTML = "The random number was : " + randoNum;
+     document.getElementById("lucky_num_id").innerHTML = "The random number was : " + randoNum;
     }
 
     function picker(){
@@ -228,7 +229,7 @@ body{ width: 700px;}
          mr_rando();
         $(this).fadeOut(1500);
         $("#error_nan").fadeOut(1400);
-        $("#guess_1, #guess_2, #guess_3").fadeIn(1500);
+        $("#guess_1").fadeIn(1500);
       }
       
     });
@@ -243,6 +244,7 @@ body{ width: 700px;}
         numberz();
         if (numberz() != true){
           $(this).delay(1000).fadeOut(1500);
+          $("#guess_2").fadeIn(1500);
         } 
       }
     });
@@ -256,6 +258,7 @@ body{ width: 700px;}
         numberz();
         if (numberz() != true){
           $(this).delay(1000).fadeOut(1500);
+          $("#guess_3").fadeIn(1500);
         } 
       }
     });
@@ -269,6 +272,8 @@ body{ width: 700px;}
         numberz();
         if (numberz() != true){
           $(this).delay(1000).fadeOut(1500);
+          
+          $(".lucky_num").show();
         } 
       }
     });
