@@ -271,9 +271,9 @@ body{ width: 700px;}
       }else{
         numberz();
         if (numberz() != true){
-          $(this).delay(1000).fadeOut(1500);
-          
+          $(this).delay(1000).fadeOut(1500); 
           $(".lucky_num").show();
+          $(".lucky_num").css("color", "red");
         } 
       }
     });
