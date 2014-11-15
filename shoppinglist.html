@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>JS and jQuery | prepend, append</title>
+<meta charset="utf-8">
+<meta name="description" content="HTML5 demos" />
+<script type="text/javascript">
+</script>
+<link rel="stylesheet" type="text/css" href="stylesheets/main1.css"></link>
+<style type="text/css"></style>
+</head>
+<body>
+	<input type="button" id="submit" class="btn" value="Refreshness" onclick="location.reload();" />
+	<br /><br />
+  <h1>.prepend() and .append()</h1>
+  <h2></h2>
+
+  <br />
+	<input type="text" id="beginning_add" value="add to top of the list" onblur="if(this.value=='')this.value='add to top of the list';" onfocus="if(this.value=='add to top of the list')this.value='';" tabindex="1" /><button id="sub_button1">Enter</button><br />
+	<input type="text" id="end_add" value="add to bottom of the list" onblur="if(this.value=='')this.value='add to bottom of the list';" onfocus="if(this.value=='add to bottom of the list')this.value='';" tabindex="2" /><button id="sub_button2">Enter</button><br />
+  <p>Grocery List</p>
+  <ol>
+  	<li>apples</li>
+  	<li>blueberries</li>
+  	<li>cantalop</li>
+  	<li>dates</li>
+  	<li>eggplant</li>
+  </ol>
+
+<script src="https://code.jquery.com/jquery-2.1.1.js"></script>
+<script>
+	$(document).ready(function(){
+		//$("h1").hide().slideDown(1000);
+	$("h2").hide();
+
+	$("#sub_button1").on("click", function(){
+		first_item = $("#beginning_add").val();
+		if ((first_item == "add to top of the list") ||(first_item == "")){
+			$("h2").show().text("Please enter something at least....");
+			$("#beginning_add").val("add to top of the list");
+		}else{
+			$("ol").prepend("<li>"+first_item+"</li>");
+			$("h2").text("").hide();
+			$("#beginning_add").val("");
+		};
+	});
+
+	$("#sub_button2").on("click", function(){
+		second_item = $("#end_add").val();
+		if ((second_item == "add to bottom of the list") ||(second_item == "")){
+			$("h2").show().text("Please enter something at least....");
+			$("#end_add").val("add to bottom of the list");
+		}else{
+			$("ol").append("<li>"+second_item+"</li>");
+			$("h2").text("").hide();
+			$("#end_add").val("");
+		};
+	});
+
+	});
+</script>
+</body>
+</html>
