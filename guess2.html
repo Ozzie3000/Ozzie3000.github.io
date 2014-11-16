@@ -121,9 +121,9 @@ body{ width: 700px;}
   Pick the end Range: <input type="text" id="domain"  /> <span id="error_nan"></span>
   
   <br /><br />
-  <input type="text" id="guess_1" class="guessed" placeholder="Guess 1:" />
-  <input type="text" id="guess_2" class="guessed" placeholder="Guess 2:" />
-  <input type="text" id="guess_3" class="guessed" placeholder="Guess 3:" />
+  <input type="text" class="guessed guess_1" placeholder="Guess 1:" /><button class="guess_1" id="guess_1">Submit</button>
+  <input type="text" class="guessed guess_2" placeholder="Guess 2:" /><button class="guess_2" id="guess_2">Submit</button>
+  <input type="text" class="guessed guess_3" placeholder="Guess 3:" /><button class="guess_3" id="guess_3">Submit</button>
 
   <br /><br />
   <div>
@@ -215,7 +215,7 @@ body{ width: 700px;}
 
   $(document).ready(function(){
     $(".lucky_num").hide();
-    $("#guess_1, #guess_2, #guess_3").hide();
+    $(".guess_1, .guess_2, .guess_3").hide();
 
 
     $("#domain").on("keyup change", function() {
@@ -229,13 +229,13 @@ body{ width: 700px;}
          mr_rando();
         $(this).fadeOut(1500);
         $("#error_nan").fadeOut(1400);
-        $("#guess_1").fadeIn(1500);
+        $(".guess_1").fadeIn(1500);
       }
       
     });
 
-    $("#guess_1").on("keyup change", function() {
-      g_1 = this.value;
+    $("#guess_1").on("click", function() {
+      g_1 = $(this).prev().val();
       this.g_1 = Number(g_1);
       if((isNaN(g_1) == true) || (g_1 == "")){
         alert("please pick a NUMERIC value");
@@ -243,13 +243,13 @@ body{ width: 700px;}
       }else{
         numberz();
         if (numberz() != true){
-          $(this).delay(1000).fadeOut(1500);
-          $("#guess_2").fadeIn(1500);
+          $(this).prev().andSelf().delay(500).fadeOut(1500);
+          $(".guess_2").fadeIn(1500);
         } 
       }
     });
-    $("#guess_2").on("keyup change", function() {
-      g_1 = this.value;
+    $("#guess_2").on("click", function() {
+      g_1 = $(this).prev().val();
       this.g_1 = Number(g_1);
       if((isNaN(g_1) == true) || (g_1 == "")){
         alert("please pick a NUMERIC value");
@@ -257,13 +257,13 @@ body{ width: 700px;}
       }else{
         numberz();
         if (numberz() != true){
-          $(this).delay(1000).fadeOut(1500);
-          $("#guess_3").fadeIn(1500);
+          $(this).prev().andSelf().delay(500).fadeOut(1500);
+          $(".guess_3").fadeIn(1500);
         } 
       }
     });
-    $("#guess_3").on("keyup change", function() {
-      g_1 = this.value;
+    $("#guess_3").on("click", function() {
+      g_1 = $(this).prev().val();
       this.g_1 = Number(g_1);
       if((isNaN(g_1) == true) || (g_1 == "")){
         alert("please pick a NUMERIC value");
@@ -271,7 +271,7 @@ body{ width: 700px;}
       }else{
         numberz();
         if (numberz() != true){
-          $(this).delay(1000).fadeOut(1500); 
+          $(this).prev().andSelf().delay(500).fadeOut(1500); 
           $(".lucky_num").show();
           $(".lucky_num").css("color", "red");
         } 
