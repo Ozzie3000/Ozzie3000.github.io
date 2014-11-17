@@ -191,6 +191,11 @@ body{ width: 700px;}
       if (i<20){
         var guessA = g_1;
         this.guessA = Number(guessA);
+        if (i >= 20) {
+          $(".guessed").hide();
+          $(".guess_2").remove();
+          $(".guess_3").remove();
+        };
         if((guessA == null) || (isNaN(guessA) == true)){
           document.getElementById("nan").innerHTML = "Please pick a Numeric value";
           x = true;
@@ -205,15 +210,14 @@ body{ width: 700px;}
           if(guessA == randoNum){
             document.getElementById("perfecto").innerHTML = "Dude you are the man/woman! "+randoNum+" was correct";
             i = 23;
-            return this.i;
+            $(".guessed").hide();
+            $(".guess_2").remove();
+            $(".guess_3").remove();
           }
         }
         i++;
       }
-      if (i >= 20) {
-        $(".guessed").hide();
-      };
-    }
+    };
 
 
   $(document).ready(function(){
@@ -256,6 +260,9 @@ body{ width: 700px;}
     $("#guess_2").on("click", function() {
       g_1 = $(this).prev().val();
       this.g_1 = Number(g_1);
+      if(i >21){
+        $(".guess_2 .guess_3").remove();
+      }
       if((isNaN(g_1) == true) || (g_1 == "")){
        //alert("please pick a NUMERIC value");
         $("#nan").text("Please pick a Numeric value");
