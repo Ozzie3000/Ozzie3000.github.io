@@ -89,6 +89,7 @@ body{
   .guess_1, .guess_2, .guess_3, #domain{
     margin-right: 5px;
   }
+  #nan, #error_nan{ color: red;}
   .ending{
     color: cyan; 
     font-family: sans-serif; 
@@ -230,7 +231,7 @@ body{ width: 700px;}
       this.ceiling = Number(ceiling);
       if((isNaN(ceiling) == true) || (ceiling == "")){
         $("#error_nan").text("please pick a NUMERIC value");
-        alert("please pick a NUMERIC value");
+        //alert("please pick a NUMERIC value");
       }else{
         $("#picked").delay(500).text(ceiling);
          mr_rando();
@@ -247,7 +248,7 @@ body{ width: 700px;}
       if((isNaN(g_1) == true) || (g_1 == "")){
         //alert("please pick a NUMERIC value");
         $("#nan").text("Please pick a Numeric value");
-        $("#nan").delay(1500).fadeOut(1500);
+        $("#nan").delay(2000).fadeOut(1500);
       }else{
         numberz();
         if (numberz() != true){
