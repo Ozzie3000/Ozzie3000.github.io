@@ -124,7 +124,7 @@ body{ width: 700px;}
   </ol>
   <br />
 
-  Pick the end Range: <input type="text" id="domain" tabindex="1" /><button id="dom_1"  tabindex="2">Submit</button> <span id="error_nan"></span>
+  Pick the end Range: <input type="text" id="domain" tabindex="1" /><button id="dom_1"  tabindex="2">Submit</button> <span id="error_nan"></span><span id="nan" style="margin-left:10px"></span>
   
   <br /><br />
   <input type="text" class="guessed guess_1" placeholder=" Guess 1:"  tabindex="3" /><button class="guess_1" id="guess_1"  tabindex="4" >Submit</button>
@@ -192,7 +192,7 @@ body{ width: 700px;}
         var guessA = g_1;
         this.guessA = Number(guessA);
         if((guessA == null) || (isNaN(guessA) == true)){
-          document.getElementById("here1").innerHTML = "Please pick a Numeric value";
+          document.getElementById("nan").innerHTML = "Please pick a Numeric value";
           x = true;
           return this.x;
         }else{
@@ -241,13 +241,15 @@ body{ width: 700px;}
       g_1 = $(this).prev().val();
       this.g_1 = Number(g_1);
       if((isNaN(g_1) == true) || (g_1 == "")){
-        alert("please pick a NUMERIC value");
-        document.getElementById("here1").innerHTML = "Please pick a Numeric value";
+        //alert("please pick a NUMERIC value");
+        $("#nan").text("Please pick a Numeric value");
+        $("#nan").delay(1500).fadeOut(1500);
       }else{
         numberz();
         if (numberz() != true){
           $(this).prev().andSelf().fadeOut(500);
           $(".guess_2").fadeIn(1500);
+          $("#nan").text("").show();
         } 
       }
     });
@@ -255,13 +257,15 @@ body{ width: 700px;}
       g_1 = $(this).prev().val();
       this.g_1 = Number(g_1);
       if((isNaN(g_1) == true) || (g_1 == "")){
-        alert("please pick a NUMERIC value");
-        document.getElementById("here1").innerHTML = "Please pick a Numeric value";
+       //alert("please pick a NUMERIC value");
+        $("#nan").text("Please pick a Numeric value");
+        $("#nan").delay(1500).fadeOut(1500);
       }else{
         numberz();
         if (numberz() != true){
           $(this).prev().andSelf().fadeOut(500);
           $(".guess_3").fadeIn(1500);
+          $("#nan").text("").show();
         } 
       }
     });
@@ -269,8 +273,9 @@ body{ width: 700px;}
       g_1 = $(this).prev().val();
       this.g_1 = Number(g_1);
       if((isNaN(g_1) == true) || (g_1 == "")){
-        alert("please pick a NUMERIC value");
-        document.getElementById("here1").innerHTML = "Please pick a Numeric value";
+        //alert("please pick a NUMERIC value");
+        $("#nan").text("Please pick a Numeric value");
+        $("#nan").delay(1500).fadeOut(1500);
       }else{
         numberz();
         if (numberz() != true){
