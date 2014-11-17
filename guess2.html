@@ -60,6 +60,11 @@ body{
     font-weight: 700;
     color: white;
   }
+  #picked, #too_low, #too_high{
+    font-family: 'Oswald', Georgia, sans-serif; 
+    font-weight: 700;
+    color: #4169e1;
+  }
   #b1{ margin-left: 20px;}
   #b1, #b2, #b3{float: left; display: inline-block; padding: 20px; }
   #b1, #b2{margin-right: 45px;}
@@ -80,6 +85,9 @@ body{
     -webkit-border-radius: 10px;
     -moz-border-radius: 10px;
     border-radius: 10px; 
+  }
+  .guess_1, .guess_2, .guess_3, #domain{
+    margin-right: 5px;
   }
   .ending{
     color: cyan; 
@@ -128,17 +136,13 @@ body{ width: 700px;}
     <section></section>
   </div>
   <div id="special">
-    <section id="here0">End range is: </section>
-    <section id="picked"></section>
+    <section id="here0">End range is: <span id="picked"></span></section>
     <br />
-    <section id="here1">Too high: </section>
-    <section id="too_high"></section>
+    <section id="here1">Too high: <span id="too_high"></span></section>
     <br />
-    <section id="here2">Just right: </section>
-    <section id="perfecto"></section>
+    <section id="here2">Just right: <span id="perfecto"></span></section>
     <br />
-    <section id="here3">Too low: </section>
-    <section id="too_low"></section>
+    <section id="here3">Too low: <span id="too_low"></span></section>
     <br />
   
   </div>
@@ -200,12 +204,13 @@ body{ width: 700px;}
           }
           if(guessA == randoNum){
             document.getElementById("perfecto").innerHTML = "Dude you are the man/woman! "+randoNum+" was correct";
-            i = 21;
+            i = 23;
+            return this.i;
           }
         }
         i++;
       }
-      if (i >+ 20) {
+      if (i >= 20) {
         $(".guessed").hide();
       };
     }
@@ -223,7 +228,7 @@ body{ width: 700px;}
         $("#error_nan").text("please pick a NUMERIC value");
         alert("please pick a NUMERIC value");
       }else{
-        $("#picked").delay(1500).text(ceiling);
+        $("#picked").delay(500).text(ceiling);
          mr_rando();
         $(this).prev().andSelf().fadeOut(1500);
         $("#error_nan").fadeOut(1400);
@@ -241,7 +246,7 @@ body{ width: 700px;}
       }else{
         numberz();
         if (numberz() != true){
-          $(this).prev().andSelf().delay(500).fadeOut(1500);
+          $(this).prev().andSelf().fadeOut(500);
           $(".guess_2").fadeIn(1500);
         } 
       }
@@ -255,7 +260,7 @@ body{ width: 700px;}
       }else{
         numberz();
         if (numberz() != true){
-          $(this).prev().andSelf().delay(500).fadeOut(1500);
+          $(this).prev().andSelf().fadeOut(500);
           $(".guess_3").fadeIn(1500);
         } 
       }
@@ -269,7 +274,7 @@ body{ width: 700px;}
       }else{
         numberz();
         if (numberz() != true){
-          $(this).prev().andSelf().delay(500).fadeOut(1500); 
+          $(this).prev().andSelf().fadeOut(500); 
           $(".lucky_num").show();
           $(".lucky_num").css("color", "red");
         } 
