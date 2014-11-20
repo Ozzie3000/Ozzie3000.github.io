@@ -16,6 +16,9 @@
     text-align: center;
     margin-top: 230px;
   }
+  ol li:hover{
+  	color: #19d2d5;
+  }
 </style>
 </head>
 <body>
@@ -24,6 +27,15 @@
   <h1>.prepend() and .append()</h1>
   <h2></h2>
 
+  <fieldset id="fieldset1" title="Click to hide. Double Click to reveal">
+    <legend> Instructions:  &nbsp; || &nbsp; (Click to hide. Double Click to reveal)</legend>
+    <ul id="hide_me">
+      <li>Add important stuff to the top.</li>
+      <li>Add less important stuff to the bottom.</li>
+      <li>Once your find your item click it to cross if off your list.</li>
+    </ul>
+  </fieldset>
+
   <br />
 	<input type="text" id="beginning_add" value="add to top of the list" onblur="if(this.value=='')this.value='add to top of the list';" onfocus="if(this.value=='add to top of the list')this.value='';" tabindex="1" /><button id="sub_button1">Enter</button><br />
 	<input type="text" id="end_add" value="add to bottom of the list" onblur="if(this.value=='')this.value='add to bottom of the list';" onfocus="if(this.value=='add to bottom of the list')this.value='';" tabindex="2" /><button id="sub_button2">Enter</button><br />
@@ -31,8 +43,8 @@
   <ol>
   	<li>apples</li>
   	<li>blueberries</li>
-  	<li>cantalop</li>
-  	<li>dates</li>
+  	<li>cantaloupe</li>
+  	<li>date palm</li>
   	<li>eggplant</li>
   </ol>
 
@@ -45,6 +57,23 @@
 	$(document).ready(function(){
 		//$("h1").hide().slideDown(1000);
 	$("h2").hide();
+
+	var hidder = $("ul");
+  $("#fieldset1").on({
+    "click" : function(){
+      hidder.fadeOut(2000);
+    }, //end click func
+    "dblclick" : function(){
+      hidder.fadeIn(1500);
+    } //end double click
+  });
+
+  $("ol").on("click", "li", function(){
+  	$(this).css("text-decoration","line-through");
+	});
+	$("ol").on("dblclick", "li", function(){
+  	$(this).css("text-decoration","none");
+	});
 
 	$("#sub_button1").on("click", function(){
 		first_item = $("#beginning_add").val();
@@ -70,9 +99,7 @@
 		};
 	});
 
-	$("ol").on("click", "li", function(){
-  	$(this).css("text-decoration","line-through");
-	});
+
 
 	});  //end doc ready
 </script>
