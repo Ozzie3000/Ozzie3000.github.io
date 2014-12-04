@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>JS and jQuery | img src</title>
+<meta charset="utf-8">
+<meta name="description" content="HTML5 demos" />
+<link rel="stylesheet" type="text/css" href="../stylesheets/main1.css"></link>
+<style type="text/css">
+	.buttonContainer {
+		float: left;
+		width: 10%;
+	}
+	.button {
+		border-radius: 6px;
+		background: lightgrey;
+		text-align: center;
+		font-size: .8em;
+		padding: 4px 0 1px 0;
+		margin-top: 10px;
+		min-width: 100px;
+	}
+	.button:hover {
+		color: white;
+		background-color: red;
+		cursor: pointer;
+	}
+	#change_me{
+		display: absolute;
+		display: table;
+		margin: auto;
+	}
+	.active{
+		background-color: green;
+		color: white;
+	}
+	img{
+		max-height: 600px;
+	}
+</style>
+<script src="https://code.jquery.com/jquery-2.1.1.js"></script>
+<script src="https://code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+<script type="text/javascript">
+	$(document).ready(function(){
+		//$("h1").hide().slideDown(1000);
+		$(".button").on("click", function(){
+			$(this).addClass("active");
+			$(this).siblings().removeClass("active");
+		});
+
+		$("#linky").on("click", function(){
+			$("#change_me").attr("src","http://img4.wikia.nocookie.net/__cb20121125020225/zelda/images/3/3c/Link_(Super_Smash_Bros._Brawl).png");
+		});
+		$("#zeldy").on("click", function(){
+			$("#change_me").attr("src","http://img1.wikia.nocookie.net/__cb20091226170420/zelda/images/0/0d/Princess_Zelda_(Twilight_Princess).png");
+		});
+
+	}); //end doc ready
+</script>
+</head>
+<body>
+	<input type="button" id="submit" class="btn" value="Refreshness" onclick="location.reload();" />
+	<br /><br />
+  <h1>Changing img src with jQuery</h1>
+
+  <div class="wrapper">
+		<div class="content">
+			<div class="main">
+				<div class="buttonContainer">
+					<div class="button" id="linky"><h2>Link</h2></div>
+					<div class="button" id="zeldy"><h2>Zelda</h2></div>
+				</div>
+			<img src="http://upload.wikimedia.org/wikipedia/commons/a/ae/Question_mark_3d.png" alt="Link or Zelda. Guy is Link" id="change_me">
+			</div>
+		</div>
+	</div>
+	  
+
+
+
+<script>
+</script>
+</body>
+</html>
