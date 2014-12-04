@@ -4,13 +4,13 @@
 <title>JS and jQuery | img src</title>
 <meta charset="utf-8">
 <meta name="description" content="HTML5 demos" />
-<!--
+
 <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css"></link>
--->
+
 <style type="text/css">
 body{ 
-    background-color: #eeeeee;
-    background: url("images/background-wallpapers-60.png"); 
+   /* background-color: #eeeeee;
+    background: url("images/background-wallpapers-60.png"); */
     background-attachment: fixed;
     background-size: cover;
     background-repeat: no-repeat;
@@ -19,20 +19,28 @@ body{
     font-size: 18px;
     padding: 0px 10px ;
   }
-	.buttonContainer {
+  #submit{
+  	font-size: .8em;
+  }
+  #submit:hover{
+  	opacity: 0.5;
+  	font-size: 1em;
+  }
+	.buttonContainer{
 		float: left;
 		width: 10%;
 	}
-	.button {
+	.btn_1{
+		color: blue;
 		border-radius: 6px;
 		background: lightgrey;
 		text-align: center;
-		font-size: .8em;
+		font-size: 1em;
 		padding: 4px 0 1px 0;
 		margin-top: 10px;
 		min-width: 100px;
 	}
-	.button:hover {
+	.btn_1:hover{
 		color: white;
 		background-color: red;
 		cursor: pointer;
@@ -52,17 +60,18 @@ body{
   .ending{
   color: cyan; 
   font-family: sans-serif; 
-  font-size: 16px; 
+  font-size: 18px; 
   text-align: center;
   margin-top: 50px;
   }
+  h2{ color: blue;}
 </style>
 <script src="https://code.jquery.com/jquery-2.1.1.js"></script>
 <script src="https://code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
 <script type="text/javascript">
 	$(document).ready(function(){
 		//$("h1").hide().slideDown(1000);
-		$(".button").on("click", function(){
+		$(".btn_1").on("click", function(){
 			$(this).addClass("active");
 			$(this).siblings().removeClass("active");
 		});
@@ -80,14 +89,14 @@ body{
 <body>
 	<input type="button" id="submit" class="btn" value="Refreshness" onclick="location.reload();" />
 	<br /><br />
-  <h1>Changing img src with jQuery</h1>
+  <h1>Changing img src with jQuery: <br />  Who is Link and who is Zelda</h1>
 
   <div class="wrapper">
 		<div class="content">
 			<div class="main">
 				<div class="buttonContainer">
-					<div class="button" id="linky"><h2>Link</h2></div>
-					<div class="button" id="zeldy"><h2>Zelda</h2></div>
+					<div class="btn_1" id="linky"><h2>Link</h2></div>
+					<div class="btn_1" id="zeldy"><h2>Zelda</h2></div>
 				</div>
 			<img src="http://upload.wikimedia.org/wikipedia/commons/a/ae/Question_mark_3d.png" alt="Link or Zelda. Guy is Link" id="change_me">
 			</div>
