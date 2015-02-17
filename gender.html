@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>JS and jQuery | change2</title>
+<meta charset="utf-8">
+<meta name="description" content="HTML5, js, jquery demos" />
+<link rel="stylesheet" type="text/css" href="../stylesheets/main1.css"></link>
+<style type="text/css">
+/*****
+  body{
+    margin: 0 auto;
+    display: table;
+    background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");
+    background-attachment: fixed;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    color: white;
+  }
+  ****/
+
+  h1:hover{
+    color: cyan;
+  }
+  .hide_me{
+    display: none;
+  }
+  #foot1{
+    color: #ff69b4;
+  }
+  #foot2{
+    color: #000000;
+  }
+  #foot3{
+    color: #d3d3d3;
+  }
+  #small_wrapper{
+    font-size: 28px;
+    font-family: "Georgia";
+    background-color: white;
+  }
+</style>
+<script src="https://code.jquery.com/jquery-2.1.1.js"></script>
+<script src="https://code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+<script type="text/javascript">
+	$(document).ready(function(){
+    $("#change_me").hide(0);
+    function getName(){
+      var str = prompt("Hello what is your name?");
+      if((str == "")||(str==null)){
+        getName();
+      };
+      name = str.toUpperCase();
+      //console.log(name);
+
+      $("#name").text(name);
+      if(name == "ASHLEY"){
+        $("#ashley").text(name);
+        $("#foot1").removeClass("hide_me");
+      };
+      if(name == "STEVEN"){
+        $("#steven").text(name);
+        $("#foot2").removeClass("hide_me");
+      };
+      if(name == "ANGEL"){
+        $("#angel").text(name);
+        $("#foot3").removeClass("hide_me");
+      };
+    }
+
+    setTimeout(function(){ getName();},1500);
+
+		$("#gender").change(function(){
+			if($(this).val() == "Please choose a gender"){
+				alert("Please select a gender from this menu!!!");
+			}
+///debug
+      if($(this).val() == "Male"){
+       // console.log("Male");
+        $("#change_me").attr("src","http://www.clker.com/cliparts/e/b/7/0/12362693641685578473ericlemerdy_man.svg.med.png");
+      }
+      if($(this).val() == "Female"){
+        //console.log("Female");
+        $("#change_me").attr("src","http://www.clker.com/cliparts/7/3/a/6/11949891621975732799aiga_toilet_women_.svg.med.png");
+      }
+      if($(this).val() == "Dalek"){
+        //console.log("Dalek");
+        $("#change_me").attr("src","http://static.comicvine.com/uploads/original/11113/111136721/3511908-7978883787-CutOu.jpg");
+      }
+      if($(this).val() == "Canananadian"){
+        //console.log("Canananadian");
+        $("#change_me").attr("src","https://pbs.twimg.com/profile_images/459043050761621505/26D4Qt5X.png");
+      }
+      $("#change_me").fadeIn(600);
+		});
+ 
+
+	}); //end doc ready
+</script>
+</head>
+<body>
+	<input type="button" id="submit" class="btn" value="Refreshness" onclick="location.reload();" />
+	<br /><br />
+  <h1><span id="name" title="Your name goes here if you can follow directions">Hello</span> choose your gender below.</h1>
+
+  <form>
+  	<select id="gender">
+  		<option value="Please choose a gender">-- Please choose a gender --</option>
+  		<option value="Male">Male</option>
+  		<option value="Female">Female</option>
+  		<option value="Dalek">Dalek</option>
+  		<option value="Canananadian">Canananadian</option>
+  	</select>
+  </form>
+  <hr>
+  <br /><br />
+
+  <div id="big_wrapper">
+    <div id="target">
+      <img id="change_me" src="#">
+    </div>
+  </div>
+
+
+  <div id="small_wrapper">
+    <div id="foot1" class="hide_me"><span id="ashley"></span> is loves Portland</div>
+    <div id="foot2" class="hide_me"><span id="steven"></span> is too close to work</div>
+    <div id="foot3" class="hide_me"><span id="angel"></span> is laughing right now</div>
+  </div>
+
+
+<script>
+</script>
+</body>
+</html>
