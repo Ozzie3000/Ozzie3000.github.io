@@ -65,27 +65,7 @@
 			<form id="mktoForm_1907"></form>
 			<script>MktoForms2.loadForm("//app-sj09.marketo.com", "559-LNN-604", 1907);</script>
 			<script>
-				function delete_cookie (name, path, domain) {
-				    document.cookie = name + "=" +
-				      ((path) ? ";path="+path:"")+
-				      ((domain)?";domain="+domain:"") +
-				      ";expires=Thu, 01 Jan 1970 00:00:01 GMT";
-				    }
-				 
-				function delete_marketo_cookie () {
-				    delete_cookie ( '_mkto_trk', '/', '.marketo.com');
-				    }
-/*
-				MktoForms2.whenRendered("//app-sj09.marketo.com", "559-LNN-604", 1907, function(form){
-				  //Add an onSuccess handler
-				  form.onSuccess(function(){
-				    //Call function to delete Marketo tracking cookie on form submission
-				    delete_marketo_cookie ();
-				  });
-				  console.log("function end in");
-				});
-				  console.log("function end out");
-				  */
+
 			</script>
 
 			<script>
