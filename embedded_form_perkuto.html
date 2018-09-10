@@ -29,6 +29,16 @@
 </script>
 <!-- pk sb M-->
 <script type="text/javascript">
+	function delete_cookie (name, path, domain) {
+	document.cookie = name + "=" +
+	  ((path) ? ";path="+path:"")+
+	  ((domain)?";domain="+domain:"") +
+	  ";expires=Thu, 01 Jan 1970 00:00:01 GMT";
+	}
+				 
+	function delete_marketo_cookie () {
+	  delete_cookie ( '_mkto_trk', '/', '.marketo.com');
+	}
 	delete_marketo_cookie();
 (function() {
   var didInit = false;
