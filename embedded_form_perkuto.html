@@ -80,10 +80,11 @@
 				//Third parameter is your Form ID
 				MktoForms2.loadForm("//app-sj09.marketo.com", "559-LNN-604", 1907, function(form){
 				//Add an onSuccess handler
-				form.onSuccess(function(){
-				//Call function to delete Marketo tracking cookie on form submission
-				  delete_marketo_cookie ();
-				});
+					form.onSuccess(function(){
+					//Call function to delete Marketo tracking cookie on form submission
+					  delete_marketo_cookie ();
+					  console.log("attemp to delete");
+					});
 				  console.log("function end in");
 				});
 				  console.log("function end out");
