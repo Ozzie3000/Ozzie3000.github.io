@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>HTML5 | JAVA, API, REST, Python</title>
+<meta charset="utf-8">
+<meta name="description" content="HTML5 demos" />
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.css">
+<link href='https://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
+<style type="text/css">
+	#troll{
+		height: 720px;
+		width:  1280px;
+	}
+	#divvy_3{
+		visibility: hidden;
+	}
+</style>
+<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.js"></script>
+<script>
+	$(document).ready(function(){
+		var firstDiv = $("#divvy_1");
+		var secondDiv = $("#divvy_2");
+		secondDiv.hide();
+
+		function hider(){
+			firstDiv.hide();
+		}
+		function showMe(){
+			secondDiv.show(2500);
+		}
+		setTimeout(function(){hider();},1500);
+		setTimeout(function(){showMe();},2000);
+
+	}); //end doc ready
+</script>
+</head>
+
+<body>
+    
+    <div>
+		<iframe src="http://marketosandbox.perkuto.com/ifram-lptest1.html"></iframe>
+	</div>
+	<div id="divvy_1">
+		<img src="http://themodernape.com/wp-content/uploads/2014/09/internet-troll.jpg" alt="angel" id="troll">
+	</div>
+
+	<br>
+
+	<div id="divvy_2">
+		<iframe width="1280" height="720" src="https://www.youtube.com/embed/HUTsdBpSWyA" frameborder="0" allowfullscreen></iframe>
+	</div>
+
+	
+
+
+<script>
+
+</script>
+<!--
+<script src="//app-sjst.marketo.com/js/forms2/js/forms2.min.js"></script>
+<form id="mktoForm_1024"></form>
+<script>MktoForms2.loadForm("//app-sjst.marketo.com", "165-YRG-627", 1024);</script>
+-->
+
+<!--
+<script src="//app-sjst.marketo.com/js/forms2/js/forms2.min.js"></script>
+<form id="mktoForm_1026"></form>
+<script>MktoForms2.loadForm("//app-sjst.marketo.com", "165-YRG-627", 1026);</script>
+-->
+
+<!--
+<script src="//app-sjst.marketo.com/js/forms2/js/forms2.min.js"></script>
+<form id="mktoForm_1027"></form>
+<script>MktoForms2.loadForm("//app-sjst.marketo.com", "165-YRG-627", 1027);</script>
+-->
+
+<!--
+<script src="//app-sjst.marketo.com/js/forms2/js/forms2.min.js"></script>
+<form id="mktoForm_1027"></form>
+<script>MktoForms2.loadForm("//app-sjst.marketo.com", "165-YRG-627", 1028);</script>
+-->
+
+</body>
+</html>
