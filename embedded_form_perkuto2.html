@@ -65,7 +65,96 @@
 			<h1>Footer: text</h1>
 		</div>
 	</div>
- 
+<script>
+(function() {
+    var config = {
+    "nolog": true,
+    "stageMappings": {
+        "initial": [
+            {"when": "{referrer.domain}",
+                "matches": "{internal.domain}",
+                "skip": "RC_First_Channel__c"
+            }, {
+                "when": "{referrer.domain}",
+                "matches": "{internal.domain}",
+                "skip": "RC_First_Medium__c"
+            }, {
+                "when": "{referrer.domain}",
+                "matches": "{internal.domain}",
+                "skip": "RC_First_Source_Detail__c"
+            }],
+            "rolling": [{
+                "when": "{referrer.domain}",
+                "matches": "{internal.domain}",
+                "skip": "RC_Acquisition_Channel__c"
+            }, {
+                "when": "{referrer.domain}",
+                "matches": "{internal.domain}",
+                "skip": "RC_Acquisition_Medium__c"
+            }, {
+                "when": "{referrer.domain}",
+                "matches": "{internal.domain}",
+                "skip": "RC_Acquisition_Source_Detail__c"
+            }],
+            "recent": [{
+                "when": "{referrer.domain}",
+                "matches": "{internal.domain}",
+                "skip": "RC_Recent_Channel__c"
+            }, {
+                "when": "{referrer.domain}",
+                "matches": "{internal.domain}",
+                "skip": "RC_Recent_Medium__c"
+            }, {
+                "when": "{referrer.domain}",
+                "matches": "{internal.domain}",
+                "skip": "RC_Recent_Source_Detail__c"
+            }]
+        },
+        "nameMappings": {
+            "RC_First_Medium__c": "utmMediumFT",
+            "RC_First_Source__c": "utmSourceFT",
+            "RC_First_Campaign__c": "utmCampaignFT",
+            "RC_First_Term__c": "utmTermFT",
+            "RC_First_Content__c": "utmContentFT",
+            "RC_First_Source_Detail__c": "webReferrerFT",
+            "RC_Acquisition_Medium__c": "utmMediumAC",
+            "RC_Acquisition_Source__c": "utmSourceAC",
+            "RC_Acquisition_Campaign__c": "utmCampaignAC",
+            "RC_Acquisition_Term__c": "utmTermAC",
+            "RC_Acquisition_Content__c": "utmContentAC",
+            "RC_Acquisition_Source_Detail__c": "webReferrerAC",
+            "RC_Recent_Medium__c": "utmMediumMR",
+            "RC_Recent_Source__c": "utmSourceMR",
+            "RC_Recent_Campaign__c": "utmCampaignMR",
+            "RC_Recent_Term__c": "utmTermMR",
+            "RC_Recent_Content__c": "utmContentMR",
+            "RC_Recent_Source_Detail__c": "webReferrerMR"
+        },
+        "cookies": {
+            "useCompatibleNames": false
+        },
+        "session": {
+            "duration": {
+                "recent": 30
+ },
+            "internalDomains": {
+                "alternates": [ 
+                ]
+            },
+            "prioritizeNonDirect": {
+                "recent": true
+            }
+        }}
+        var el = document.createElement('script');
+    
+    el.setAttribute('src', 'https://du4pg90j806ok.cloudfront.net/js/touch-history/dist/conversionpath-0.3.9.min.js');
+    
+    el.setAttribute('data-simo-script', 'My Script');
+    el.innerHTML = JSON.stringify(config);
+    
+    document.body.appendChild(el);
+})();
+</script> 
 
 <br><br><br>
 <script>
