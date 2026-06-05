@@ -3,152 +3,517 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tic-Tac-Toe</title>
+    <title>Tic Tac Toe with AI and Score Tracking</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            background-color: #f0f2f5;
+            padding: 20px;
+            box-sizing: border-box;
         }
-        h1 { color: #333; margin-bottom: 20px; }
-        .status {
-            margin-bottom: 20px;
-            font-size: 1.2rem;
+        h1 {
+            color: #333;
+            margin: 0 0 15px 0;
+        }
+        .mode-container, .score-container, .settings-container {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .score-box {
+            font-weight: bold;
+            font-size: 1.1rem;
             color: #555;
-            height: 1.5em;
+        }
+        .settings-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .settings-group label {
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="range"] {
+            width: 150px;
+        }
+        .difficulty-value {
+            font-weight: bold;
+            color: #007bff;
+            min-width: 30px;
+        }
+        .symbol-selector {
+            display: flex;
+            gap: 10px;
+        }
+        .symbol-btn {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            background-color: #e9ecef;
+            color: #333;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .symbol-btn.selected {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .symbol-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         .board {
             display: grid;
             grid-template-columns: repeat(3, 100px);
             grid-template-rows: repeat(3, 100px);
-            gap: 5px;
+            gap: 10px;
             background-color: #333;
-            padding: 5px;
+            padding: 10px;
             border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
         }
         .cell {
             background-color: #fff;
+            border-radius: 5px;
+            font-size: 3rem;
+            font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3rem;
-            font-weight: bold;
             cursor: pointer;
+            transition: background-color 0.2s;
             user-select: none;
         }
-        .cell:hover { background-color: #e0e0e0; }
-        .cell.x { color: #e74c3c; }
-        .cell.o { color: #3498db; }
-        .reset-btn {
-            margin-top: 20px;
+        .cell:hover {
+            background-color: #e0e0e0;
+        }
+        .cell.taken {
+            cursor: not-allowed;
+        }
+        .info {
+            margin-top: 15px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #444;
+            height: 35px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        button {
             padding: 10px 20px;
             font-size: 1rem;
-            cursor: pointer;
-            background-color: #333;
+            font-weight: bold;
+            background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.2s;
         }
-        .reset-btn:hover { background-color: #555; }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button.secondary {
+            background-color: #6c757d;
+        }
+        button.secondary:hover {
+            background-color: #5a6268;
+        }
+        .active-mode {
+            background-color: #28a745 !important;
+        }
+        #fireworks-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Tic-Tac-Toe</h1>
-    <div class="status" id="status">Player X's Turn</div>
-    <div class="board" id="board">
-        <div class="cell" data-index="0"></div>
-        <div class="cell" data-index="1"></div>
-        <div class="cell" data-index="2"></div>
-        <div class="cell" data-index="3"></div>
-        <div class="cell" data-index="4"></div>
-        <div class="cell" data-index="5"></div>
-        <div class="cell" data-index="6"></div>
-        <div class="cell" data-index="7"></div>
-        <div class="cell" data-index="8"></div>
+    <h1>Tic Tac Toe- Can you beat Oz's Ai at level 10?</h1>
+
+    <!-- Mode Selection -->
+    <div class="mode-container">
+        <button id="btn-vs" class="active-mode" onclick="setMode('ai')">vs AI (Computer)</button>
+        <button id="btn-local" onclick="setMode('local')">2-Player (Local)</button>
     </div>
-    <button class="reset-btn" id="resetBtn">Restart Game</button>
+
+    <!-- Settings (AI difficulty and symbol selection) -->
+    <div class="settings-container" id="ai-settings" style="display: none;">
+        <div class="settings-group">
+            <label>Difficulty:</label>
+            <input type="range" id="difficulty-slider" min="1" max="10" value="5" oninput="updateDifficulty(this.value)">
+            <span class="difficulty-value" id="difficulty-display">5</span>
+        </div>
+        <div class="settings-group">
+            <label>You are:</label>
+            <div class="symbol-selector">
+                <button class="symbol-btn selected" id="btn-x" onclick="setPlayerSymbol('X')">X</button>
+                <button class="symbol-btn" id="btn-o" onclick="setPlayerSymbol('O')">O</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scoreboard -->
+    <div class="score-container">
+        <div class="score-box" id="score-x">Player X: 0</div>
+        <div class="score-box" id="score-draw">Draws: 0</div>
+        <div class="score-box" id="score-o">Player O: 0</div>
+    </div>
+
+    <!-- Game Board -->
+    <div class="board" id="board">
+        <div class="cell" onclick="makeMove(0)" id="cell-0"></div>
+        <div class="cell" onclick="makeMove(1)" id="cell-1"></div>
+        <div class="cell" onclick="makeMove(2)" id="cell-2"></div>
+        <div class="cell" onclick="makeMove(3)" id="cell-3"></div>
+        <div class="cell" onclick="makeMove(4)" id="cell-4"></div>
+        <div class="cell" onclick="makeMove(5)" id="cell-5"></div>
+        <div class="cell" onclick="makeMove(6)" id="cell-6"></div>
+        <div class="cell" onclick="makeMove(7)" id="cell-7"></div>
+        <div class="cell" onclick="makeMove(8)" id="cell-8"></div>
+    </div>
+
+    <div class="info" id="status">Select your symbol to start</div>
+
+    <div class="controls">
+        <button onclick="resetGame(false)">Next Round</button>
+        <button class="secondary" onclick="resetGame(true)">Reset All Scores</button>
+    </div>
+
+    <canvas id="fireworks-canvas"></canvas>
 
     <script>
-        const cells = document.querySelectorAll('.cell');
-        const statusText = document.getElementById('status');
-        const resetBtn = document.getElementById('resetBtn');
-        
-        let currentPlayer = 'X';
-        let gameState = ["", "", "", "", "", "", "", "", ""];
-        let gameActive = true;
+        let board = ["", "", "", "", "", "", "", "", ""];
+        let currentPlayer = "X";
+        let gameActive = false;
+        let gameMode = "ai";
+        let difficulty = 5;
+        let playerSymbol = "X";
+        let aiSymbol = "O";
+        let gameStarted = false;
+
+        let scores = { X: 0, O: 0, draws: 0 };
 
         const winningConditions = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-            [0, 4, 8], [2, 4, 6]             // Diagonals
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
         ];
 
-        function handleCellClick(event) {
-            const clickedCell = event.target;
-            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
+        // Fireworks setup
+        const canvas = document.getElementById('fireworks-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particles = [];
 
-            if (gameState[clickedCellIndex] !== "" || !gameActive) {
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        function setMode(mode) {
+            if (gameMode !== mode) {
+                gameMode = mode;
+                document.getElementById('btn-vs').classList.toggle('active-mode', mode === 'ai');
+                document.getElementById('btn-local').classList.toggle('active-mode', mode === 'local');
+                document.getElementById('ai-settings').style.display = mode === 'ai' ? 'flex' : 'none';
+                resetGame(true);
+            }
+        }
+
+        function updateDifficulty(value) {
+            difficulty = parseInt(value);
+            document.getElementById('difficulty-display').innerText = difficulty;
+        }
+
+        function setPlayerSymbol(symbol) {
+            if (gameStarted) return;
+            playerSymbol = symbol;
+            aiSymbol = symbol === "X" ? "O" : "X";
+            document.getElementById('btn-x').classList.toggle('selected', symbol === 'X');
+            document.getElementById('btn-o').classList.toggle('selected', symbol === 'O');
+            startGame();
+        }
+
+        function startGame() {
+            gameStarted = true;
+            gameActive = true;
+            currentPlayer = "X";
+            board = ["", "", "", "", "", "", "", "", ""];
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.innerText = "";
+                cell.classList.remove('taken');
+            });
+            document.getElementById('btn-x').disabled = true;
+            document.getElementById('btn-o').disabled = true;
+            updateScoreboard();
+            
+            if (playerSymbol === "O") {
+                document.getElementById("status").innerText = "AI is thinking...";
+                setTimeout(aiMove, 600);
+            } else {
+                document.getElementById("status").innerText = "Your turn (X)";
+            }
+        }
+
+        function updateScoreboard() {
+            if (gameMode === 'ai') {
+                document.getElementById('score-x').innerText = `Player X ${playerSymbol === 'X' ? '(You)' : '(AI)'}: ${scores.X}`;
+                document.getElementById('score-o').innerText = `Player O ${playerSymbol === 'O' ? '(You)' : '(AI)'}: ${scores.O}`;
+            } else {
+                document.getElementById('score-x').innerText = `Player X: ${scores.X}`;
+                document.getElementById('score-o').innerText = `Player O: ${scores.O}`;
+            }
+            document.getElementById('score-draw').innerText = `Draws: ${scores.draws}`;
+        }
+
+        function makeMove(index) {
+            if (board[index] === "" && gameActive && (gameMode === 'local' || currentPlayer === playerSymbol)) {
+                executeMove(index);
+                
+                if (gameActive && gameMode === "ai" && currentPlayer === aiSymbol) {
+                    setTimeout(aiMove, 600);
+                }
+            }
+        }
+
+        function executeMove(index) {
+            board[index] = currentPlayer;
+            document.getElementById(`cell-${index}`).innerText = currentPlayer;
+            document.getElementById(`cell-${index}`).classList.add('taken');
+            
+            if (checkResult()) {
+                return;
+            }
+            
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            updateStatusMessage();
+        }
+
+        function updateStatusMessage() {
+            if (!gameActive) return;
+            if (gameMode === 'ai') {
+                if (currentPlayer === aiSymbol) {
+                    document.getElementById("status").innerText = "AI is thinking...";
+                } else {
+                    document.getElementById("status").innerText = `Your turn (${playerSymbol})`;
+                }
+            } else {
+                document.getElementById("status").innerText = `Player ${currentPlayer}'s Turn`;
+            }
+        }
+
+        function aiMove() {
+            if (!gameActive) return;
+
+            // Random chance based on difficulty
+            const randomChance = (11 - difficulty) / 100;
+            if (Math.random() < randomChance) {
+                // Make random move
+                let availableCells = [];
+                board.forEach((cell, idx) => {
+                    if (cell === "") availableCells.push(idx);
+                });
+                if (availableCells.length > 0) {
+                    const move = availableCells[Math.floor(Math.random() * availableCells.length)];
+                    executeMove(move);
+                }
                 return;
             }
 
-            handleCellPlayed(clickedCell, clickedCellIndex);
-            handleResultValidation();
+            // Strategic moves
+            let move = findWinningMove(aiSymbol);
+            
+            if (move === null) {
+                move = findWinningMove(playerSymbol);
+            }
+            
+            if (move === null && board[4] === "") {
+                move = 4;
+            }
+            
+            if (move === null) {
+                let availableCells = [];
+                board.forEach((cell, idx) => {
+                    if (cell === "") availableCells.push(idx);
+                });
+                if (availableCells.length > 0) {
+                    move = availableCells[Math.floor(Math.random() * availableCells.length)];
+                }
+            }
+
+            if (move !== null) {
+                executeMove(move);
+            }
         }
 
-        function handleCellPlayed(clickedCell, clickedCellIndex) {
-            gameState[clickedCellIndex] = currentPlayer;
-            clickedCell.textContent = currentPlayer;
-            clickedCell.classList.add(currentPlayer.toLowerCase());
+        function findWinningMove(player) {
+            for (let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                if (board[a] === player && board[b] === player && board[c] === "") return c;
+                if (board[a] === player && board[c] === player && board[b] === "") return b;
+                if (board[b] === player && board[c] === player && board[a] === "") return a;
+            }
+            return null;
         }
 
-        function handleResultValidation() {
+        function checkResult() {
             let roundWon = false;
             for (let i = 0; i < winningConditions.length; i++) {
                 const [a, b, c] = winningConditions[i];
-                if (gameState[a] === "" || gameState[b] === "" || gameState[c] === "") {
-                    continue;
-                }
-                if (gameState[a] === gameState[b] && gameState[b] === gameState[c]) {
+                if (board[a] !== "" && board[a] === board[b] && board[b] === board[c]) {
                     roundWon = true;
                     break;
                 }
             }
 
             if (roundWon) {
-                statusText.textContent = `Player ${currentPlayer} Wins!`;
+                if (gameMode === 'ai' && currentPlayer === playerSymbol) {
+                    document.getElementById("status").innerText = "🎉 You Win!";
+                    triggerFireworks();
+                } else if (gameMode === 'ai' && currentPlayer === aiSymbol) {
+                    document.getElementById("status").innerText = "AI Wins!";
+                } else {
+                    document.getElementById("status").innerText = `Player ${currentPlayer} Wins!`;
+                }
+                scores[currentPlayer]++;
+                updateScoreboard();
                 gameActive = false;
-                return;
+                return true;
             }
 
-            if (!gameState.includes("")) {
-                statusText.textContent = "Draw!";
+            let roundDraw = !board.includes("");
+            if (roundDraw) {
+                document.getElementById("status").innerText = "Draw!";
+                scores.draws++;
+                updateScoreboard();
                 gameActive = false;
-                return;
+                return true;
             }
-
-            currentPlayer = currentPlayer === "X" ? "O" : "X";
-            statusText.textContent = `Player ${currentPlayer}'s Turn`;
+            return false;
         }
 
-        function restartGame() {
+        function resetGame(resetAllScores = false) {
+            if (resetAllScores) {
+                scores = { X: 0, O: 0, draws: 0 };
+                gameStarted = false;
+                document.getElementById('btn-x').disabled = false;
+                document.getElementById('btn-o').disabled = false;
+                document.getElementById("status").innerText = "Select your symbol to start";
+                playerSymbol = "X";
+                aiSymbol = "O";
+                document.getElementById('btn-x').classList.add('selected');
+                document.getElementById('btn-o').classList.remove('selected');
+            }
+            board = ["", "", "", "", "", "", "", "", ""];
+            gameActive = gameStarted;
             currentPlayer = "X";
-            gameState = ["", "", "", "", "", "", "", "", ""];
-            gameActive = true;
-            statusText.textContent = `Player ${currentPlayer}'s Turn`;
-            cells.forEach(cell => {
-                cell.textContent = "";
-                cell.classList.remove('x', 'o');
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.innerText = "";
+                cell.classList.remove('taken');
             });
+
+            if (gameStarted) {
+                if (playerSymbol === "O") {
+                    document.getElementById("status").innerText = "AI is thinking...";
+                    setTimeout(aiMove, 600);
+                } else {
+                    document.getElementById("status").innerText = `Your turn (${playerSymbol})`;
+                }
+            }
+            updateScoreboard();
         }
 
-        cells.forEach(cell => cell.addEventListener('click', handleCellClick));
-        resetBtn.addEventListener('click', restartGame);
+        // Fireworks
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 5 + 2;
+                this.speedX = (Math.random() - 0.5) * 12;
+                this.speedY = (Math.random() - 0.5) * 12;
+                this.decay = Math.random() * 0.015 + 0.005;
+                this.alpha = 1;
+                this.color = `hsl(${Math.random() * 60 + 30}, 100%, 50%)`;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.speedY += 0.2; // gravity
+                this.alpha -= this.decay;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function triggerFireworks() {
+            const boardRect = document.getElementById('board').getBoundingClientRect();
+            const centerX = boardRect.left + boardRect.width / 2;
+            const centerY = boardRect.top + boardRect.height / 2;
+
+            // Create multiple bursts
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    for (let j = 0; j < 30; j++) {
+                        particles.push(new Particle(centerX, centerY));
+                    }
+                }, i * 100);
+            }
+
+            animateFireworks();
+        }
+
+        function animateFireworks() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw(ctx);
+
+                if (particles[i].alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            if (particles.length > 0) {
+                requestAnimationFrame(animateFireworks);
+            }
+        }
+
+        // Initialize
+        updateScoreboard();
     </script>
 </body>
 </html>
