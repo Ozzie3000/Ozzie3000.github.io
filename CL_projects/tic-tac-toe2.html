@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tic Tac Toe</title>
+    <title>Tic Tac Toe with AI and Score Tracking</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -12,12 +12,29 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
         h1 {
             color: #333;
-            margin-bottom: 20px;
+            margin: 0 0 15px 0;
+        }
+        .mode-container, .score-container {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .score-box {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #555;
         }
         .board {
             display: grid;
@@ -39,6 +56,7 @@
             justify-content: center;
             cursor: pointer;
             transition: background-color 0.2s;
+            user-select: none;
         }
         .cell:hover {
             background-color: #e0e0e0;
@@ -47,30 +65,60 @@
             cursor: not-allowed;
         }
         .info {
-            margin-top: 20px;
-            font-size: 1.5rem;
+            margin-top: 15px;
+            font-size: 1.4rem;
             font-weight: bold;
-            color: #555;
+            color: #444;
+            height: 35px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
         }
         button {
-            margin-top: 20px;
             padding: 10px 20px;
             font-size: 1rem;
+            font-weight: bold;
             background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.2s;
         }
         button:hover {
             background-color: #0056b3;
+        }
+        button.secondary {
+            background-color: #6c757d;
+        }
+        button.secondary:hover {
+            background-color: #5a6268;
+        }
+        .active-mode {
+            background-color: #28a745 !important;
         }
     </style>
 </head>
 <body>
 
     <h1>Tic Tac Toe</h1>
+
+    <!-- Mode Selection -->
+    <div class="mode-container">
+        <button id="btn-vs" class="active-mode" onclick="setMode('ai')">vs AI (Computer)</button>
+        <button id="btn-local" onclick="setMode('local')">2-Player (Local)</button>
+    </div>
+
+    <!-- Scoreboard -->
+    <div class="score-container">
+        <div class="score-box" id="score-x">Player X (You): 0</div>
+        <div class="score-box" id="score-draw">Draws: 0</div>
+        <div class="score-box" id="score-o">Player O (AI): 0</div>
+    </div>
+
+    <!-- Game Board -->
     <div class="board" id="board">
         <div class="cell" onclick="makeMove(0)" id="cell-0"></div>
         <div class="cell" onclick="makeMove(1)" id="cell-1"></div>
@@ -84,73 +132,142 @@
     </div>
 
     <div class="info" id="status">Player X's Turn</div>
-    <button onclick="resetGame()">Restart Game</button>
+
+    <div class="controls">
+        <button onclick="resetGame(false)">Next Round</button>
+        <button class="secondary" onclick="resetGame(true)">Reset All Scores</button>
+    </div>
 
     <script>
         let board = ["", "", "", "", "", "", "", "", ""];
         let currentPlayer = "X";
         let gameActive = true;
+        let gameMode = "ai"; // 'ai' or 'local'
+
+        // Scores
+        let scores = { X: 0, O: 0, draws: 0 };
 
         const winningConditions = [
-            [0, 1, 2],
-            [3, 4, 5],
-            [6, 7, 8],
-            [0, 3, 6],
-            [1, 4, 7],
-            [2, 5, 8],
-            [0, 4, 8],
-            [2, 4, 6]
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+            [0, 4, 8], [2, 4, 6] // Diagonals
         ];
 
-        function makeMove(index) {
-            if (board[index] === "" && gameActive) {
-                board[index] = currentPlayer;
-                document.getElementById(`cell-${index}`).innerText = currentPlayer;
-                document.getElementById(`cell-${index}`).classList.add('taken');
-                
-                checkResult();
-                changePlayer();
+        function setMode(mode) {
+            if (gameMode !== mode) {
+                gameMode = mode;
+                document.getElementById('btn-vs').classList.toggle('active-mode', mode === 'ai');
+                document.getElementById('btn-local').classList.toggle('active-mode', mode === 'local');
+                resetGame(true); // Reset scoreboard when switching modes
             }
         }
 
-        function changePlayer() {
-            if (gameActive) {
-                currentPlayer = currentPlayer === "X" ? "O" : "X";
-                document.getElementById("status").innerText = `Player ${currentPlayer}'s Turn`;
+        function updateScoreboard() {
+            const labelO = gameMode === 'ai' ? 'Player O (AI)' : 'Player O';
+            const labelX = gameMode === 'ai' ? 'Player X (You)' : 'Player X';
+            
+            document.getElementById('score-x').innerText = `${labelX}: ${scores.X}`;
+            document.getElementById('score-o').innerText = `${labelO}: ${scores.O}`;
+            document.getElementById('score-draw').innerText = `Draws: ${scores.draw}`;
+        }
+
+        function makeMove(index) {
+            if (board[index] === "" && gameActive && (currentPlayer === "X" || gameMode === "local")) {
+                executeMove(index);
+                
+                // Trigger AI if game is still going and it is AI's turn
+                if (gameActive && gameMode === "ai" && currentPlayer === "O") {
+                    setTimeout(aiMove, 400); // Small delay so AI feels natural
+                }
             }
+        }
+
+        function executeMove(index) {
+            board[index] = currentPlayer;
+            document.getElementById(`cell-${index}`).innerText = currentPlayer;
+            document.getElementById(`cell-${index}`).classList.add('taken');
+            
+            if (checkResult()) {
+                return;
+            }
+            
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            document.getElementById("status").innerText = gameMode === "ai" && currentPlayer === "O" ? "AI is thinking..." : `Player ${currentPlayer}'s Turn`;
+        }
+
+        function aiMove() {
+            if (!gameActive) return;
+
+            // 1. Can AI win right now?
+            let move = findWinningMove("O");
+            
+            // 2. Can AI block Player X from winning?
+            if (move === null) {
+                move = findWinningMove("X");
+            }
+            
+            // 3. Take center if open
+            if (move === null && board[4] === "") {
+                move = 4;
+            }
+            
+            // 4. Take random available spot
+            if (move === null) {
+                let availableCells = [];
+                board.forEach((cell, idx) => {
+                    if (cell === "") availableCells.push(idx);
+                });
+                if (availableCells.length > 0) {
+                    move = availableCells[Math.floor(Math.random() * availableCells.length)];
+                }
+            }
+
+            if (move !== null) {
+                executeMove(move);
+            }
+        }
+
+        function findWinningMove(player) {
+            for (let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                if (board[a] === player && board[b] === player && board[c] === "") return c;
+                if (board[a] === player && board[c] === player && board[b] === "") return b;
+                if (board[b] === player && board[c] === player && board[a] === "") return a;
+            }
+            return null;
         }
 
         function checkResult() {
             let roundWon = false;
-            for (let i = 0; i <= 7; i++) {
-                const winCondition = winningConditions[i];
-                let a = board[winCondition[0]];
-                let b = board[winCondition[1]];
-                let c = board[winCondition[2]];
-                if (a === '' || b === '' || c === '') {
-                    continue;
-                }
-                if (a === b && b === c) {
+            for (let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                if (board[a] !== "" && board[a] === board[b] && board[b] === board[c]) {
                     roundWon = true;
                     break;
                 }
             }
 
             if (roundWon) {
-                document.getElementById("status").innerText = `Player ${currentPlayer} Wins!`;
+                const label = gameMode === "ai" && currentPlayer === "O" ? "AI Wins!" : `Player ${currentPlayer} Wins!`;
+                document.getElementById("status").innerText = label;
+                scores[currentPlayer]++;
+                updateScoreboard();
                 gameActive = false;
-                return;
+                return true;
             }
 
             let roundDraw = !board.includes("");
             if (roundDraw) {
                 document.getElementById("status").innerText = "Draw!";
+                scores.draw++;
+                updateScoreboard();
                 gameActive = false;
-                return;
+                return true;
             }
+            return false;
         }
 
-        function resetGame() {
+        function resetGame(resetAllScores = false) {
             board = ["", "", "", "", "", "", "", "", ""];
             gameActive = true;
             currentPlayer = "X";
@@ -159,7 +276,15 @@
                 cell.innerText = "";
                 cell.classList.remove('taken');
             });
+
+            if (resetAllScores) {
+                scores = { X: 0, O: 0, draws: 0 };
+            }
+            updateScoreboard();
         }
+
+        // Initialize score labels correctly on load
+        updateScoreboard();
     </script>
 </body>
 </html>
