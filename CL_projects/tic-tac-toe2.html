@@ -168,7 +168,7 @@
             
             document.getElementById('score-x').innerText = `${labelX}: ${scores.X}`;
             document.getElementById('score-o').innerText = `${labelO}: ${scores.O}`;
-            document.getElementById('score-draw').innerText = `Draws: ${scores.draw}`;
+            document.getElementById('score-draw').innerText = `Draws: ${scores.draws}`;
         }
 
         function makeMove(index) {
@@ -259,7 +259,7 @@
             let roundDraw = !board.includes("");
             if (roundDraw) {
                 document.getElementById("status").innerText = "Draw!";
-                scores.draw++;
+                scores.draws++;
                 updateScoreboard();
                 gameActive = false;
                 return true;
