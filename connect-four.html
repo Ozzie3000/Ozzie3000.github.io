@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Where Oz MOPs meets Connect Four: Human vs AI</title>
     <style>
         :root {
@@ -10,7 +10,18 @@
             --empty-square: #111827;
             --player-red: #dc2626;
             --ai-yellow: #eab308;
+            
+            /* Responsive sizes */
+            --cell-size: clamp(50px, 12vw, 90px);
+            --token-size: calc(var(--cell-size) * 0.85);
+            --gap-size: clamp(5px, 2vw, 8px);
+            --padding-board: clamp(8px, 2vw, 12px);
         }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #1a1a1a;
@@ -21,72 +32,119 @@
             justify-content: center;
             min-height: 100vh;
             margin: 0;
+            padding: clamp(12px, 4vw, 20px);
             overflow-x: hidden;
         }
-        h1 { margin-bottom: 5px; font-weight: 400; }
+
+        h1 {
+            margin: clamp(10px, 3vw, 20px) 0 clamp(8px, 2vw, 15px) 0;
+            font-weight: 400;
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            text-align: center;
+            line-height: 1.2;
+        }
+
         #controls {
-            margin-bottom: 22.5px;
+            margin-bottom: clamp(15px, 4vw, 22.5px);
             background: #2a2a2a;
-            padding: 12px 20px;
+            padding: clamp(12px, 3vw, 16px);
             border-radius: 8px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: clamp(10px, 3vw, 12px);
             align-items: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 600px;
         }
+
         #scoreboard {
             display: flex;
-            gap: 30px;
+            gap: clamp(15px, 5vw, 30px);
             background: #1c1c1c;
-            padding: 8px 24px;
+            padding: clamp(8px, 2vw, 12px) clamp(16px, 4vw, 24px);
             border-radius: 20px;
             border: 1px solid #444;
-            font-size: 1.1rem;
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
             font-weight: bold;
+            flex-wrap: wrap;
+            justify-content: center;
         }
+
         .score-box {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            white-space: nowrap;
         }
+
         .score-red { color: var(--player-red); }
         .score-yellow { color: var(--ai-yellow); }
+
         .slider-container {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: clamp(8px, 2vw, 10px);
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
         }
-        #status {
-            font-size: 1.2rem;
+
+        label {
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            white-space: nowrap;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            min-width: 120px;
+            max-width: 250px;
+            height: 6px;
+            cursor: pointer;
+        }
+
+        #diff-val {
             font-weight: bold;
-            height: 25px;
+            min-width: 25px;
+            text-align: center;
         }
+
+        #status {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            font-weight: bold;
+            height: auto;
+            min-height: 25px;
+            text-align: center;
+        }
+
         #board {
             display: grid;
-            grid-template-columns: repeat(7, 90px);
-            grid-template-rows: repeat(6, 90px);
+            grid-template-columns: repeat(7, var(--cell-size));
+            grid-template-rows: repeat(6, var(--cell-size));
             background-color: var(--board-blue);
-            padding: 12px;
+            padding: var(--padding-board);
             border-radius: 12px;
             box-shadow: 0 12px 36px rgba(0,0,0,0.6);
-            gap: 8px;
+            gap: var(--gap-size);
             position: relative;
         }
+
         .cell {
-            width: 90px;
-            height: 90px;
+            width: var(--cell-size);
+            height: var(--cell-size);
             background-color: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
             cursor: pointer;
+            touch-action: manipulation;
         }
+
         .cell::before {
             content: '';
-            width: 76px;
-            height: 76px;
+            width: var(--token-size);
+            height: var(--token-size);
             border-radius: 50%;
             background-color: var(--empty-square);
             position: absolute;
@@ -94,43 +152,145 @@
             box-shadow: inset 0 4px 8px rgba(0,0,0,0.5);
             pointer-events: none;
         }
+
         .token {
-            width: 76px;
-            height: 76px;
+            width: var(--token-size);
+            height: var(--token-size);
             border-radius: 50%;
             position: absolute;
             z-index: 3;
             transition: top 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045);
             box-shadow: inset 0 -6px 12px rgba(0,0,0,0.3), 0 4px 6px rgba(0,0,0,0.4);
         }
+
         .token.player { background-color: var(--player-red); }
         .token.ai { background-color: var(--ai-yellow); }
+
         .token.winning-token {
             animation: pulse-cyan 1.5s infinite;
             z-index: 4;
             box-shadow: 0 0 20px #00ffff, inset 0 0 10px rgba(255,255,255,0.6);
             border: 3px solid #00ffff;
         }
+
         @keyframes pulse-cyan {
             0% { transform: scale(1); }
             50% { transform: scale(1.06); }
             100% { transform: scale(1); }
         }
+
+        .button-container {
+            display: flex;
+            gap: clamp(12px, 4vw, 40px);
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+        }
+
         button {
-            padding: 8px 16px;
+            padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
             background-color: #444;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            white-space: nowrap;
+            flex: 1 1 auto;
+            min-width: 120px;
+            max-width: 200px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
-        button:hover { background-color: #555; }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        button:active {
+            background-color: #666;
+        }
+
+        /* Tablet and above */
+        @media (min-width: 640px) {
+            body {
+                padding: 20px;
+            }
+
+            .button-container {
+                gap: 40px;
+            }
+
+            button {
+                flex: 0 1 auto;
+                min-width: 140px;
+            }
+        }
+
+        /* Large desktop */
+        @media (min-width: 1024px) {
+            h1 {
+                margin-bottom: 20px;
+            }
+
+            #controls {
+                margin-bottom: 22.5px;
+            }
+        }
+
+        /* Landscape mode optimization */
+        @media (orientation: landscape) and (max-height: 500px) {
+            body {
+                justify-content: flex-start;
+                padding: 8px;
+            }
+
+            h1 {
+                margin: 4px 0 8px 0;
+                font-size: 1.2rem;
+            }
+
+            #controls {
+                margin-bottom: 10px;
+                padding: 8px;
+                gap: 8px;
+            }
+
+            #scoreboard {
+                gap: 15px;
+                padding: 6px 16px;
+                font-size: 0.9rem;
+            }
+
+            .slider-container {
+                gap: 6px;
+            }
+
+            label {
+                font-size: 0.8rem;
+            }
+
+            #status {
+                font-size: 0.9rem;
+                min-height: 20px;
+            }
+
+            button {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+                min-width: 100px;
+            }
+
+            :root {
+                --cell-size: clamp(40px, 9vw, 65px);
+            }
+        }
     </style>
 </head>
 <body>
 
-    <h1>Can you beat Oz's Ai at Connect Four on Level 10?</h1>
+    <h1>Can you beat Oz's AI at Connect Four on Level 10?</h1>
     
     <div id="controls">
         <div class="slider-container">
@@ -143,7 +303,7 @@
             <div class="score-box">AI (Yellow): <span id="ai-score" class="score-yellow">0</span></div>
         </div>
         <div id="status">Your Turn (Red)</div>
-        <div style="display: flex; gap: 40px;">
+        <div class="button-container">
             <button onclick="nextRound()" id="next-btn" style="background-color: #2563eb;">Let's Go! Next Round</button>
             <button onclick="resetFullGame()">Reset Match & Scores</button>
         </div>
@@ -222,25 +382,29 @@
             token.classList.add('token', activePlayer === PLAYER ? 'player' : 'ai');
             token.id = `token-${r}-${c}`;
             
-            const startTop = -80; 
-            const targetTop = 19 + r * 98;
-            const leftPosition = 19 + c * 98;
-
-            token.style.left = `${leftPosition}px`;
-            token.style.top = `${startTop}px`;
+            const cell = document.querySelector(`[data-col="${c}"]`);
+            const boardRect = boardEl.getBoundingClientRect();
+            const cellRect = cell.getBoundingClientRect();
+            
+            const cellSize = cellRect.width;
+            const startTop = -cellSize * (r + 1);
+            const endTop = cellSize * r;
+            
+            token.style.left = '50%';
+            token.style.transform = 'translateX(-50%)';
+            token.style.top = startTop + 'px';
             boardEl.appendChild(token);
-
-            setTimeout(() => {
-                token.style.top = `${targetTop}px`;
-            }, 15);
+            
+            requestAnimationFrame(() => {
+                token.style.top = endTop + 'px';
+            });
 
             setTimeout(() => {
                 isAnimating = false;
                 const winData = checkWin(board);
-                
                 if (winData) {
                     highlightWinningLine(winData.slots);
-                    if (activePlayer === PLAYER) {
+                    if (winData.player === PLAYER) {
                         playerScore++;
                         document.getElementById('player-score').textContent = playerScore;
                         statusEl.textContent = "You Win!";
