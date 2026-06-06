@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkers: Human vs AI</title>
+    <style>
+        :root {
+            --dark-square: #769656;
+            --light-square: #eeeed2;
+            --player-piece: #f9f9f9;
+            --ai-piece: #b53434;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #222;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        h1 { margin-bottom: 10px; font-weight: 400; }
+        #controls {
+            margin-bottom: 20px;
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #status {
+            font-size: 1.2rem;
+            font-weight: bold;
+            height: 30px;
+        }
+        #board {
+            display: grid;
+            grid-template-columns: repeat(8, 90px);
+            grid-template-rows: repeat(8, 90px);
+            border: 4px solid #444;
+            border-radius: 4px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        .square {
+            width: 90px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .light { background-color: var(--light-square); }
+        .dark { background-color: var(--dark-square); }
+        .piece {
+            width: 69px;
+            height: 69px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.4), 0 3px 6px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 30px;
+            user-select: none;
+            /*rather uselss as renderBoard() wipes out the old board elements and recreates them from scratch */
+            transition: transform 0.1s ease;
+        }
+        .piece.player {
+            background-color: var(--player-piece);
+            color: #333;
+            border: 2px solid #ccc;
+        }
+        .piece.ai {
+            background-color: var(--ai-piece);
+            color: #fff;
+            border: 2px solid #801a1a;
+            cursor: not-allowed;
+        }
+        .piece.king::after {
+            content: "👑";
+        }
+        .selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px #ffeb3b, inset 0 0 8px rgba(0,0,0,0.4);
+            border-color: #ffeb3b !important;
+        }
+        .highlighted-move {
+            width: 45px;
+            height: 45px;
+            background-color: rgba(0, 255, 255, 0.6);
+            border: 2px solid #00ffff;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #555;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background-color: #666; }
+    </style>
+</head>
+<body>
+
+    <h1>Checkers</h1>
+    
+    <div id="controls">
+        <div class="slider-container">
+            <label for="difficulty">Difficulty Level (0-10):</label>
+            <input type="range" id="difficulty" min="0" max="10" value="5">
+            <span id="diff-val">5</span>
+        </div>
+        <div id="status">Your Turn (White)</div>
+        <button onclick="resetGame()">Restart Game</button>
+    </div>
+
+    <div id="board"></div>
+
+    <script>
+        const EMPTY = 0;
+        const PLAYER = 1;
+        const AI = 2;
+        const PLAYER_KING = 3;
+        const AI_KING = 4;
+
+        let board = [];
+        let turn = PLAYER; 
+        let selectedPiece = null;
+        let validMovesForSelected = [];
+        let mandatoryJumpsAvailable = [];
+
+        const boardEl = document.getElementById('board');
+        const statusEl = document.getElementById('status');
+        const diffSlider = document.getElementById('difficulty');
+        const diffValEl = document.getElementById('diff-val');
+
+        diffSlider.addEventListener('input', (e) => {
+            diffValEl.textContent = e.target.value;
+        });
+
+        function initBoard() {
+            board = Array(8).fill(null).map(() => Array(8).fill(EMPTY));
+            for (let r = 0; r < 3; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if ((r + c) % 2 === 1) board[r][c] = AI;
+                }
+            }
+            for (let r = 5; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if ((r + c) % 2 === 1) board[r][c] = PLAYER;
+                }
+            }
+        }
+
+        function renderBoard() {
+            boardEl.innerHTML = '';
+            mandatoryJumpsAvailable = getAllJumps(turn, board);
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const square = document.createElement('div');
+                    square.classList.add('square', (r + c) % 2 === 1 ? 'dark' : 'light');
+                    square.dataset.row = r;
+                    square.dataset.col = c;
+
+                    const pieceType = board[r][c];
+                    if (pieceType !== EMPTY) {
+                        const piece = document.createElement('div');
+                        piece.classList.add('piece');
+                        if (pieceType === PLAYER || pieceType === PLAYER_KING) piece.classList.add('player');
+                        if (pieceType === AI || pieceType === AI_KING) piece.classList.add('ai');
+                        if (pieceType === PLAYER_KING || pieceType === AI_KING) piece.classList.add('king');
+
+                        if (turn === PLAYER && (pieceType === PLAYER || pieceType === PLAYER_KING)) {
+                            piece.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                handlePieceClick(r, c);
+                            });
+                        }
+                        square.appendChild(piece);
+                    }
+
+                    if (selectedPiece && selectedPiece.r === r && selectedPiece.c === c) {
+                        if (square.firstChild) square.firstChild.classList.add('selected');
+                    }
+
+                    const isMoveHint = validMovesForSelected.find(m => m.toR === r && m.toC === c);
+                    if (isMoveHint) {
+                        const hint = document.createElement('div');
+                        hint.classList.add('highlighted-move');
+                        hint.addEventListener('click', () => handleMoveExecute(isMoveHint));
+                        square.appendChild(hint);
+                    }
+
+                    boardEl.appendChild(square);
+                }
+            }
+            checkGameOver();
+        }
+
+        function handlePieceClick(r, c) {
+            if (turn !== PLAYER) return;
+            
+            if (mandatoryJumpsAvailable.length > 0) {
+                const canThisPieceJump = mandatoryJumpsAvailable.some(m => m.fromR === r && m.fromC === c);
+                if (!canThisPieceJump) {
+                    statusEl.textContent = "Forced jump! Pick a valid piece.";
+                    return;
+                }
+            }
+
+            selectedPiece = { r, c };
+            validMovesForSelected = getLegalMovesForPiece(r, c, board);
+            renderBoard();
+        }
+
+        function handleMoveExecute(move) {
+            executeMove(move, board);
+            
+            if (move.isJump) {
+                const successiveJumps = getJumpsForPiece(move.toR, move.toC, board);
+                if (successiveJumps.length > 0) {
+                    selectedPiece = { r: move.toR, c: move.toC };
+                    validMovesForSelected = successiveJumps;
+                    renderBoard();
+                    statusEl.textContent = "Keep jumping!";
+                    return;
+                }
+            }
+
+            selectedPiece = null;
+            validMovesForSelected = [];
+            turn = AI;
+            statusEl.textContent = "AI is thinking...";
+            setTimeout(handleAiTurn, 600);
+        }
+
+        function executeMove(move, targetBoard) {
+            const p = targetBoard[move.fromR][move.fromC];
+            targetBoard[move.fromR][move.fromC] = EMPTY;
+            
+            if (p === PLAYER && move.toR === 0) targetBoard[move.toR][move.toC] = PLAYER_KING;
+            else if (p === AI && move.toR === 7) targetBoard[move.toR][move.toC] = AI_KING;
+            else targetBoard[move.toR][move.toC] = p;
+
+            if (move.isJump) {
+                targetBoard[move.jumpedR][move.jumpedC] = EMPTY;
+            }
+        }
+
+        function getLegalMovesForPiece(r, c, b) {
+            const jumps = getJumpsForPiece(r, c, b);
+            if (jumps.length > 0) return jumps;
+            
+            const totalJumpsOnBoard = getAllJumps(b[r][c], b);
+            if (totalJumpsOnBoard.length > 0) return [];
+
+            return getStepsForPiece(r, c, b);
+        }
+
+        function getStepsForPiece(r, c, b) {
+            const moves = [];
+            const type = b[r][c];
+            if (type === EMPTY) return [];
+
+            let dirs = [];
+            if (type === PLAYER) dirs = [[-1, -1], [-1, 1]];
+            if (type === AI) dirs = [[1, -1], [1, 1]];
+            if (type === PLAYER_KING || type === AI_KING) dirs = [[1, -1], [1, 1], [-1, -1], [-1, 1]];
+
+            for (let [dr, dc] of dirs) {
+                const nr = r + dr, nc = c + dc;
+                if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && b[nr][nc] === EMPTY) {
+                    moves.push({ fromR: r, fromC: c, toR: nr, toC: nc, isJump: false });
+                }
+            }
+            return moves;
+        }
+
+        function getJumpsForPiece(r, c, b) {
+            const moves = [];
+            const type = b[r][c];
+            if (type === EMPTY) return [];
+
+            let dirs = [];
+            if (type === PLAYER) dirs = [[-1, -1], [-1, 1]];
+            if (type === AI) dirs = [[1, -1], [1, 1]];
+            if (type === PLAYER_KING || type === AI_KING) dirs = [[1, -1], [1, 1], [-1, -1], [-1, 1]];
+
+            const isPlayerSide = (type === PLAYER || type === PLAYER_KING);
+
+            for (let [dr, dc] of dirs) {
+                const midR = r + dr, midC = c + dc;
+                const targetR = r + (dr * 2), targetC = c + (dc * 2);
+
+                if (targetR >= 0 && targetR < 8 && targetC >= 0 && targetC < 8) {
+                    const midPiece = b[midR][midC];
+                    const targetPiece = b[targetR][targetC];
+
+                    if (midPiece !== EMPTY && targetPiece === EMPTY) {
+                        const isMidEnemy = isPlayerSide ? 
+                            (midPiece === AI || midPiece === AI_KING) : 
+                            (midPiece === PLAYER || midPiece === PLAYER_KING);
+
+                        if (isMidEnemy) {
+                            moves.push({
+                                fromR: r, fromC: c,
+                                toR: targetR, toC: targetC,
+                                isJump: true,
+                                jumpedR: midR, jumpedC: midC
+                            });
+                        }
+                    }
+                }
+            }
+            return moves;
+        }
+
+        function getAllMoves(playerType, b) {
+            const jumps = getAllJumps(playerType, b);
+            if (jumps.length > 0) return jumps;
+
+            let steps = [];
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const p = b[r][c];
+                    if (playerType === PLAYER && (p === PLAYER || p === PLAYER_KING)) steps = steps.concat(getStepsForPiece(r, c, b));
+                    if (playerType === AI && (p === AI || p === AI_KING)) steps = steps.concat(getStepsForPiece(r, c, b));
+                }
+            }
+            return steps;
+        }
+
+        function getAllJumps(playerType, b) {
+            let jumps = [];
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const p = b[r][c];
+                    if (playerType === PLAYER && (p === PLAYER || p === PLAYER_KING)) jumps = jumps.concat(getJumpsForPiece(r, c, b));
+                    if (playerType === AI && (p === AI || p === AI_KING)) jumps = jumps.concat(getJumpsForPiece(r, c, b));
+                }
+            }
+            return jumps;
+        }
+
+        function handleAiTurn() {
+            if (turn !== AI) return;
+            const aiMoves = getAllMoves(AI, board);
+            if (aiMoves.length === 0) {
+                statusEl.textContent = "You win! AI has no moves.";
+                turn = null;
+                return;
+            }
+
+            const level = parseInt(diffSlider.value);
+            const randomThreshold = (10 - level) / 10;
+            
+            let chosenMove;
+            if (Math.random() < randomThreshold) {
+                chosenMove = aiMoves[Math.floor(Math.random() * aiMoves.length)];
+            } else {
+                chosenMove = getBestAiMove(board, aiMoves);
+            }
+
+            executeMove(chosenMove, board);
+
+            if (chosenMove.isJump) {
+                let successiveJumps = getJumpsForPiece(chosenMove.toR, chosenMove.toC, board);
+                while (successiveJumps.length > 0) {
+                    const nextJump = successiveJumps[0];
+                    executeMove(nextJump, board);
+                    successiveJumps = getJumpsForPiece(nextJump.toR, nextJump.toC, board);
+                }
+            }
+
+            turn = PLAYER;
+            statusEl.textContent = "Your Turn (White)";
+            renderBoard();
+        }
+
+        function getBestAiMove(currentBoard, legalMoves) {
+            let bestScore = -Infinity;
+            let bestMoves = [];
+            const depth = 3; 
+
+            for (let move of legalMoves) {
+                let boardCopy = currentBoard.map(row => [...row]);
+                executeMove(move, boardCopy);
+                let score = minimax(boardCopy, depth - 1, -Infinity, Infinity, false);
+                
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMoves = [move];
+                } else if (score === bestScore) {
+                    bestMoves.push(move);
+                }
+            }
+            return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+        }
+
+        function minimax(b, depth, alpha, beta, isMaximizing) {
+            if (depth === 0) return evaluateBoard(b);
+
+            if (isMaximizing) {
+                let maxEval = -Infinity;
+                const moves = getAllMoves(AI, b);
+                if (moves.length === 0) return -1000;
+                for (let move of moves) {
+                    let copy = b.map(r => [...r]);
+                    executeMove(move, copy);
+                    let ev = minimax(copy, depth - 1, alpha, beta, false);
+                    maxEval = Math.max(maxEval, ev);
+                    alpha = Math.max(alpha, ev);
+                    if (beta <= alpha) break;
+                }
+                return maxEval;
+            } else {
+                let minEval = Infinity;
+                const moves = getAllMoves(PLAYER, b);
+                if (moves.length === 0) return 1000;
+                for (let move of moves) {
+                    let copy = b.map(r => [...r]);
+                    executeMove(move, copy);
+                    let ev = minimax(copy, depth - 1, alpha, beta, true);
+                    minEval = Math.min(minEval, ev);
+                    beta = Math.min(beta, ev);
+                    if (beta <= alpha) break;
+                }
+                return minEval;
+            }
+        }
+
+        function evaluateBoard(b) {
+            let score = 0;
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (b[r][c] === AI) score += 10 + r; 
+                    if (b[r][c] === AI_KING) score += 25;
+                    if (b[r][c] === PLAYER) score -= (10 + (7 - r));
+                    if (b[r][c] === PLAYER_KING) score -= 25;
+                }
+            }
+            return score;
+        }
+
+        function checkGameOver() {
+            let playerPieces = 0;
+            let aiPieces = 0;
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) { 
+                    if (board[r][c] === PLAYER || board[r][c] === PLAYER_KING) playerPieces++;
+                    if (board[r][c] === AI || board[r][c] === AI_KING) aiPieces++;
+                }
+            }
+
+            if (playerPieces === 0) {
+                statusEl.textContent = "AI Wins!";
+                turn = null;
+            } else if (aiPieces === 0) {
+                statusEl.textContent = "You Win!";
+                turn = null;
+            }
+        }
+
+        function resetGame() {
+            turn = PLAYER;
+            selectedPiece = null;
+            validMovesForSelected = [];
+            statusEl.textContent = "Your Turn (White)";
+            initBoard();
+            renderBoard();
+        }
+
+        initBoard();
+        renderBoard();
+    </script>
+</body>
+</html>
