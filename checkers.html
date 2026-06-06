@@ -127,20 +127,64 @@
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
             -webkit-tap-highlight-color: transparent;
         }
+        #scoreboard {
+            display: flex;
+            gap: clamp(15px, 5vw, 30px);
+            background: #1c1c1c;
+            padding: clamp(8px, 2vw, 12px) clamp(16px, 4vw, 24px);
+            border-radius: 20px;
+            border: 1px solid #444;
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            font-weight: bold;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .score-box {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .score-white { color: #f9f9f9; }
+        .score-red { color: #b53434; }
+        .button-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+        }
         button {
-            padding: 10px 20px;
-            background-color: #555;
+            padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
+            background-color: #444;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
-            font-size: clamp(0.85rem, 3vw, 1rem);
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            white-space: nowrap;
+            flex: 1 1 auto;
+            min-width: 120px;
+            max-width: 200px;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
         }
-        button:hover { background-color: #666; }
-        button:active { background-color: #777; }
+        button:hover { background-color: #555; }
+        button:active { background-color: #666; }
+        @media (min-width: 640px) {
+            .button-container { gap: 20px; }
+            button { flex: 0 1 auto; min-width: 140px; }
+        }
+        @media (orientation: landscape) and (max-height: 500px) {
+            body { justify-content: flex-start; padding: 8px; }
+            h1 { margin: 4px 0 8px 0; font-size: 1rem; }
+            #controls { margin-bottom: 10px; padding: 8px; gap: 8px; }
+            #scoreboard { gap: 15px; padding: 6px 16px; font-size: 0.9rem; }
+            #status { font-size: 0.9rem; }
+            button { padding: 8px 12px; font-size: 0.8rem; min-width: 100px; }
+            :root { --sq: min(9vw, 90px); }
+        }
     </style>
 </head>
 <body>
@@ -153,8 +197,15 @@
             <input type="range" id="difficulty" min="0" max="10" value="5">
             <span id="diff-val">5</span>
         </div>
+        <div id="scoreboard">
+            <div class="score-box">Player (White): <span id="player-score" class="score-white">0</span></div>
+            <div class="score-box">AI (Red): <span id="ai-score" class="score-red">0</span></div>
+        </div>
         <div id="status">Your Turn (White)</div>
-        <button onclick="resetGame()">Restart Game</button>
+        <div class="button-container">
+            <button onclick="nextRound()" style="background-color: #2563eb;">Next Round</button>
+            <button onclick="resetGame()">Reset Match & Scores</button>
+        </div>
     </div>
 
     <div id="board"></div>
@@ -171,6 +222,8 @@
         let selectedPiece = null;
         let validMovesForSelected = [];
         let mandatoryJumpsAvailable = [];
+        let playerScore = 0;
+        let aiScore = 0;
 
         const boardEl = document.getElementById('board');
         const statusEl = document.getElementById('status');
@@ -390,6 +443,8 @@
             if (turn !== AI) return;
             const aiMoves = getAllMoves(AI, board);
             if (aiMoves.length === 0) {
+                playerScore++;
+                document.getElementById('player-score').textContent = playerScore;
                 statusEl.textContent = "You win! AI has no moves.";
                 turn = null;
                 return;
@@ -498,21 +553,33 @@
             }
 
             if (playerPieces === 0) {
+                aiScore++;
+                document.getElementById('ai-score').textContent = aiScore;
                 statusEl.textContent = "AI Wins!";
                 turn = null;
             } else if (aiPieces === 0) {
+                playerScore++;
+                document.getElementById('player-score').textContent = playerScore;
                 statusEl.textContent = "You Win!";
                 turn = null;
             }
         }
 
-        function resetGame() {
+        function nextRound() {
             turn = PLAYER;
             selectedPiece = null;
             validMovesForSelected = [];
             statusEl.textContent = "Your Turn (White)";
             initBoard();
             renderBoard();
+        }
+
+        function resetGame() {
+            playerScore = 0;
+            aiScore = 0;
+            document.getElementById('player-score').textContent = 0;
+            document.getElementById('ai-score').textContent = 0;
+            nextRound();
         }
 
         initBoard();
