@@ -359,6 +359,10 @@
             } else {
                 document.getElementById("status").innerText = "Your turn (X)";
             }
+                        // Scroll to board on mobile
+            setTimeout(() => {
+                document.getElementById('board').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
         }
 
         function updateScoreboard() {
