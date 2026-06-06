@@ -151,12 +151,17 @@
 </head>
 <body>
 
-    <h1>Tic Tac Toe- Can you beat Oz's Ai at level 10?</h1>
+    <h1>Tic Tac Toe</h1>
+    <h3><ul>
+      <li>Pick Ai or Local</li>
+      <li>If playing Ai select Difficulty and X or O</li>
+    </ul>
+  </h3>
 
     <!-- Mode Selection -->
     <div class="mode-container">
-        <button id="btn-vs" class="active-mode" onclick="setMode('ai')">vs AI (Computer)</button>
-        <button id="btn-local" onclick="setMode('local')">2-Player (Local)</button>
+        <button id="btn-vs" onclick="setMode('ai')">vs AI (Computer)</button>
+        <button id="btn-local" class="active-mode" onclick="setMode('local')">2-Player (Local)</button>
     </div>
 
     <!-- Settings (AI difficulty and symbol selection) -->
@@ -208,7 +213,7 @@
         let board = ["", "", "", "", "", "", "", "", ""];
         let currentPlayer = "X";
         let gameActive = false;
-        let gameMode = "ai";
+        let gameMode = "local";
         let difficulty = 5;
         let playerSymbol = "X";
         let aiSymbol = "O";
@@ -329,8 +334,8 @@
         function aiMove() {
             if (!gameActive) return;
 
-            // Random chance based on difficulty
-            const randomChance = (11 - difficulty) / 100;
+            // Random chance based on difficulty (level 1 = 90% random, level 10 = 0% random)
+            const randomChance = 1 - (difficulty / 10);
             if (Math.random() < randomChance) {
                 // Make random move
                 let availableCells = [];
