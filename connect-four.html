@@ -84,7 +84,7 @@
             height: 76px;
             border-radius: 50%;
             position: absolute;
-            z-index: 1;
+            z-index: 3;
             /* Gravity drop animation speed configured here (0.4s) */
             transition: top 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045);
             box-shadow: inset 0 -6px 12px rgba(0,0,0,0.3), 0 4px 6px rgba(0,0,0,0.4);
@@ -200,26 +200,23 @@
             isAnimating = true;
             board[r][c] = activePlayer;
 
-            // Instantiating token element dynamically at top of column viewport
             const token = document.createElement('div');
             token.classList.add('token', activePlayer === PLAYER ? 'player' : 'ai');
             token.id = `token-${r}-${c}`;
             
-            // Physical measurement maps: 12px padding + row offset * (90px grid + 8px gap)
+            // FIXED OFFSET MATH: 19px padding centers the 76px token perfectly within the 90px cell + 8px gaps
             const startTop = -80; 
-            const targetTop = 12 + r * 98;
-            const leftPosition = 12 + c * 98;
+            const targetTop = 19 + r * 98;
+            const leftPosition = 19 + c * 98;
 
             token.style.left = `${leftPosition}px`;
             token.style.top = `${startTop}px`;
             boardEl.appendChild(token);
 
-            // Force engine redraw to run the falling transition cleanly
             setTimeout(() => {
                 token.style.top = `${targetTop}px`;
             }, 15);
 
-            // Match timeout (400ms) with CSS transition sliding curve
             setTimeout(() => {
                 isAnimating = false;
                 const winData = checkWin(board);
@@ -247,6 +244,7 @@
                 }
             }, 415);
         }
+
 
         function handleAiTurn() {
             if (gameOver || isAnimating) return;
