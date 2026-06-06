@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Where Oz MOPs meets Connect Four: Human vs AI</title>
+    <style>
+        :root {
+            --board-blue: #1e40af;
+            --empty-square: #111827;
+            --player-red: #dc2626;
+            --ai-yellow: #eab308;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        h1 { margin-bottom: 5px; font-weight: 400; }
+        #controls {
+            margin-bottom: 15px;
+            background: #2a2a2a;
+            padding: 12px 20px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #status {
+            font-size: 1.2rem;
+            font-weight: bold;
+            height: 25px;
+        }
+        /* Grid setup for 7 columns, 6 rows. Box size 90px matching your style preference */
+        #board {
+            display: grid;
+            grid-template-columns: repeat(7, 90px);
+            grid-template-rows: repeat(6, 90px);
+            background-color: var(--board-blue);
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+            gap: 8px;
+            position: relative;
+        }
+        .cell {
+            width: 90px;
+            height: 90px;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+        }
+        /* The structural masking rings that create the hollow grid slots */
+        .cell::before {
+            content: '';
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background-color: var(--empty-square);
+            position: absolute;
+            z-index: 2;
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+        .token {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            position: absolute;
+            z-index: 1;
+            /* Gravity drop animation speed configured here (0.4s) */
+            transition: top 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045);
+            box-shadow: inset 0 -6px 12px rgba(0,0,0,0.3), 0 4px 6px rgba(0,0,0,0.4);
+        }
+        .token.player {
+            background-color: var(--player-red);
+        }
+        .token.ai {
+            background-color: var(--ai-yellow);
+        }
+        /* Cyan pulse highlight for winning tokens */
+        .token.winning-token {
+            animation: pulse-cyan 1.5s infinite;
+            z-index: 3;
+            box-shadow: 0 0 20px #00ffff, inset 0 0 10px rgba(255,255,255,0.6);
+            border: 3px solid #00ffff;
+        }
+        @keyframes pulse-cyan {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+            100% { transform: scale(1); }
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background-color: #555; }
+    </style>
+</head>
+<body>
+
+    <h1>Can you beat Oz's Ai at Connect Four?</h1>
+    
+    <div id="controls">
+        <div class="slider-container">
+            <label for="difficulty">AI Difficulty (0-10):</label>
+            <input type="range" id="difficulty" min="0" max="10" value="5">
+            <span id="diff-val">5</span>
+        </div>
+        <div id="status">Your Turn (Red)</div>
+        <button onclick="resetGame()">Restart Game</button>
+    </div>
+
+    <div id="board" id="board-container"></div>
+
+    <script>
+        const EMPTY = 0;
+        const PLAYER = 1;
+        const AI = 2;
+
+        const ROWS = 6;
+        const COLS = 7;
+
+        let board = [];
+        let turn = PLAYER;
+        let isAnimating = false;
+        let gameOver = false;
+
+        const boardEl = document.getElementById('board');
+        const statusEl = document.getElementById('status');
+        const diffSlider = document.getElementById('difficulty');
+        const diffValEl = document.getElementById('diff-val');
+
+        diffSlider.addEventListener('input', (e) => {
+            diffValEl.textContent = e.target.value;
+        });
+
+        function initBoard() {
+            board = Array(ROWS).fill(null).map(() => Array(COLS).fill(EMPTY));
+            gameOver = false;
+            turn = PLAYER;
+            isAnimating = false;
+        }
+
+        function createGridLayout() {
+            boardEl.innerHTML = '';
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.col = c;
+                    cell.onclick = () => handleColumnClick(c);
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+
+        function handleColumnClick(c) {
+            if (turn !== PLAYER || isAnimating || gameOver) return;
+
+            const r = getNextAvailableRow(board, c);
+            if (r === -1) {
+                statusEl.textContent = "Column full! Pick another.";
+                return;
+            }
+
+            dropToken(r, c, PLAYER);
+        }
+
+        function getNextAvailableRow(b, c) {
+            for (let r = ROWS - 1; r >= 0; r--) {
+                if (b[r][c] === EMPTY) return r;
+            }
+            return -1;
+        }
+
+        function dropToken(r, c, activePlayer) {
+            isAnimating = true;
+            board[r][c] = activePlayer;
+
+            // Instantiating token element dynamically at top of column viewport
+            const token = document.createElement('div');
+            token.classList.add('token', activePlayer === PLAYER ? 'player' : 'ai');
+            token.id = `token-${r}-${c}`;
+            
+            // Physical measurement maps: 12px padding + row offset * (90px grid + 8px gap)
+            const startTop = -80; 
+            const targetTop = 12 + r * 98;
+            const leftPosition = 12 + c * 98;
+
+            token.style.left = `${leftPosition}px`;
+            token.style.top = `${startTop}px`;
+            boardEl.appendChild(token);
+
+            // Force engine redraw to run the falling transition cleanly
+            setTimeout(() => {
+                token.style.top = `${targetTop}px`;
+            }, 15);
+
+            // Match timeout (400ms) with CSS transition sliding curve
+            setTimeout(() => {
+                isAnimating = false;
+                const winData = checkWin(board);
+                
+                if (winData) {
+                    highlightWinningLine(winData.slots);
+                    statusEl.textContent = activePlayer === PLAYER ? "You Win!" : "AI Wins!";
+                    gameOver = true;
+                    return;
+                }
+
+                if (checkDraw(board)) {
+                    statusEl.textContent = "It's a Draw!";
+                    gameOver = true;
+                    return;
+                }
+
+                if (activePlayer === PLAYER) {
+                    turn = AI;
+                    statusEl.textContent = "AI is thinking...";
+                    setTimeout(handleAiTurn, 400);
+                } else {
+                    turn = PLAYER;
+                    statusEl.textContent = "Your Turn (Red)";
+                }
+            }, 415);
+        }
+
+        function handleAiTurn() {
+            if (gameOver || isAnimating) return;
+
+            const validCols = [];
+            for (let c = 0; c < COLS; c++) {
+                if (getNextAvailableRow(board, c) !== -1) validCols.push(c);
+            }
+
+            if (validCols.length === 0) return;
+
+            const level = parseInt(diffSlider.value);
+            const randomThreshold = (10 - level) / 10;
+
+            let chosenCol;
+            if (Math.random() < randomThreshold) {
+                chosenCol = validCols[Math.floor(Math.random() * validCols.length)];
+            } else {
+                chosenCol = getBestAiColumn(board);
+            }
+
+            const r = getNextAvailableRow(board, chosenCol);
+            dropToken(r, chosenCol, AI);
+        }
+
+        // Minimax lookahead solver for column prioritization
+        function getBestAiColumn(currentBoard) {
+            let bestScore = -Infinity;
+            let bestCols = [];
+            const depth = 5; // Look ahead frame window
+
+            for (let c = 0; c < COLS; c++) {
+                const r = getNextAvailableRow(currentBoard, c);
+                if (r !== -1) {
+                    currentBoard[r][c] = AI;
+                    let score = minimax(currentBoard, depth - 1, -Infinity, Infinity, false);
+                    currentBoard[r][c] = EMPTY;
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestCols = [c];
+                    } else if (score === bestScore) {
+                        bestCols.push(c);
+                    }
+                }
+            }
+            return bestCols[Math.floor(Math.random() * bestCols.length)];
+        }
+
+        function minimax(b, depth, alpha, beta, isMaximizing) {
+            const winData = checkWin(b);
