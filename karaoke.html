@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oz MOps: Karaoke — Dear Hearts and Gentle People</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #c9a84c;
+    --gold-dim: #7a6230;
+    --gold-glow: rgba(201,168,76,0.15);
+    --night: #0c0e18;
+    --night2: #13162a;
+    --sung: #e8c060;
+    --dim: rgba(255,255,255,0.28);
+    --mid: rgba(255,255,255,0.6);
+  }
+
+  body {
+    background: var(--night);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Subtle radial glow behind card */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(ellipse, rgba(201,168,76,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Stars */
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .star {
+    position: absolute; border-radius: 50%; background: white;
+    animation: twinkle var(--d,3s) ease-in-out infinite;
+    animation-delay: var(--dl, 0s);
+    opacity: 0;
+  }
+  @keyframes twinkle {
+    0%,100% { opacity: 0; }
+    50% { opacity: var(--o, 0.5); }
+  }
+
+  /* Main card */
+  .card {
+    position: relative; z-index: 10;
+    width: min(700px, 96vw);
+    padding: 2.5rem 2.8rem 2rem;
+    background: rgba(13,16,28,0.92);
+    border: 1px solid rgba(201,168,76,0.18);
+    border-radius: 3px;
+    backdrop-filter: blur(16px);
+  }
+
+  .song-meta {
+    font-size: 14px; letter-spacing: 0.2em;
+    color: var(--gold-dim); text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+  .song-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 4vw, 34px);
+    font-weight: 400; color: white;
+    margin-bottom: 0.2rem; line-height: 1.2;
+  }
+  .song-artist {
+    font-size: 12px; color: var(--dim);
+    margin-bottom: 2rem;
+    font-style: italic;
+  }
+
+  /* Lyric stage — fixed height viewport, lines scroll through */
+  .lyric-stage {
+    height: 180px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    justify-content: center; gap: 0.9rem;
+    margin-bottom: 1.8rem;
+    padding: 0;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    position: relative;
+  }
+
+  /* Fade masks top and bottom */
+  .lyric-stage::before, .lyric-stage::after {
+    content: ''; position: absolute; left: 0; right: 0; z-index: 2;
+    pointer-events: none;
+  }
+  .lyric-stage::before {
+    top: 0; height: 40px;
+    background: linear-gradient(to bottom, var(--night), transparent);
+  }
+  .lyric-stage::after {
+    bottom: 0; height: 40px;
+    background: linear-gradient(to top, var(--night), transparent);
+  }
+
+  .lyric-line {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(16px, 2.6vw, 22px);
+    font-weight: 400; line-height: 1.5;
+    display: none; /* hidden by default — JS shows only nearby lines */
+    flex-wrap: wrap; gap: 0.28em;
+    opacity: 0; transform: translateY(5px);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    will-change: opacity, transform;
+    flex-shrink: 0;
+  }
+  .lyric-line.visible { display: flex; }
+  .lyric-line.active  { opacity: 1; transform: translateY(0); }
+  .lyric-line.past    { opacity: 0.2; transform: translateY(0); transition: opacity 0.8s ease; }
+
+  .word {
+    color: var(--mid);
+    transition: color 0.12s ease, text-shadow 0.12s ease;
+    display: inline-block;
+  }
+  .word.sung    { color: var(--sung); }
+  .word.current {
+    color: #fff;
+    text-shadow: 0 0 22px rgba(240,192,80,0.75), 0 0 6px rgba(240,192,80,0.4);
+    animation: pop 0.18s ease;
+  }
+  @keyframes pop {
+    0%   { transform: scale(1); }
+    45%  { transform: scale(1.09); }
+    100% { transform: scale(1); }
+  }
+
+  /* Progress */
+  .progress-wrap {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 1.4rem;
+  }
+  .progress-track {
+    flex: 1; height: 2px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 1px; cursor: pointer; position: relative;
+  }
+  .progress-track:hover { background: rgba(255,255,255,0.14); }
+  .progress-fill {
+    height: 100%; border-radius: 1px; width: 0%;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+    transition: width 0.1s linear; pointer-events: none;
+  }
+  .time-label {
+    font-size: 11px; color: var(--dim);
+    font-variant-numeric: tabular-nums; min-width: 34px;
+  }
+  .time-label.right { text-align: right; }
+
+  /* Controls */
+  .controls { display: flex; align-items: center; gap: 10px; }
+
+  .btn-play {
+    width: 42px; height: 42px; border-radius: 50%;
+    border: 1px solid rgba(201,168,76,0.45);
+    background: transparent; color: var(--gold);
+    font-size: 15px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-play:hover:not(:disabled) {
+    background: var(--gold-glow); border-color: var(--gold);
+  }
+  .btn-play:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .btn-text {
+    background: transparent; border: none;
+    color: var(--dim); font-size: 12px; cursor: pointer;
+    padding: 6px 10px; border-radius: 2px;
+    font-family: 'DM Sans', sans-serif;
+    transition: color 0.15s; letter-spacing: 0.04em;
+  }
+  .btn-text:hover { color: var(--mid); }
+
+  .status-msg {
+    margin-left: auto; font-size: 11px;
+    color: var(--dim); font-style: italic;
+  }
+  .status-msg.ok { color: rgba(120,200,120,0.7); font-style: normal; }
+  .status-msg.err { color: rgba(220,100,80,0.8); font-style: normal; }
+
+  /* Credit */
+  .credit {
+    margin-top: 1.6rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 11px; color: var(--dim); line-height: 1.7;
+  }
+  .credit a { color: var(--gold-dim); text-decoration: none; }
+  .credit a:hover { color: var(--gold); }
+
+  /* Floating notes */
+  .note {
+    position: fixed; pointer-events: none;
+    font-size: 16px; color: var(--gold); opacity: 0;
+    animation: floatNote 2.8s ease forwards; z-index: 5;
+  }
+  @keyframes floatNote {
+    0%   { opacity: 0;   transform: translateY(0) rotate(-8deg); }
+    12%  { opacity: 0.45; }
+    100% { opacity: 0;   transform: translateY(-110px) rotate(14deg); }
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="card">
+  <p class="song-meta">CSS Karaoke by Oz. Using: CSS, JSON, ASR, and obviously royalty free music via MP3</p>
+  <h1 class="song-title">Dear Hearts and Gentle People</h1>
+  <p class="song-artist">Larry Douglas — 78rpm digitized recording, c. 1949</p>
+
+  <div class="lyric-stage" id="stage">
+    <!-- Lines injected by JS from word data -->
+  </div>
+
+  <div class="progress-wrap">
+    <span class="time-label" id="timeNow">0:00</span>
+    <div class="progress-track" id="progressTrack">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <span class="time-label right" id="timeTot">2:51</span>
+  </div>
+
+  <div class="controls">
+    <button class="btn-play" id="playBtn" title="Play / Pause">▶</button>
+    <button class="btn-text" id="restartBtn">↺ Restart</button>
+    <span class="status-msg" id="statusMsg">Loading audio…</span>
+  </div>
+
+  <p class="credit">
+    Audio: <a href="https://archive.org/details/78_dear-hearts-and-gentle-people_larry-douglas-scott-fishers-pile-drivers-hilliard-fa_gbia0038725b" target="_blank">Internet Archive — 78rpm Collection</a>
+    · Word timings via Whisper ASR · Lyrics: Hilliard &amp; Fain
+  </p>
+</div>
+
+<audio id="audio"
+  src="https://ozzie3000.github.io/audio/Dear-Hearts-and-Gentle-People_Larry-Douglas.mp3">
+</audio>
+
+<script>
+// ── Word data from Whisper ASR (segment → words, grouped into display lines) ──
+const LINES = [
+  // verse 1
+  { words: [{w:"I",t:10.7},{w:"love",t:12.22},{w:"those",t:12.5},{w:"dear",t:13.06},{w:"hearts",t:13.96},{w:"and",t:14.6},{w:"gentle",t:15.14},{w:"people",t:16.1}] },
+  { words: [{w:"who",t:16.98},{w:"live",t:18.0},{w:"in",t:18.36},{w:"my",t:18.68},{w:"hometown.",t:19.2}] },
+  { words: [{w:"Because",t:20.62},{w:"those",t:21.78},{w:"dear",t:22.34},{w:"hearts",t:23.22},{w:"and",t:23.86},{w:"gentle",t:24.44},{w:"people",t:25.46}] },
+  { words: [{w:"will",t:26.26},{w:"never",t:26.84},{w:"ever",t:27.34},{w:"let",t:27.84},{w:"you",t:28.46},{w:"down.",t:29.0}] },
+  { words: [{w:"They",t:30.48},{w:"read",t:30.94},{w:"the",t:31.26},{w:"good",t:31.48},{w:"book",t:32.52},{w:"from",t:33.1},{w:"Friday",t:33.88},{w:"till",t:34.48},{w:"Monday.",t:35.16}] },
+  { words: [{w:"That's",t:36.62},{w:"how",t:36.92},{w:"the",t:37.16},{w:"weekend",t:37.44},{w:"goes.",t:37.9}] },
+  { words: [{w:"I've",t:40.06},{w:"got",t:40.5},{w:"a",t:40.7},{w:"dream",t:40.94},{w:"house.",t:41.88}] },
+  { words: [{w:"I'll",t:43.22},{w:"build",t:43.32},{w:"there",t:43.74},{w:"one",t:44.42},{w:"day",t:44.82},{w:"with",t:45.4},{w:"picket",t:45.68},{w:"fence",t:46.16},{w:"and",t:46.46},{w:"rambling",t:46.86},{w:"rows.",t:47.62}] },
+  { words: [{w:"I",t:48.78},{w:"feel",t:49.7},{w:"so",t:50.06},{w:"welcome",t:50.56},{w:"each",t:51.8},{w:"time",t:52.7},{w:"that",t:53.28},{w:"I",t:53.46},{w:"return.",t:53.7}] },
+  { words: [{w:"That",t:54.88},{w:"my",t:54.94},{w:"happy",t:55.16},{w:"heart",t:55.6},{w:"keeps",t:55.94},{w:"laughing",t:56.26},{w:"like",t:56.74},{w:"a",t:57.2},{w:"clown.",t:57.64}] },
+  { words: [{w:"I",t:58.96},{w:"love",t:59.18},{w:"the",t:59.42},{w:"dear",t:59.72},{w:"hearts",t:60.84},{w:"and",t:61.34},{w:"gentle",t:62.08},{w:"people",t:63.06}] },
+  { words: [{w:"who",t:63.86},{w:"live",t:64.42},{w:"in",t:64.74},{w:"love",t:64.98},{w:"in",t:65.36},{w:"my",t:65.64},{w:"hometown.",t:66.14}] },
+  // bridge
+  { words: [{w:"There's",t:68.52},{w:"a",t:69.0},{w:"place",t:69.14},{w:"I'd",t:69.4},{w:"like",t:69.88},{w:"to",t:70.04},{w:"be,",t:70.26}] },
+  { words: [{w:"headed",t:70.9},{w:"back",t:71.28},{w:"in",t:71.78},{w:"Tennessee.",t:72.08}] },
+  { words: [{w:"Where",t:73.18},{w:"your",t:73.54},{w:"friendly",t:73.74},{w:"neighbors",t:74.3},{w:"smile",t:74.78},{w:"and",t:75.32},{w:"say",t:75.64},{w:"hello.",t:76.0}] },
+  { words: [{w:"It's",t:77.22},{w:"a",t:78.24},{w:"pleasure",t:78.4},{w:"and",t:78.82},{w:"a",t:79.38},{w:"treat",t:79.52},{w:"to",t:79.9},{w:"me",t:80.54},{w:"and",t:80.76},{w:"her",t:81.06},{w:"down",t:81.26},{w:"the",t:81.58},{w:"street.",t:81.78}] },
+  { words: [{w:"That's",t:82.28},{w:"why",t:83.08},{w:"I",t:83.4},{w:"want",t:83.64},{w:"the",t:83.94},{w:"whole",t:84.18},{w:"wide",t:84.46},{w:"world",t:84.82},{w:"to",t:85.14},{w:"know.",t:85.34}] },
+  // verse 2
+  { words: [{w:"I",t:86.68},{w:"love",t:87.1},{w:"those",t:87.38},{w:"dear",t:87.76},{w:"hearts",t:88.74},{w:"and",t:89.3},{w:"gentle",t:89.96},{w:"people",t:90.9}] },
+  { words: [{w:"who",t:91.76},{w:"live",t:92.8},{w:"in",t:93.2},{w:"my",t:93.48},{w:"hometown.",t:94.0}] },
+  { words: [{w:"Because",t:96.08},{w:"those",t:96.6},{w:"dear",t:96.96},{w:"hearts",t:98.0},{w:"and",t:98.62},{w:"gentle",t:99.22},{w:"people",t:100.24}] },
+  { words: [{w:"will",t:101.0},{w:"never",t:101.52},{w:"ever",t:102.1},{w:"let",t:102.52},{w:"you",t:103.16},{w:"down.",t:103.72}] },
+  { words: [{w:"They",t:104.58},{w:"read",t:105.54},{w:"the",t:105.9},{w:"good",t:106.14},{w:"book",t:107.1},{w:"from",t:107.68},{w:"Friday",t:108.46},{w:"till",t:109.04},{w:"Monday.",t:109.72}] },
+  { words: [{w:"That's",t:111.14},{w:"how",t:111.54},{w:"the",t:111.72},{w:"weekend",t:112.0},{w:"goes.",t:112.68}] },
+  { words: [{w:"I've",t:114.72},{w:"got",t:114.94},{w:"a",t:115.24},{w:"dream",t:115.44},{w:"house.",t:116.32}] },
+  { words: [{w:"I'll",t:117.7},{w:"build",t:117.82},{w:"there",t:118.26},{w:"one",t:118.82},{w:"day",t:119.18},{w:"with",t:119.72},{w:"picket",t:120.08},{w:"fence",t:120.6},{w:"and",t:120.92},{w:"rambling",t:121.24},{w:"rows.",t:122.0}] },
+  { words: [{w:"I",t:123.72},{w:"feel",t:124.04},{w:"so",t:124.38},{w:"welcome",t:124.8},{w:"each",t:125.88},{w:"time",t:126.96},{w:"that",t:127.46},{w:"I",t:127.68},{w:"return.",t:127.9}] },
+  { words: [{w:"That",t:128.98},{w:"my",t:129.08},{w:"happy",t:129.32},{w:"heart",t:129.8},{w:"keeps",t:130.16},{w:"laughing",t:130.42},{w:"like",t:130.9},{w:"a",t:131.34},{w:"clown.",t:131.72}] },
+  { words: [{w:"I",t:132.5},{w:"love",t:133.3},{w:"the",t:133.58},{w:"dear",t:133.82},{w:"hearts",t:134.92},{w:"and",t:135.5},{w:"gentle",t:136.16},{w:"people",t:137.14}] },
+  { words: [{w:"who",t:137.98},{w:"live",t:138.4},{w:"in",t:138.8},{w:"love",t:139.08},{w:"in",t:139.4},{w:"my",t:139.66},{w:"hometown.",t:140.16}] },
+  // outro
+  { words: [{w:"Home,",t:143.36},{w:"home",t:144.2},{w:"sweet",t:144.6},{w:"home.",t:145.2}] },
+  { words: [{w:"I",t:145.8},{w:"love",t:145.98},{w:"my",t:146.2},{w:"home.",t:146.54}] },
+  { words: [{w:"I",t:146.92},{w:"love",t:147.1},{w:"my",t:147.36},{w:"home.",t:147.66}] },
+  { words: [{w:"Home",t:148.84},{w:"sweet",t:149.12},{w:"home.",t:149.7}] },
+];
+
+// ── Build DOM ──
+const stage = document.getElementById('stage');
+const lineEls = [];
+const wordEls = []; // flat list {el, t, lineIdx}
+
+LINES.forEach((line, li) => {
+  const div = document.createElement('div');
+  div.className = 'lyric-line';
+  div.id = 'line' + li;
+  line.words.forEach(({w, t}) => {
+    const span = document.createElement('span');
+    span.className = 'word';
+    span.textContent = w;
+    div.appendChild(span);
+    wordEls.push({ el: span, t, lineIdx: li });
+  });
+  stage.appendChild(div);
+  lineEls.push(div);
+});
+
+// Compute line windows: show from 0.6s before first word, hide 1.8s after last word
+const lineWindows = LINES.map((line, li) => ({
+  show: line.words[0].t - 0.8,
+  hide: line.words[line.words.length - 1].t + 2.2,
+}));
+
+// ── Audio & controls ──
+const audio    = document.getElementById('audio');
+const playBtn  = document.getElementById('playBtn');
+const restartBtn = document.getElementById('restartBtn');
+const progressFill  = document.getElementById('progressFill');
+const progressTrack = document.getElementById('progressTrack');
+const timeNow  = document.getElementById('timeNow');
+const timeTot  = document.getElementById('timeTot');
+const statusMsg = document.getElementById('statusMsg');
+
+let raf;
+let lastWordIdx = -1;
+
+function fmt(s) {
+  const m = Math.floor(s / 60);
+  return m + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+}
+
+function resetVisuals() {
+  wordEls.forEach(({el}) => el.classList.remove('current','sung'));
+  lineEls.forEach((l, i) => {
+    l.classList.remove('active','past');
+    l.classList.toggle('visible', i === 0);
+  });
+  lastWordIdx = -1;
+}
+
+function tick() {
+  const t = audio.currentTime;
+  const dur = audio.duration || 171;
+
+  progressFill.style.width = (t / dur * 100).toFixed(2) + '%';
+  timeNow.textContent = fmt(t);
+
+  // Determine current word index
+  let curIdx = -1;
+  for (let i = 0; i < wordEls.length; i++) {
+    const nextT = wordEls[i+1]?.t ?? wordEls[i].t + 2.5;
+    if (t >= wordEls[i].t && t < nextT) { curIdx = i; break; }
+  }
+
+  wordEls.forEach(({el, t: wt}, i) => {
+    const nextT = wordEls[i+1]?.t ?? wt + 2.5;
+    if (i === curIdx) {
+      el.classList.add('current'); el.classList.remove('sung');
+    } else if (t >= nextT) {
+      el.classList.remove('current'); el.classList.add('sung');
+    } else {
+      el.classList.remove('current','sung');
+    }
+  });
+
+  // Spawn note on new word
+  if (curIdx !== lastWordIdx && curIdx >= 0) {
+    lastWordIdx = curIdx;
+    if (Math.random() > 0.55) spawnNote();
+  }
+
+  // Find active line index
+  let activeLineIdx = -1;
+  lineEls.forEach((el, i) => {
+    const {show, hide} = lineWindows[i];
+    if (t >= show && t < hide) activeLineIdx = i;
+  });
+
+  // Show a window: 1 past, active, 1 upcoming
+  lineEls.forEach((el, i) => {
+    const {show, hide} = lineWindows[i];
+    const inWindow = i >= activeLineIdx - 1 && i <= activeLineIdx + 1;
+    el.classList.toggle('visible', inWindow || (activeLineIdx === -1 && i === 0));
+    if (t >= show && t < hide) { el.classList.add('active'); el.classList.remove('past'); }
+    else if (t >= hide)        { el.classList.remove('active'); el.classList.add('past'); }
+    else                       { el.classList.remove('active','past'); }
+  });
+
+  raf = requestAnimationFrame(tick);
+}
+
+playBtn.onclick = () => {
+  if (audio.paused) {
+    audio.play();
+    playBtn.textContent = '⏸';
+    raf = requestAnimationFrame(tick);
+  } else {
+    audio.pause();
+    playBtn.textContent = '▶';
+    cancelAnimationFrame(raf);
+  }
+};
+
+restartBtn.onclick = () => {
+  cancelAnimationFrame(raf);
+  audio.currentTime = 0;
+  resetVisuals();
+  progressFill.style.width = '0%';
+  timeNow.textContent = '0:00';
+  if (!audio.paused) raf = requestAnimationFrame(tick);
+};
+
+audio.addEventListener('ended', () => {
+  playBtn.textContent = '▶';
+  cancelAnimationFrame(raf);
+});
+
+audio.addEventListener('loadedmetadata', () => {
+  timeTot.textContent = fmt(audio.duration);
+  statusMsg.textContent = 'Ready';
+  statusMsg.className = 'status-msg ok';
+  playBtn.disabled = false;
+});
+
+audio.addEventListener('error', () => {
+  statusMsg.textContent = 'Audio failed to load (CORS or network)';
+  statusMsg.className = 'status-msg err';
+  playBtn.disabled = true;
+});
+
+audio.addEventListener('waiting', () => {
+  statusMsg.textContent = 'Buffering…';
+  statusMsg.className = 'status-msg';
+});
+audio.addEventListener('playing', () => {
+  statusMsg.textContent = '';
+});
+
+// Scrub
+progressTrack.addEventListener('click', e => {
+  const rect = progressTrack.getBoundingClientRect();
+  audio.currentTime = ((e.clientX - rect.left) / rect.width) * (audio.duration || 171);
+});
+
+// Floating notes
+function spawnNote() {
+  const note = document.createElement('div');
+  note.className = 'note';
+  note.textContent = Math.random() > 0.5 ? '♪' : '♫';
+  note.style.left = (15 + Math.random() * 70) + 'vw';
+  note.style.top  = (25 + Math.random() * 45) + 'vh';
+  document.body.appendChild(note);
+  setTimeout(() => note.remove(), 2900);
+}
+
+// Stars
+const starContainer = document.getElementById('stars');
+for (let i = 0; i < 130; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const sz = Math.random() * 1.8 + 0.8;
+  s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${(Math.random()*4+2).toFixed(1)}s;--o:${(Math.random()*0.55+0.15).toFixed(2)};--dl:${(Math.random()*6).toFixed(1)}s;`;
+  starContainer.appendChild(s);
+}
+
+// Try loading (may get blocked by CORS depending on browser/context)
+audio.load();
+</script>
+</body>
+</html>
