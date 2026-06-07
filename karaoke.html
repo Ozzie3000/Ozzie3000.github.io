@@ -243,7 +243,8 @@
 <div class="stars" id="stars"></div>
 
 <div class="card">
-  <p class="song-meta">CSS Karaoke by Oz. Using: CSS, JSON, ASR, and obviously royalty free music via MP3</p>
+  <p class="song-meta">CSS Karaoke by Oz.
+  <br />Using: CSS, JSON, ASR, and obviously royalty free music via MP3</p>
   <h1 class="song-title">Dear Hearts and Gentle People</h1>
   <p class="song-artist">Larry Douglas — 78rpm digitized recording, c. 1949</p>
 
@@ -490,7 +491,7 @@ const starContainer = document.getElementById('stars');
 for (let i = 0; i < 130; i++) {
   const s = document.createElement('div');
   s.className = 'star';
-  const sz = Math.random() * 1.8 + 0.8;
+  const sz = Math.random() * 3.8 + 0.8;
   s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${(Math.random()*4+2).toFixed(1)}s;--o:${(Math.random()*0.55+0.15).toFixed(2)};--dl:${(Math.random()*6).toFixed(1)}s;`;
   starContainer.appendChild(s);
 }
