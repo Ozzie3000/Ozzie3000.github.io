@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Land of Oz – Stellar Solitaire</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{overflow:hidden;background:#050510;}
+  #root{width:100vw;height:100vh;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+const CLASSIC_SUITS = ["♠","♥","♦","♣"];
+const STELLAR_SUITS = ["⭐","🪐","🚀","👾"];
+const RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+const SUIT_COLOR_C = {"♠":0,"♣":0,"♥":1,"♦":1};
+const SUIT_COLOR_S = {"⭐":0,"🚀":0,"🪐":1,"👾":1};
+
+const THEMES = {
+  gold:{label:"Gold & Deep Space",bg:"linear-gradient(160deg,#050510 0%,#12103a 100%)",stars:"#ffd700",accent:"#ffd700",accent2:"#ff9500",cardFace:"#12123a",cardBack:"linear-gradient(135deg,#1a1060,#0a0830)",cardBorder:"#ffd70088",redSuit:"#ff6060",blackSuit:"#e0e0ff",ui:"#ffd700",uiDim:"#7a5a00",btn:"linear-gradient(135deg,#2a1800,#6a4000)",btnBorder:"#ffd700",glow:"0 0 18px #ffd70088,0 0 36px #b8860044",hudBg:"rgba(10,8,40,0.85)",winColor:"#ffd700"},
+  neon:{label:"Neon Cyan & Purple",bg:"linear-gradient(160deg,#080010 0%,#1a0535 100%)",stars:"#00ffff",accent:"#00ffff",accent2:"#bf00ff",cardFace:"#12022e",cardBack:"linear-gradient(135deg,#200040,#080020)",cardBorder:"#00ffff88",redSuit:"#ff40ff",blackSuit:"#00ffff",ui:"#00ffff",uiDim:"#004455",btn:"linear-gradient(135deg,#080020,#180040)",btnBorder:"#00ffff",glow:"0 0 18px #00ffff88,0 0 36px #bf00ff44",hudBg:"rgba(8,0,20,0.85)",winColor:"#00ffff"},
+  ice:{label:"White & Ice Blue",bg:"linear-gradient(160deg,#060e1a 0%,#0a1e3a 100%)",stars:"#87ceeb",accent:"#ffffff",accent2:"#87ceeb",cardFace:"#dff0fa",cardBack:"linear-gradient(135deg,#0a2040,#0d3060)",cardBorder:"#87ceeb88",redSuit:"#c0392b",blackSuit:"#0a1628",ui:"#ffffff",uiDim:"#3a6080",btn:"linear-gradient(135deg,#0a2040,#0d3060)",btnBorder:"#87ceeb",glow:"0 0 18px #87ceeb88,0 0 36px #ffffff44",hudBg:"rgba(6,14,26,0.85)",winColor:"#87ceeb"},
+};
+
+function makeDeck(ss){
+  const suits=ss==="classic"?CLASSIC_SUITS:STELLAR_SUITS;
+  return suits.flatMap((suit,si)=>RANKS.map((rank,ri)=>({id:`${si}-${ri}`,suit,rank:ri,rankLabel:rank,faceUp:false})));
+}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function getSuitColor(suit,ss){return ss==="classic"?SUIT_COLOR_C[suit]:SUIT_COLOR_S[suit];}
+function canStack(card,onto,ss){if(!onto)return card.rank===12;if(!onto.faceUp)return false;return onto.rank-card.rank===1&&getSuitColor(card.suit,ss)!==getSuitColor(onto.suit,ss);}
+function canFoundation(card,pile){if(!pile.length)return card.rank===0;const top=pile[pile.length-1];return top.suit===card.suit&&card.rank===top.rank+1;}
+function dealGame(ss){
+  const deck=shuffle(makeDeck(ss));
+  const tableau=Array.from({length:7},(_,i)=>{const col=deck.splice(0,i+1);col[col.length-1].faceUp=true;return col;});
+  return{tableau,stock:deck.map(c=>({...c,faceUp:false})),waste:[],foundations:[[],[],[],[]]};
+}
+
+function Starfield({color}){
+  const stars=useRef(Array.from({length:80},()=>({x:Math.random()*100,y:Math.random()*100,r:Math.random()*1.5+0.3,op:Math.random()*0.6+0.2,spd:Math.random()*2+1}))).current;
+  return(
+    <svg style={{position:"fixed",inset:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:0}}>
+      {stars.map((s,i)=>(
+        <circle key={i} cx={`${s.x}%`} cy={`${s.y}%`} r={s.r} fill={color} opacity={s.op}>
+          <animate attributeName="opacity" values={`${s.op};${s.op*0.3};${s.op}`} dur={`${s.spd}s`} repeatCount="indefinite"/>
+        </circle>
+      ))}
+    </svg>
+  );
+}
+
+function Logo({theme}){
+  const t=THEMES[theme||"gold"];
+  return(
+    <div style={{textAlign:"center",marginBottom:24,userSelect:"none"}}>
+      <svg viewBox="0 0 420 90" width="100%" style={{maxWidth:420,filter:`drop-shadow(0 0 12px ${t.accent})`}}>
+        <defs>
+          <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={t.accent}/><stop offset="50%" stopColor={t.accent2}/><stop offset="100%" stopColor={t.accent}/>
+          </linearGradient>
+          <filter id="logoGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <ellipse cx="36" cy="45" rx="22" ry="22" fill="none" stroke="url(#logoGrad)" strokeWidth="2.5" filter="url(#logoGlow)"/>
+        <ellipse cx="36" cy="45" rx="13" ry="13" fill={t.accent+"22"} stroke="url(#logoGrad)" strokeWidth="1.5"/>
+        <ellipse cx="36" cy="45" rx="30" ry="8" fill="none" stroke="url(#logoGrad)" strokeWidth="1.5" opacity="0.7"/>
+        <circle cx="30" cy="39" r="2.5" fill={t.accent} opacity="0.8"/>
+        <text x="72" y="38" fontFamily="Georgia,serif" fontSize="28" fontWeight="900" fill="url(#logoGrad)" filter="url(#logoGlow)" letterSpacing="6">LAND OF OZ</text>
+        <text x="72" y="62" fontFamily="Georgia,serif" fontSize="13" fill={t.accent2} letterSpacing="8" opacity="0.85">STELLAR SOLITAIRE</text>
+        <line x1="72" y1="68" x2="400" y2="68" stroke="url(#logoGrad)" strokeWidth="1" opacity="0.4"/>
+      </svg>
+    </div>
+  );
+}
+
+function Card({card,theme,ss,small,cssStyle,onMouseDown,onTouchStart,dragging}){
+  const t=THEMES[theme];
+  const isRed=card.faceUp&&getSuitColor(card.suit,ss)===1;
+  const sColor=isRed?t.redSuit:t.blackSuit;
+  const w=small?52:68,h=small?72:96;
+  const base={width:w,height:h,borderRadius:7,boxShadow:dragging?t.glow:"0 2px 8px #00000080",flexShrink:0,...(cssStyle||{})};
+  if(!card.faceUp)return(
+    <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} style={{...base,background:t.cardBack,border:`1.5px solid ${t.cardBorder}`,cursor:"default"}}>
+      <div style={{width:"100%",height:"100%",borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",background:"repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(255,255,255,0.03) 4px,rgba(255,255,255,0.03) 8px)"}}>
+        <span style={{fontSize:20,opacity:0.5}}>🚀</span>
+      </div>
+    </div>
+  );
+  return(
+    <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} style={{...base,background:t.cardFace,border:`1.5px solid ${t.cardBorder}`,cursor:"grab",display:"flex",flexDirection:"column",padding:"3px 5px",userSelect:"none"}}>
+      <div style={{fontSize:small?10:12,fontWeight:"bold",color:sColor,lineHeight:1}}>{card.rankLabel}</div>
+      <div style={{fontSize:small?11:13,lineHeight:1,color:sColor}}>{card.suit}</div>
+      <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",fontSize:small?18:26,color:sColor}}>{card.suit}</div>
+      <div style={{fontSize:small?10:12,fontWeight:"bold",color:sColor,transform:"rotate(180deg)",lineHeight:1,alignSelf:"flex-end"}}>{card.rankLabel}</div>
+    </div>
+  );
+}
+
+function EmptyPile({theme,small,label,cssStyle}){
+  const t=THEMES[theme];
+  const w=small?52:68,h=small?72:96;
+  return(<div style={{width:w,height:h,borderRadius:7,border:`1.5px dashed ${t.cardBorder}`,display:"flex",alignItems:"center",justifyContent:"center",color:t.uiDim,fontSize:12,...(cssStyle||{})}}>{label}</div>);
+}
+
+function Btn({children,onClick,theme,small,btnStyle}){
+  const t=THEMES[theme||"gold"];
+  const [hover,setHover]=useState(false);
+  return(
+    <button onClick={onClick} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
+      style={{background:t.btn,border:`1.5px solid ${t.btnBorder}`,color:t.accent,fontFamily:"Georgia,serif",fontSize:small?11:13,fontWeight:700,padding:small?"8px 14px":"12px 24px",borderRadius:8,cursor:"pointer",letterSpacing:1,boxShadow:hover?t.glow:"none",transition:"box-shadow 0.2s",outline:"none",...(btnStyle||{})}}>
+      {children}
+    </button>
+  );
+}
+
+function SetupScreen({step,settings,onChoose,theme}){
+  const t=THEMES[theme||"gold"];
+  const steps=[
+    {q:"Choose Draw Mode",opts:[{label:"Draw 1",sub:"Relaxed pace",val:{drawMode:1}},{label:"Draw 3",sub:"Classic challenge",val:{drawMode:3}}]},
+    {q:"Choose Your Suits",opts:[{label:"♠ ♥ ♦ ♣",sub:"Classic",val:{suitStyle:"classic"}},{label:"⭐ 🪐 🚀 👾",sub:"Stellar",val:{suitStyle:"stellar"}}]},
+    {q:"Choose Your Visual Theme",opts:[{label:"Gold & Deep Space",sub:"Epic & grand",val:{theme:"gold"},color:"#ffd700"},{label:"Neon Cyan & Purple",sub:"Futuristic & edgy",val:{theme:"neon"},color:"#00ffff"},{label:"White & Ice Blue",sub:"Clean & premium",val:{theme:"ice"},color:"#87ceeb"}]},
+  ];
+  const s=steps[step-1];
+  return(
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:20,padding:"0 16px"}}>
+      <Logo theme={theme||"gold"}/>
+      <div style={{color:t.accent,fontFamily:"Georgia,serif",fontSize:14,letterSpacing:2,marginBottom:4}}>STEP {step} OF 3</div>
+      <div style={{color:t.accent,fontFamily:"Georgia,serif",fontSize:18,fontWeight:700,textAlign:"center"}}>{s.q}</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:16,justifyContent:"center",marginTop:8}}>
+        {s.opts.map(o=>(
+          <div key={o.label} onClick={()=>onChoose(o.val)}
+            style={{background:t.btn,border:`2px solid ${o.color||t.btnBorder}`,borderRadius:12,padding:"18px 28px",cursor:"pointer",textAlign:"center",minWidth:130,boxShadow:`0 0 12px ${o.color||t.btnBorder}44`,transition:"box-shadow 0.2s",userSelect:"none"}}
+            onMouseEnter={e=>e.currentTarget.style.boxShadow=`0 0 24px ${o.color||t.btnBorder}`}
+            onMouseLeave={e=>e.currentTarget.style.boxShadow=`0 0 12px ${o.color||t.btnBorder}44`}>
+            <div style={{color:o.color||t.accent,fontFamily:"Georgia,serif",fontSize:18,fontWeight:900,marginBottom:6}}>{o.label}</div>
+            <div style={{color:t.uiDim,fontSize:11,fontFamily:"sans-serif"}}>{o.sub}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GameScreen({settings,onStartOver,score,setScore}){
+  const{drawMode,suitStyle,theme}=settings;
+  const t=THEMES[theme];
+  const small=window.innerWidth<520;
+  const cardW=small?52:68;
+  const overlap=small?18:22;
+
+  const initState=useCallback(()=>({...dealGame(suitStyle),moves:0,time:0,won:false}),[suitStyle]);
+  const[gs,setGs]=useState(initState);
+  const[history,setHistory]=useState([]);
+  const[drag,setDrag]=useState(null);
+  const[dragPos,setDragPos]=useState({x:0,y:0});
+  const boardRef=useRef(null);
+  const timerRef=useRef(null);
+
+  useEffect(()=>{
+    clearInterval(timerRef.current);
+    if(!gs.won)timerRef.current=setInterval(()=>setGs(g=>({...g,time:g.time+1})),1000);
+    return()=>clearInterval(timerRef.current);
+  },[gs.won]);
+
+  const fmt=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  function saveHistory(g){setHistory(h=>[...h.slice(-30),JSON.parse(JSON.stringify(g))]);}
+  function undo(){if(!history.length)return;setHistory(h=>h.slice(0,-1));setGs(history[history.length-1]);}
+
+  function autoFoundation(state){
+    let changed=true,s=state;
+    while(changed){
+      changed=false;
+      if(s.waste.length){
+        const c=s.waste[s.waste.length-1];
+        for(let fi=0;fi<4;fi++){if(canFoundation(c,s.foundations[fi])){s={...s,waste:s.waste.slice(0,-1),foundations:s.foundations.map((f,i)=>i===fi?[...f,c]:f)};changed=true;break;}}
+      }
+      for(let ci=0;ci<7&&!changed;ci++){
+        const col=s.tableau[ci];if(!col.length)continue;
+        const c=col[col.length-1];if(!c.faceUp)continue;
+        for(let fi=0;fi<4;fi++){
+          if(canFoundation(c,s.foundations[fi])){
+            s={...s,tableau:s.tableau.map((tc,i)=>{if(i!==ci)return tc;const nc=tc.slice(0,-1);if(nc.length&&!nc[nc.length-1].faceUp)nc[nc.length-1]={...nc[nc.length-1],faceUp:true};return nc;}),foundations:s.foundations.map((f,i)=>i===fi?[...f,c]:f)};
+            changed=true;break;
+          }
+        }
+      }
+    }
+    return s;
+  }
+
+  function applyMove(newGs){
+    const s2=autoFoundation(newGs);
+    const won=s2.foundations.every(f=>f.length===13);
+    if(won)setScore(sc=>({...sc,wins:sc.wins+1}));
+    setGs({...s2,won});
+  }
+
+  function clickStock(){
+    saveHistory(gs);
+    if(!gs.stock.length){if(!gs.waste.length)return;setGs(g=>({...g,stock:[...g.waste].reverse().map(c=>({...c,faceUp:false})),waste:[],moves:g.moves+1}));return;}
+    const drawn=gs.stock.slice(-drawMode).map(c=>({...c,faceUp:true}));
+    setGs(g=>({...g,stock:g.stock.slice(0,-drawMode),waste:[...g.waste,...drawn],moves:g.moves+1}));
+  }
+
+  function clickWasteTop(){
+    if(!gs.waste.length)return;
+    const card=gs.waste[gs.waste.length-1];
+    for(let fi=0;fi<4;fi++){if(canFoundation(card,gs.foundations[fi])){saveHistory(gs);applyMove({...gs,waste:gs.waste.slice(0,-1),foundations:gs.foundations.map((f,i)=>i===fi?[...f,card]:f),moves:gs.moves+1});return;}}
+  }
+
+  function clickTableauCard(ci,cardi){
+    const col=gs.tableau[ci];
+    if(cardi!==col.length-1||!col[cardi].faceUp)return;
+    const card=col[cardi];
+    for(let fi=0;fi<4;fi++){
+      if(canFoundation(card,gs.foundations[fi])){
+        saveHistory(gs);
+        applyMove({...gs,tableau:gs.tableau.map((tc,i)=>{if(i!==ci)return tc;const nc=tc.slice(0,-1);if(nc.length&&!nc[nc.length-1].faceUp)nc[nc.length-1]={...nc[nc.length-1],faceUp:true};return nc;}),foundations:gs.foundations.map((f,i)=>i===fi?[...f,card]:f),moves:gs.moves+1});
+        return;
+      }
+    }
+  }
+
+  useEffect(()=>{
+    if(!drag)return;
+    const onMove=e=>{const p=e.touches?e.touches[0]:e;setDragPos({x:p.clientX,y:p.clientY});};
+    const onUp=e=>{const p=e.changedTouches?e.changedTouches[0]:e;dropCards(p.clientX,p.clientY);setDrag(null);};
+    window.addEventListener("mousemove",onMove);window.addEventListener("mouseup",onUp);
+    window.addEventListener("touchmove",onMove,{passive:true});window.addEventListener("touchend",onUp);
+    return()=>{window.removeEventListener("mousemove",onMove);window.removeEventListener("mouseup",onUp);window.removeEventListener("touchmove",onMove);window.removeEventListener("touchend",onUp);};
+  },[drag,gs]);
+
+  function dropCards(cx,cy){
+    if(!drag||!boardRef.current)return;
+    let target=null;
+    for(const el of boardRef.current.querySelectorAll("[data-dropzone]")){const r=el.getBoundingClientRect();if(cx>=r.left&&cx<=r.right&&cy>=r.top&&cy<=r.bottom){target=el.dataset.dropzone;break;}}
+    if(!target)return;
+    const{cards,from,fromIdx}=drag;
+    if(target.startsWith("f")&&cards.length===1){
+      const fi=parseInt(target[1]);
+      if(canFoundation(cards[0],gs.foundations[fi])){saveHistory(gs);const next=removeFromSource(gs,from,fromIdx);applyMove({...next,foundations:next.foundations.map((f,i)=>i===fi?[...f,cards[0]]:f),moves:gs.moves+1});return;}
+    }
+    if(target.startsWith("t")){
+      const ti=parseInt(target.slice(1));
+      const col=gs.tableau[ti];
+      const onto=col.length?col[col.length-1]:null;
+      if(canStack(cards[0],onto,suitStyle)){saveHistory(gs);const next=removeFromSource(gs,from,fromIdx);applyMove({...next,tableau:next.tableau.map((tc,i)=>i===ti?[...tc,...cards]:tc),moves:gs.moves+1});}
+    }
+  }
+
+  function removeFromSource(state,from,fromIdx){
+    if(from==="waste")return{...state,waste:state.waste.slice(0,-1)};
+    if(from.startsWith("t")){
+      const ti=parseInt(from.slice(1));
+      return{...state,tableau:state.tableau.map((tc,i)=>{if(i!==ti)return tc;const nc=tc.slice(0,fromIdx);if(nc.length&&!nc[nc.length-1].faceUp)nc[nc.length-1]={...nc[nc.length-1],faceUp:true};return nc;})};
+    }
+    return state;
+  }
+
+  function startDragFrom(cards,from,fromIdx,e){
+    e.preventDefault();
+    const p=e.touches?e.touches[0]:e;
+    setDrag({cards,from,fromIdx});
+    setDragPos({x:p.clientX,y:p.clientY});
+  }
+
+  function handleNewGame(){clearInterval(timerRef.current);setHistory([]);setGs(initState());setScore(sc=>({...sc,games:sc.games+1}));}
+
+  const cardH=small?72:96;
+  const fanOffset=small?14:18;
+
+  return(
+    <div style={{display:"flex",flexDirection:"column",height:"100%",minHeight:0}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",padding:"8px 12px",background:t.hudBg,borderBottom:`1px solid ${t.accent}33`,gap:6,flexShrink:0,zIndex:10}}>
+        <div style={{display:"flex",gap:14}}>
+          {[["⏱",fmt(gs.time)],["🔢",gs.moves],["🏆",`${score.wins}/${score.games}`]].map(([ic,v])=>(
+            <div key={ic} style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
+              <span style={{fontSize:10,color:t.uiDim}}>{ic}</span>
+              <span style={{fontSize:13,fontWeight:"bold",color:t.ui,fontFamily:"Georgia,serif"}}>{v}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+          <Btn theme={theme} small onClick={undo}>↩ Undo</Btn>
+          <Btn theme={theme} small onClick={handleNewGame}>🔄 New Game</Btn>
+          <Btn theme={theme} small onClick={onStartOver}>🚀 Start Over</Btn>
+        </div>
+      </div>
+
+      <div ref={boardRef} style={{flex:1,overflowY:"auto",padding:small?"8px 4px":"12px 8px",position:"relative"}}>
+        <div style={{display:"flex",gap:small?4:8,marginBottom:small?8:12,justifyContent:"center",flexWrap:"wrap",alignItems:"flex-start"}}>
+          <div data-dropzone="stock" style={{cursor:"pointer"}} onClick={clickStock}>
+            {gs.stock.length?<Card card={{...gs.stock[gs.stock.length-1],faceUp:false}} theme={theme} ss={suitStyle} small={small}/>:<EmptyPile theme={theme} small={small} label="↺"/>}
+          </div>
+          <div style={{position:"relative",width:drawMode===3?(cardW+fanOffset*2):cardW,height:cardH}}>
+            {gs.waste.length===0?<EmptyPile theme={theme} small={small} label=""/>:
+              (()=>{
+                const visible=drawMode===3?gs.waste.slice(-3):gs.waste.slice(-1);
+                return visible.map((card,i)=>{
+                  const isTop=i===visible.length-1;
+                  return(
+                    <div key={card.id} style={{position:"absolute",left:i*(drawMode===3?fanOffset:0),top:0,zIndex:i}}>
+                      <Card card={card} theme={theme} ss={suitStyle} small={small}
+                        onMouseDown={isTop?e=>startDragFrom([card],"waste",gs.waste.length-1,e):undefined}
+                        onTouchStart={isTop?e=>startDragFrom([card],"waste",gs.waste.length-1,e):undefined}
+                        onClick={isTop?clickWasteTop:undefined}
+                        dragging={isTop&&drag?.from==="waste"}/>
+                    </div>
+                  );
+                });
+              })()
+            }
+          </div>
+          <div style={{width:small?8:16}}/>
+          {[0,1,2,3].map(fi=>(
+            <div key={fi} data-dropzone={`f${fi}`}>
+              {gs.foundations[fi].length?<Card card={gs.foundations[fi][gs.foundations[fi].length-1]} theme={theme} ss={suitStyle} small={small}/>:<EmptyPile theme={theme} small={small} label="A"/>}
+            </div>
+          ))}
+        </div>
+
+        <div style={{display:"flex",gap:small?4:8,justifyContent:"center",alignItems:"flex-start"}}>
+          {gs.tableau.map((col,ci)=>(
+            <div key={ci} data-dropzone={`t${ci}`} style={{position:"relative",width:cardW,minHeight:cardH+10}}>
+              {col.length===0?<EmptyPile theme={theme} small={small} label="K" cssStyle={{position:"absolute",top:0}}/>:
+                col.map((card,cardi)=>(
+                  <div key={card.id} style={{position:"absolute",top:cardi*overlap,left:0,zIndex:cardi}}>
+                    <Card card={card} theme={theme} ss={suitStyle} small={small}
+                      onMouseDown={card.faceUp?e=>startDragFrom(col.slice(cardi),`t${ci}`,cardi,e):undefined}
+                      onTouchStart={card.faceUp?e=>startDragFrom(col.slice(cardi),`t${ci}`,cardi,e):undefined}
+                      onClick={()=>clickTableauCard(ci,cardi)}
+                      dragging={drag?.from===`t${ci}`&&cardi>=(drag?.fromIdx??Infinity)}/>
+                  </div>
+                ))
+              }
+              <div style={{height:(col.length?(col.length-1)*overlap+cardH:cardH)+10}}/>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {drag&&(
+        <div style={{position:"fixed",left:dragPos.x-cardW/2,top:dragPos.y-20,zIndex:9999,pointerEvents:"none"}}>
+          {drag.cards.map((c,i)=>(
+            <div key={c.id} style={{position:"absolute",top:i*overlap}}>
+              <Card card={c} theme={theme} ss={suitStyle} small={small} dragging/>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {gs.won&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:10000}}>
+          <div style={{fontSize:60,marginBottom:16}}>🎉</div>
+          <div style={{fontFamily:"Georgia,serif",fontSize:28,fontWeight:900,color:t.winColor,textShadow:t.glow,marginBottom:8}}>YOU WIN!</div>
+          <div style={{color:t.accent2,marginBottom:24,fontFamily:"sans-serif"}}>{gs.moves} moves · {fmt(gs.time)}</div>
+          <div style={{display:"flex",gap:12}}>
+            <Btn theme={theme} onClick={handleNewGame}>🔄 New Game</Btn>
+            <Btn theme={theme} onClick={onStartOver}>🚀 Start Over</Btn>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function App(){
+  const[screen,setScreen]=useState("intro");
+  const[settings,setSettings]=useState({drawMode:1,suitStyle:"classic",theme:"gold"});
+  const[score,setScore]=useState({wins:0,games:0});
+
+  function handleSetup(vals){
+    const ns={...settings,...vals};
+    setSettings(ns);
+    if(screen==="setup1")setScreen("setup2");
+    else if(screen==="setup2")setScreen("setup3");
+    else if(screen==="setup3"){setScore({wins:0,games:1});setScreen("game");}
+  }
+
+  const t=THEMES[settings.theme||"gold"];
+  return(
+    <div style={{minHeight:"100vh",background:t.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:screen==="game"?"flex-start":"center",fontFamily:"Georgia,serif",position:"relative",overflow:"hidden"}}>
+      <Starfield color={t.stars}/>
+      <div style={{position:"relative",zIndex:1,width:"100%",maxWidth:700,display:"flex",flexDirection:"column",height:screen==="game"?"100vh":"auto"}}>
+        {screen==="intro"&&(
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:20,padding:24}}>
+            <Logo theme={settings.theme}/>
+            <div style={{color:t.accent2,fontSize:13,letterSpacing:3,textAlign:"center",fontStyle:"italic",opacity:0.85}}>"Where the stars align and the cards decide your fate..."</div>
+            <Btn theme={settings.theme} onClick={()=>setScreen("setup1")} btnStyle={{marginTop:12,fontSize:15,padding:"14px 36px"}}>✦ BEGIN YOUR JOURNEY ✦</Btn>
+          </div>
+        )}
+        {["setup1","setup2","setup3"].includes(screen)&&(
+          <div style={{padding:24}}>
+            <SetupScreen step={screen==="setup1"?1:screen==="setup2"?2:3} settings={settings} onChoose={handleSetup} theme={settings.theme}/>
+          </div>
+        )}
+        {screen==="game"&&(
+          <GameScreen settings={settings} score={score} setScore={setScore}
+            onStartOver={()=>{setScreen("intro");setSettings({drawMode:1,suitStyle:"classic",theme:"gold"});}}/>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
