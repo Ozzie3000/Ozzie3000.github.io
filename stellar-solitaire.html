@@ -51,6 +51,16 @@ function getCardDims() {
     small:   vw < 520,
   };
 }
+
+function getMaxWidth() {
+  const vw = window.innerWidth;
+  if (vw >= 3840) return 1800;
+  if (vw >= 2560) return 1400;
+  if (vw >= 1920) return 900;
+  if (vw >= 1280) return 750;
+  return 700;
+}
+
 // ─────────────────────────────────────────────────────────────
 
 const THEMES = {
@@ -431,7 +441,7 @@ function App(){
   return(
     <div style={{minHeight:"100vh",background:t.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:screen==="game"?"flex-start":"center",fontFamily:"Georgia,serif",position:"relative",overflow:"hidden"}}>
       <Starfield color={t.stars}/>
-      <div style={{position:"relative",zIndex:1,width:"100%",maxWidth:900,display:"flex",flexDirection:"column",height:screen==="game"?"100vh":"auto"}}>
+      <div style={{position:"relative",zIndex:1,width:"100%",maxWidth:getMaxWidth(),display:"flex",flexDirection:"column",height:screen==="game"?"100vh":"auto"}}>
         {screen==="intro"&&(
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:20,padding:24}}>
             <Logo theme={settings.theme}/>
