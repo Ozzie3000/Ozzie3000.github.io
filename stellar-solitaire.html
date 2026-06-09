@@ -238,11 +238,22 @@ function GameScreen({settings,onStartOver,score,setScore}){
   }
 
   function applyMove(newGs){
-    const s2=autoFoundation(newGs);
-    const won=s2.foundations.every(f=>f.length===13);
+    const won=newGs.foundations.every(f=>f.length===13);
     if(won)setScore(sc=>({...sc,wins:sc.wins+1}));
-    setGs({...s2,won});
+    setGs({...newGs,won});
   }
+
+  function sendToFoundation(card,source,fromIdx){
+  for(let fi=0;fi<4;fi++){
+    if(canFoundation(card,gs.foundations[fi])){
+      saveHistory(gs);
+      const next=removeFromSource(gs,source,fromIdx);
+      applyMove({...next,foundations:next.foundations.map((f,i)=>i===fi?[...f,card]:f),moves:gs.moves+1});
+      return true;
+    }
+  }
+  return false;
+}
 
   function clickStock(){
     saveHistory(gs);
@@ -260,14 +271,18 @@ function GameScreen({settings,onStartOver,score,setScore}){
   function clickTableauCard(ci,cardi){
     const col=gs.tableau[ci];
     if(cardi!==col.length-1||!col[cardi].faceUp)return;
-    const card=col[cardi];
-    for(let fi=0;fi<4;fi++){
-      if(canFoundation(card,gs.foundations[fi])){
-        saveHistory(gs);
-        applyMove({...gs,tableau:gs.tableau.map((tc,i)=>{if(i!==ci)return tc;const nc=tc.slice(0,-1);if(nc.length&&!nc[nc.length-1].faceUp)nc[nc.length-1]={...nc[nc.length-1],faceUp:true};return nc;}),foundations:gs.foundations.map((f,i)=>i===fi?[...f,card]:f),moves:gs.moves+1});
-        return;
-      }
+    // single click does nothing to foundation now
+  }
+
+  const lastTap=useRef({});
+  function handleCardInteract(card,source,fromIdx,e){
+    const now=Date.now();
+    const key=card.id;
+    if(now-( lastTap.current[key]||0)<350){
+      // double click/tap — send to foundation
+      sendToFoundation(card,source,fromIdx);
     }
+    lastTap.current[key]=now;
   }
 
   useEffect(()=>{
@@ -356,7 +371,8 @@ function GameScreen({settings,onStartOver,score,setScore}){
                         <Card {...cp} card={card}
                           onMouseDown={isTop?e=>startDragFrom([card],"waste",gs.waste.length-1,e):undefined}
                           onTouchStart={isTop?e=>startDragFrom([card],"waste",gs.waste.length-1,e):undefined}
-                          onClick={isTop?clickWasteTop:undefined}
+                          onDoubleClick={isTop?()=>sendToFoundation(card,"waste",gs.waste.length-1):undefined}
+                          onTouchEnd={isTop?e=>handleCardInteract(card,"waste",gs.waste.length-1,e):undefined}
                           dragging={isTop&&drag?.from==="waste"}/>
                       </div>
                     );
@@ -386,7 +402,8 @@ function GameScreen({settings,onStartOver,score,setScore}){
                     <Card {...cp} card={card}
                       onMouseDown={card.faceUp?e=>startDragFrom(col.slice(cardi),`t${ci}`,cardi,e):undefined}
                       onTouchStart={card.faceUp?e=>startDragFrom(col.slice(cardi),`t${ci}`,cardi,e):undefined}
-                      onClick={()=>clickTableauCard(ci,cardi)}
+                      onDoubleClick={card.faceUp?()=>sendToFoundation(card,`t${ci}`,cardi):undefined}
+                      onTouchEnd={card.faceUp?e=>handleCardInteract(card,`t${ci}`,cardi,e):undefined}
                       dragging={drag?.from===`t${ci}`&&cardi>=(drag?.fromIdx??Infinity)}/>
                   </div>
                 ))
