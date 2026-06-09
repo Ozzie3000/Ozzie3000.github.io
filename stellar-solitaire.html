@@ -9,11 +9,8 @@
 <meta property="og:url" content="https://ozzie3000.github.io/stellar-solitaire.html">
 <meta property="og:type" content="website">
 <meta name="author" content="Oz">
-
-<!-- Twitter/X specifically uses these -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://ozzie3000.github.io/images/LandofOzSolitaire_B.jpg">
-<meta name="author" content="Oz">
 <title>Land of Oz – Stellar Solitaire</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
 <style>
@@ -35,6 +32,26 @@ const STELLAR_SUITS = ["⭐","🪐","🚀","👾"];
 const RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
 const SUIT_COLOR_C = {"♠":0,"♣":0,"♥":1,"♦":1};
 const SUIT_COLOR_S = {"⭐":0,"🚀":0,"🪐":1,"👾":1};
+
+// ─── CARD SIZE CONFIG ─────────────────────────────────────────
+const CARD_W_DESKTOP = 100;    // ← tune desktop independently
+const CARD_W_TABLET  = 78;     // ← tune tablet independently
+const CARD_RATIO     = 1.4;    // height = width × ratio (locked)
+
+function getCardDims() {
+  const vw = window.innerWidth;
+  const w = vw >= 1024 ? CARD_W_DESKTOP
+           : vw >= 520  ? CARD_W_TABLET
+           : Math.floor(vw / 8.5);   // mobile: scales to viewport
+  return {
+    cardW:   w,
+    cardH:   Math.round(w * CARD_RATIO),
+    overlap: Math.round(w * 0.32),
+    fanOff:  Math.round(w * 0.22),
+    small:   vw < 520,
+  };
+}
+// ─────────────────────────────────────────────────────────────
 
 const THEMES = {
   gold:{label:"Gold & Deep Space",bg:"linear-gradient(160deg,#050510 0%,#12103a 100%)",stars:"#ffd700",accent:"#ffd700",accent2:"#ff9500",cardFace:"#12123a",cardBack:"linear-gradient(135deg,#1a1060,#0a0830)",cardBorder:"#ffd70088",redSuit:"#ff6060",blackSuit:"#e0e0ff",ui:"#ffd700",uiDim:"#7a5a00",btn:"linear-gradient(135deg,#2a1800,#6a4000)",btnBorder:"#ffd700",glow:"0 0 18px #ffd70088,0 0 36px #b8860044",hudBg:"rgba(10,8,40,0.85)",winColor:"#ffd700"},
@@ -92,33 +109,35 @@ function Logo({theme}){
   );
 }
 
-function Card({card,theme,ss,small,cssStyle,onMouseDown,onTouchStart,dragging}){
+// cardW + cardH passed in from parent — no hardcoded sizes inside
+function Card({card,theme,ss,cardW,cardH,small,cssStyle,onMouseDown,onTouchStart,dragging}){
   const t=THEMES[theme];
   const isRed=card.faceUp&&getSuitColor(card.suit,ss)===1;
   const sColor=isRed?t.redSuit:t.blackSuit;
-  const w=small?52:68,h=small?72:96;
-  const base={width:w,height:h,borderRadius:7,boxShadow:dragging?t.glow:"0 2px 8px #00000080",flexShrink:0,...(cssStyle||{})};
+  const base={width:cardW,height:cardH,borderRadius:7,boxShadow:dragging?t.glow:"0 2px 8px #00000080",flexShrink:0,...(cssStyle||{})};
   if(!card.faceUp)return(
     <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} style={{...base,background:t.cardBack,border:`1.5px solid ${t.cardBorder}`,cursor:"default"}}>
       <div style={{width:"100%",height:"100%",borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",background:"repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(255,255,255,0.03) 4px,rgba(255,255,255,0.03) 8px)"}}>
-        <span style={{fontSize:20,opacity:0.5}}>🚀</span>
+        <span style={{fontSize:Math.round(cardW*0.28),opacity:0.5}}>🚀</span>
       </div>
     </div>
   );
+  const fs1=Math.round(cardW*0.15); // rank label
+  const fs2=Math.round(cardW*0.17); // suit corner
+  const fs3=Math.round(cardW*0.36); // centre suit
   return(
     <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} style={{...base,background:t.cardFace,border:`1.5px solid ${t.cardBorder}`,cursor:"grab",display:"flex",flexDirection:"column",padding:"3px 5px",userSelect:"none"}}>
-      <div style={{fontSize:small?10:12,fontWeight:"bold",color:sColor,lineHeight:1}}>{card.rankLabel}</div>
-      <div style={{fontSize:small?11:13,lineHeight:1,color:sColor}}>{card.suit}</div>
-      <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",fontSize:small?18:26,color:sColor}}>{card.suit}</div>
-      <div style={{fontSize:small?10:12,fontWeight:"bold",color:sColor,transform:"rotate(180deg)",lineHeight:1,alignSelf:"flex-end"}}>{card.rankLabel}</div>
+      <div style={{fontSize:fs1,fontWeight:"bold",color:sColor,lineHeight:1}}>{card.rankLabel}</div>
+      <div style={{fontSize:fs2,lineHeight:1,color:sColor}}>{card.suit}</div>
+      <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",fontSize:fs3,color:sColor}}>{card.suit}</div>
+      <div style={{fontSize:fs1,fontWeight:"bold",color:sColor,transform:"rotate(180deg)",lineHeight:1,alignSelf:"flex-end"}}>{card.rankLabel}</div>
     </div>
   );
 }
 
-function EmptyPile({theme,small,label,cssStyle}){
+function EmptyPile({theme,cardW,cardH,label,cssStyle}){
   const t=THEMES[theme];
-  const w=small?52:68,h=small?72:96;
-  return(<div style={{width:w,height:h,borderRadius:7,border:`1.5px dashed ${t.cardBorder}`,display:"flex",alignItems:"center",justifyContent:"center",color:t.uiDim,fontSize:12,...(cssStyle||{})}}>{label}</div>);
+  return(<div style={{width:cardW,height:cardH,borderRadius:7,border:`1.5px dashed ${t.cardBorder}`,display:"flex",alignItems:"center",justifyContent:"center",color:t.uiDim,fontSize:12,...(cssStyle||{})}}>{label}</div>);
 }
 
 function Btn({children,onClick,theme,small,btnStyle}){
@@ -163,9 +182,10 @@ function SetupScreen({step,settings,onChoose,theme}){
 function GameScreen({settings,onStartOver,score,setScore}){
   const{drawMode,suitStyle,theme}=settings;
   const t=THEMES[theme];
-  const small=window.innerWidth<520;
-  const cardW=small?52:68;
-  const overlap=small?18:22;
+
+  // ── All card dimensions from one place ──────────────────────
+  const {cardW, cardH, overlap, fanOff, small} = getCardDims();
+  // ────────────────────────────────────────────────────────────
 
   const initState=useCallback(()=>({...dealGame(suitStyle),moves:0,time:0,won:false}),[suitStyle]);
   const[gs,setGs]=useState(initState);
@@ -285,8 +305,7 @@ function GameScreen({settings,onStartOver,score,setScore}){
 
   function handleNewGame(){clearInterval(timerRef.current);setHistory([]);setGs(initState());setScore(sc=>({...sc,games:sc.games+1}));}
 
-  const cardH=small?72:96;
-  const fanOffset=small?14:18;
+  const cp={theme,ss:suitStyle,cardW,cardH,small}; // shared card props shorthand
 
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100%",minHeight:0}}>
@@ -308,43 +327,53 @@ function GameScreen({settings,onStartOver,score,setScore}){
 
       <div ref={boardRef} style={{flex:1,overflowY:"auto",padding:small?"8px 4px":"12px 8px",position:"relative"}}>
         <div style={{display:"flex",gap:small?4:8,marginBottom:small?8:12,justifyContent:"center",flexWrap:"wrap",alignItems:"flex-start"}}>
+          {/* Stock */}
           <div data-dropzone="stock" style={{cursor:"pointer"}} onClick={clickStock}>
-            {gs.stock.length?<Card card={{...gs.stock[gs.stock.length-1],faceUp:false}} theme={theme} ss={suitStyle} small={small}/>:<EmptyPile theme={theme} small={small} label="↺"/>}
+            {gs.stock.length
+              ? <Card {...cp} card={{...gs.stock[gs.stock.length-1],faceUp:false}}/>
+              : <EmptyPile theme={theme} cardW={cardW} cardH={cardH} label="↺"/>}
           </div>
-          <div style={{position:"relative",width:drawMode===3?(cardW+fanOffset*2):cardW,height:cardH}}>
-            {gs.waste.length===0?<EmptyPile theme={theme} small={small} label=""/>:
-              (()=>{
-                const visible=drawMode===3?gs.waste.slice(-3):gs.waste.slice(-1);
-                return visible.map((card,i)=>{
-                  const isTop=i===visible.length-1;
-                  return(
-                    <div key={card.id} style={{position:"absolute",left:i*(drawMode===3?fanOffset:0),top:0,zIndex:i}}>
-                      <Card card={card} theme={theme} ss={suitStyle} small={small}
-                        onMouseDown={isTop?e=>startDragFrom([card],"waste",gs.waste.length-1,e):undefined}
-                        onTouchStart={isTop?e=>startDragFrom([card],"waste",gs.waste.length-1,e):undefined}
-                        onClick={isTop?clickWasteTop:undefined}
-                        dragging={isTop&&drag?.from==="waste"}/>
-                    </div>
-                  );
-                });
-              })()
+          {/* Waste */}
+          <div style={{position:"relative",width:drawMode===3?(cardW+fanOff*2):cardW,height:cardH}}>
+            {gs.waste.length===0
+              ? <EmptyPile theme={theme} cardW={cardW} cardH={cardH} label=""/>
+              : (()=>{
+                  const visible=drawMode===3?gs.waste.slice(-3):gs.waste.slice(-1);
+                  return visible.map((card,i)=>{
+                    const isTop=i===visible.length-1;
+                    return(
+                      <div key={card.id} style={{position:"absolute",left:i*(drawMode===3?fanOff:0),top:0,zIndex:i}}>
+                        <Card {...cp} card={card}
+                          onMouseDown={isTop?e=>startDragFrom([card],"waste",gs.waste.length-1,e):undefined}
+                          onTouchStart={isTop?e=>startDragFrom([card],"waste",gs.waste.length-1,e):undefined}
+                          onClick={isTop?clickWasteTop:undefined}
+                          dragging={isTop&&drag?.from==="waste"}/>
+                      </div>
+                    );
+                  });
+                })()
             }
           </div>
           <div style={{width:small?8:16}}/>
+          {/* Foundations */}
           {[0,1,2,3].map(fi=>(
             <div key={fi} data-dropzone={`f${fi}`}>
-              {gs.foundations[fi].length?<Card card={gs.foundations[fi][gs.foundations[fi].length-1]} theme={theme} ss={suitStyle} small={small}/>:<EmptyPile theme={theme} small={small} label="A"/>}
+              {gs.foundations[fi].length
+                ? <Card {...cp} card={gs.foundations[fi][gs.foundations[fi].length-1]}/>
+                : <EmptyPile theme={theme} cardW={cardW} cardH={cardH} label="A"/>}
             </div>
           ))}
         </div>
 
+        {/* Tableau */}
         <div style={{display:"flex",gap:small?4:8,justifyContent:"center",alignItems:"flex-start"}}>
           {gs.tableau.map((col,ci)=>(
             <div key={ci} data-dropzone={`t${ci}`} style={{position:"relative",width:cardW,minHeight:cardH+10}}>
-              {col.length===0?<EmptyPile theme={theme} small={small} label="K" cssStyle={{position:"absolute",top:0}}/>:
-                col.map((card,cardi)=>(
+              {col.length===0
+                ? <EmptyPile theme={theme} cardW={cardW} cardH={cardH} label="K" cssStyle={{position:"absolute",top:0}}/>
+                : col.map((card,cardi)=>(
                   <div key={card.id} style={{position:"absolute",top:cardi*overlap,left:0,zIndex:cardi}}>
-                    <Card card={card} theme={theme} ss={suitStyle} small={small}
+                    <Card {...cp} card={card}
                       onMouseDown={card.faceUp?e=>startDragFrom(col.slice(cardi),`t${ci}`,cardi,e):undefined}
                       onTouchStart={card.faceUp?e=>startDragFrom(col.slice(cardi),`t${ci}`,cardi,e):undefined}
                       onClick={()=>clickTableauCard(ci,cardi)}
@@ -358,16 +387,18 @@ function GameScreen({settings,onStartOver,score,setScore}){
         </div>
       </div>
 
+      {/* Drag ghost */}
       {drag&&(
         <div style={{position:"fixed",left:dragPos.x-cardW/2,top:dragPos.y-20,zIndex:9999,pointerEvents:"none"}}>
           {drag.cards.map((c,i)=>(
             <div key={c.id} style={{position:"absolute",top:i*overlap}}>
-              <Card card={c} theme={theme} ss={suitStyle} small={small} dragging/>
+              <Card {...cp} card={c} dragging/>
             </div>
           ))}
         </div>
       )}
 
+      {/* Win overlay */}
       {gs.won&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:10000}}>
           <div style={{fontSize:60,marginBottom:16}}>🎉</div>
@@ -400,7 +431,7 @@ function App(){
   return(
     <div style={{minHeight:"100vh",background:t.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:screen==="game"?"flex-start":"center",fontFamily:"Georgia,serif",position:"relative",overflow:"hidden"}}>
       <Starfield color={t.stars}/>
-      <div style={{position:"relative",zIndex:1,width:"100%",maxWidth:700,display:"flex",flexDirection:"column",height:screen==="game"?"100vh":"auto"}}>
+      <div style={{position:"relative",zIndex:1,width:"100%",maxWidth:900,display:"flex",flexDirection:"column",height:screen==="game"?"100vh":"auto"}}>
         {screen==="intro"&&(
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:20,padding:24}}>
             <Logo theme={settings.theme}/>
