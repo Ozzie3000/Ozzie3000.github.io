@@ -13,7 +13,6 @@
     <meta name="twitter:card" content="summary_large_image">
     <title>Responsive Mahjong Solitaire</title>
     <style>
-        /* Reset and Base Styles */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -24,7 +23,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #1e4620; /* Traditional green felt color */
+            background-color: #1e4620;
             color: #ffffff;
             display: flex;
             flex-direction: column;
@@ -35,7 +34,6 @@
             padding: 10px;
         }
 
-        /* Header and UI Controls */
         header {
             text-align: center;
             margin-bottom: 15px;
@@ -73,73 +71,76 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        /* Game Container and Responsive Board */
         .game-container {
             width: 100%;
-            max-width: 800px; /* Limits desktop width */
-            aspect-ratio: 4 / 3; /* Maintains standard board proportions */
+            max-width: 850px;
+            aspect-ratio: 4 / 3;
             position: relative;
             background-color: rgba(0, 0, 0, 0.15);
             border-radius: 10px;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.4);
-            padding: 10px;
+            padding: 15px;
         }
 
-        /* The Board Grid System */
-        /* We use a 30x24 grid to allow precise overlapping half-tile positions */
         .board {
             position: relative;
             width: 100%;
             height: 100%;
-            display: grid;
-            grid-template-columns: repeat(30, 1fr);
-            grid-template-rows: repeat(24, 1fr);
         }
 
-        /* Placeholder Tiles for Visual Testing */
         .tile {
             position: absolute;
-            background: #fdfdfd;
-            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            /* Map coordinates using percentage based on a standard 30x24 layout system */
+            width: calc(100% / 15);  /* Each tile spans 2 grid units horizontally */
+            height: calc(100% / 12); /* Each tile spans 2 grid units vertically */
+            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
             border-radius: 4px;
             border: 1px solid #ccc;
-            /* 3D Tile Edge Effects */
-            border-bottom: 4px solid #d4d4d4;
-            border-right: 4px solid #d4d4d4;
-            border-left: 1px solid #e5e5e5;
-            border-top: 1px solid #e5e5e5;
-            
-            /* Center the text/emoji */
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: min(4vw, 2rem); /* Dynamic text scaling */
+            font-size: min(4.5vw, 2.2rem);
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            transition: transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: background-color 0.1s;
         }
 
-        /* Interactive states to be triggered by JavaScript */
-        .tile:active, .tile.selected {
-            transform: translate(2px, 2px);
-            border-bottom-width: 2px;
-            border-right-width: 2px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-            background: #e8f5e9; /* Light green tint when selected */
+        /* 3D Stacking Offset System */
+        /* Higher layers slide up and left slightly to simulate depth */
+        .layer-0 { transform: translate(0px, 0px); z-index: 10; }
+        .layer-1 { transform: translate(-3px, -3px); z-index: 20; box-shadow: 3px 7px 8px rgba(0,0,0,0.35); }
+        .layer-2 { transform: translate(-6px, -6px); z-index: 30; box-shadow: 6px 10px 10px rgba(0,0,0,0.4); }
+        .layer-3 { transform: translate(-9px, -9px); z-index: 40; box-shadow: 9px 13px 12px rgba(0,0,0,0.45); }
+        .layer-4 { transform: translate(-12px, -12px); z-index: 50; box-shadow: 12px 16px 14px rgba(0,0,0,0.5); }
+
+        /* Multi-layered borders for 3D effect */
+        .tile::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: -4px; bottom: -4px;
+            border-bottom: 4px solid #b5b5b5;
+            border-right: 4px solid #b5b5b5;
+            border-radius: 4px;
+            z-index: -1;
+            pointer-events: none;
         }
 
-        /* Temporary Static Layout Positions for Preview */
-        /* Real layout coordinates will be injected by JavaScript in Step 2 */
-        .t1 { grid-column: 11 / span 2; grid-row: 11 / span 2; z-index: 1; }
-        .t2 { grid-column: 13 / span 2; grid-row: 11 / span 2; z-index: 1; }
-        .t3 { grid-column: 15 / span 2; grid-row: 11 / span 2; z-index: 1; }
-        .t4 { grid-column: 17 / span 2; grid-row: 11 / span 2; z-index: 1; }
-        .t5 { grid-column: 13 / span 2; grid-row: 9 / span 2; z-index: 1; }
-        .t6 { grid-column: 15 / span 2; grid-row: 9 / span 2; z-index: 1; }
-        
-        /* Layer 2 example (Stacked directly on top of t2) */
-        .t-top { grid-column: 13 / span 2; grid-row: 11 / span 2; z-index: 2; transform: translate(-3px, -3px); }
+        /* State Modifiers */
+        .tile.selected {
+            background: #a9dfbf !important; /* Highlights matching option */
+            border-color: #27ae60;
+        }
 
+        .tile.blocked {
+            /* Visual indicator if a user tries to tap an invalid tile */
+            animation: shake 0.2s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
     </style>
 </head>
 <body>
@@ -147,25 +148,211 @@
     <header>
         <h1>🀄 Mahjong Solitaire</h1>
         <div class="controls">
-            <button id="shuffle-btn">🔄 Shuffle</button>
             <button id="restart-btn">🔁 Restart</button>
         </div>
     </header>
 
     <div class="game-container">
-        <!-- The board elements will be dynamically generated by JS later -->
-        <!-- These static tiles are here just to verify the visual setup -->
-        <div class="board">
-            <div class="tile t1">🀀</div>
-            <div class="tile t2">🀃</div>
-            <div class="tile t3">🀆</div>
-            <div class="tile t4">🀇</div>
-            <div class="tile t5">🀐</div>
-            <div class="tile t6">🀘</div>
-            <!-- Stacked Tile -->
-            <div class="tile t-top">🀄</div>
-        </div>
+        <div class="board" id="game-board"></div>
     </div>
 
+    <script>
+        // 1. Emoji Tile Definition Pool (36 unique patterns x 4 of each = 144 tiles)
+        const TILE_SYMBOLS = [
+            '🀀','🀁','🀂','🀃', // Winds
+            '🀄','🀅','🀆',      // Dragons
+            '🀇','🀈','🀉','🀊','🀋','🀌','🀍','🀎','🀏', // Characters
+            '🀙','🀚','🀛','🀜','🀝','🀞','🀟','🀠','🀡', // Dots
+            '🀐','🀑','🀒','🀓','🀔','🀕','🀖','🀗','🀘'  // Bamboos
+        ];
+
+        // 2. The Classic 144-Tile "Turtle" Layout Coordinates
+        // Format: [x, y, layer] based on a 30-wide by 24-high half-tile grid.
+        // Each tile is exactly 2 units wide and 2 units high.
+        const TURTLE_LAYOUT = [
+            // Layer 0 (Bottom Base Layout: 82 tiles)
+            [2,2,0],[4,2,0],[6,2,0],[8,2,0],[10,2,0],[12,2,0],[14,2,0],[16,2,0],[18,2,0],[20,2,0],[22,2,0],[24,2,0],
+            [6,4,0],[8,4,0],[10,4,0],[12,4,0],[14,4,0],[16,4,0],[18,4,0],[20,4,0],[22,4,0],
+            [4,6,0],[6,6,0],[8,6,0],[10,6,0],[12,6,0],[14,6,0],[16,6,0],[18,6,0],[20,6,0],[22,6,0],[24,6,0],
+            [0,8,0],[4,8,0],[6,8,0],[8,8,0],[10,8,0],[12,8,0],[14,8,0],[16,8,0],[18,8,0],[20,8,0],[22,8,0],[24,8,0],[26,8,0],
+            [0,10,0],[2,10,0],[4,10,0],[6,10,0],[8,10,0],[10,10,0],[12,10,0],[14,10,0],[16,10,0],[18,10,0],[20,10,0],[22,10,0],[24,10,0],[26,10,0],[28,10,0],
+            [4,12,0],[6,12,0],[8,12,0],[10,12,0],[12,12,0],[14,12,0],[16,12,0],[18,12,0],[20,12,0],[22,12,0],[24,12,0],
+            [6,14,0],[8,14,0],[10,14,0],[12,14,0],[14,14,0],[16,14,0],[18,14,0],[20,14,0],[22,14,0],
+            [2,16,0],[4,16,0],[6,16,0],[8,16,0],[10,16,0],[12,16,0],[14,16,0],[16,16,0],[18,16,0],[20,16,0],[22,16,0],[24,16,0],
+
+            // Layer 1 (Stack Level 2: 36 tiles)
+            [8,4,1],[10,4,1],[12,4,1],[14,4,1],[16,4,1],[18,4,1],
+            [8,6,1],[10,6,1],[12,6,1],[14,6,1],[16,6,1],[18,6,1],
+            [8,8,1],[10,8,1],[12,8,1],[14,8,1],[16,8,1],[18,8,1],
+            [8,10,1],[10,10,1],[12,10,1],[14,10,1],[16,10,1],[18,10,1],
+            [8,12,1],[10,12,1],[12,12,1],[14,12,1],[16,12,1],[18,12,1],
+            [8,14,1],[10,14,1],[12,14,1],[14,14,1],[16,14,1],[18,14,1],
+
+            // Layer 2 (Stack Level 3: 16 tiles)
+            [10,6,2],[12,6,2],[14,6,2],[16,6,2],
+            [10,8,2],[12,8,2],[14,8,2],[16,8,2],
+            [10,10,2],[12,10,2],[14,10,2],[16,10,2],
+            [10,12,2],[12,12,2],[14,12,2],[16,12,2],
+
+            // Layer 3 (Stack Level 4: 4 tiles)
+            [12,8,3],[14,8,3],
+            [12,10,3],[14,10,3],
+
+            // Layer 4 (The Crest Summit: 1 top tile centered)
+            [13,9,4]
+        ];
+
+        let gameState = [];
+        let selectedTileId = null;
+
+        const boardElement = document.getElementById('game-board');
+        const restartBtn = document.getElementById('restart-btn');
+
+        // Initialize Engine
+        function initGame() {
+            boardElement.innerHTML = '';
+            selectedTileId = null;
+            gameState = [];
+
+            // Build a full 144 pool container (4 copies of each of our 36 types)
+            let instancePool = [];
+            for (let i = 0; i < 4; i++) {
+                instancePool.push(...TILE_SYMBOLS);
+            }
+
+            // Shuffle the complete tile instances pool
+            shuffleArray(instancePool);
+
+            // Map layout structures to active state instances
+            TURTLE_LAYOUT.forEach((coord, index) => {
+                gameState.push({
+                    id: index,
+                    x: coord[0],
+                    y: coord[1],
+                    layer: coord[2],
+                    symbol: instancePool[index],
+                    active: true
+                });
+            });
+
+            renderBoard();
+        }
+
+        // Fisher-Yates Array Shuffler
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
+
+        // Core Rendering System
+        function renderBoard() {
+            boardElement.innerHTML = '';
+            
+            gameState.forEach(tile => {
+                if (!tile.active) return; // Ignore removed matches
+
+                const tileEl = document.createElement('div');
+                tileEl.className = `tile layer-${tile.layer}`;
+                tileEl.innerText = tile.symbol;
+                
+                // Position calculations using precision grid metrics
+                tileEl.style.left = `${(tile.x / 30) * 100}%`;
+                tileEl.style.top = `${(tile.y / 24) * 100}%`;
+                tileEl.dataset.id = tile.id;
+
+                if (selectedTileId === tile.id) {
+                    tileEl.classList.add('selected');
+                }
+
+                // Native unified touch support handling
+                tileEl.addEventListener('click', (e) => handleTileClick(tile.id, tileEl));
+
+                boardElement.appendChild(tileEl);
+            });
+        }
+
+        // Rule Evaluator: Checks if a specific tile is free to move/match
+        function isTileFree(target) {
+            let blockedLeft = false;
+            let blockedRight = false;
+            let blockedAbove = false;
+            const targetRightEdge = target.x + 2;
+            const targetBottomEdge = target.y + 2;
+
+            gameState.forEach(other => {
+                if (!other.active || other.id === target.id) return;
+
+                const otherRightEdge = other.x + 2;
+                const otherBottomEdge = other.y + 2;
+
+                // 1. Is there any active tile overlapping directly above it?
+                if (other.layer === target.layer + 1) {
+                    const overlapX = (target.x < otherRightEdge) && (targetRightEdge > other.x);
+                    const overlapY = (target.y < otherBottomEdge) && (targetBottomEdge > other.y);
+                    if (overlapX && overlapY) {
+                        blockedAbove = true;
+                    }
+                }
+
+                // 2. Are there blocking adjacent neighbors on the same layer?
+                if (other.layer === target.layer) {
+                    const rowOverlap = (target.y < otherBottomEdge) && (targetBottomEdge > other.y);
+                    if (rowOverlap) {
+                        if (other.x === target.x - 2) blockedLeft = true;
+                        if (other.x === target.x + 2) blockedRight = true;
+                    }
+                }
+            });
+
+            // True mahjong mechanics: Free if NOT covered AND (left is free OR right is free)
+            return !blockedAbove && (!blockedLeft || !blockedRight);
+        }
+
+        // Gameplay Interaction Controller
+        function handleTileClick(id, element) {
+            const targetTile = gameState.find(t => t.id === id);
+
+            if (!isTileFree(targetTile)) {
+                // Flash animation trigger if blocked
+                element.classList.add('blocked');
+                setTimeout(() => element.classList.remove('blocked'), 200);
+                return;
+            }
+
+            if (selectedTileId === null) {
+                // First tile selection phase
+                selectedTileId = id;
+                renderBoard();
+            } else {
+                // Second tile selection phase
+                if (selectedTileId === id) {
+                    // Deselect if clicked twice
+                    selectedTileId = null;
+                    renderBoard();
+                    return;
+                }
+
+                const firstTile = gameState.find(t => t.id === selectedTileId);
+
+                if (firstTile.symbol === targetTile.symbol) {
+                    // Match found! Process removal
+                    firstTile.active = false;
+                    targetTile.active = false;
+                    selectedTileId = null;
+                } else {
+                    // Mismatch: Change selection focus to the new tile
+                    selectedTileId = id;
+                }
+                renderBoard();
+            }
+        }
+
+        restartBtn.addEventListener('click', initGame);
+
+        // Run Engine on load
+        initGame();
+    </script>
 </body>
-</html>
+</html>            
