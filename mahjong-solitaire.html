@@ -384,6 +384,58 @@
                 renderBoard();
             }
         }
+                // Scoring Calculation
+        function updateScore(points) {
+            score += points;
+            scoreDisplay.innerText = `Score: ${score}`;
+        }
+
+        // Countdown Timer Clock Implementation
+        function startCountdown() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                timerDisplay.innerText = `Time: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert("⏳ Time is up! Game Over.");
+                    initGame();
+                }
+            }, 1000);
+        }
+
+        // Hint System Finder: Finds and flashes a matching pair
+        function triggerVisualHint() {
+            // Remove previous hint artifacts if any exist
+            document.querySelectorAll('.tile.hinted').forEach(el => el.classList.remove('hinted'));
+
+            let activeTiles = gameState.filter(t => t.active);
+            let freeTiles = activeTiles.filter(t => isTileFree(t));
+
+            for (let i = 0; i < freeTiles.length; i++) {
+                for (let j = i + 1; j < freeTiles.length; j++) {
+                    if (freeTiles[i].symbol === freeTiles[j].symbol) {
+                        // Target elements in the actual DOM map
+                        let el1 = document.querySelector(`.tile[data-id='${freeTiles[i].id}']`);
+                        let el2 = document.querySelector(`.tile[data-id='${freeTiles[j].id}']`);
+                        
+                        if (el1 && el2) {
+                            el1.classList.add('hinted');
+                            el2.classList.add('hinted');
+                            // Clear hint animations cleanly after 2.5 seconds
+                            setTimeout(() => {
+                                el1.classList.remove('hinted');
+                                el2.classList.remove('hinted');
+                            }, 2500);
+                        }
+                        return; // Found a hint, exit loop
+                    }
+                }
+            }
+        }
+        
         restartBtn.addEventListener('click', initGame);
         shuffleBtn.addEventListener('click', shuffleRemaining); // <--- Links the button to code
 
