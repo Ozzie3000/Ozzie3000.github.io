@@ -523,8 +523,25 @@
             let activeTiles = gameState.filter(t => t.active);
             
             // Win condition
-            if (activeTiles.length === 0) {
-                setTimeout(() => alert("🎉 Congratulations! You cleared the board!"), 300);
+             if (activeTiles.length === 0) {
+                clearInterval(timerInterval); // Stop the clock ticking immediately
+                
+                // Fetch dynamic text string data metrics from current runtime settings
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                
+                finalScoreDisplay.innerText = `Final Score: ${score}`;
+                finalTimeDisplay.innerText = `Time Remaining: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                
+                // Beautifully animate the custom overlay into view
+                setTimeout(() => {
+                    victoryOverlay.style.display = 'flex';
+                    // Trigger a tiny engine timeout cycle for CSS transitions to work perfectly
+                    setTimeout(() => {
+                        victoryOverlay.style.opacity = '1';
+                        victoryContent.style.transform = 'scale(1)';
+                    }, 50);
+                }, 300);
                 return;
             }
 
