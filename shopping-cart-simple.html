@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Fruit Market — Drag &amp; Drop Shopping Cart</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="A single-page HTML drag-and-drop shopping cart demo." />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f5f3;
+    --surface: #ffffff;
+    --surface2: #f0efeb;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --text: #1a1a18;
+    --text2: #6b6b67;
+    --text3: #9b9b96;
+    --info-bg: #e6f1fb;
+    --info-text: #0c447c;
+    --success-bg: #eaf3de;
+    --success-text: #27500a;
+    --warn-bg: #faeeda;
+    --warn-text: #633806;
+    --danger-text: #a32d2d;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --blue: #378ADD;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  .container { max-width: 760px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: var(--text2); margin-bottom: 1.5rem; }
+
+  .section-label {
+    font-size: 11px; font-weight: 500; color: var(--text2);
+    text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px;
+  }
+
+  /* SHELF */
+  .shelf {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    background: var(--surface); border: 0.5px solid var(--border2);
+    border-radius: var(--radius-lg); padding: 12px; min-height: 80px;
+    transition: border-color .15s;
+  }
+  .shelf.drag-over { border-color: var(--blue); background: var(--surface2); }
+
+  .fruit-card {
+    position: relative; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    width: 85px; height: 85px;
+    background: var(--surface2); border: 0.5px solid var(--border);
+    border-radius: var(--radius); cursor: grab; user-select: none;
+    touch-action: none; transition: transform .12s, border-color .12s, background .12s;
+  }
+  .fruit-card:hover { border-color: var(--border2); background: var(--surface); transform: translateY(-2px); }
+  .fruit-card:active { transform: scale(.95); cursor: grabbing; }
+  .fruit-card.dragging { opacity: .35; }
+  .fruit-emoji { font-size: 32px; line-height: 1; margin-bottom: 3px; }
+  .fruit-price-tag { font-size: 11px; color: var(--text2); font-weight: 500; }
+
+  .add-btn {
+    position: absolute; bottom: 4px; right: 4px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--info-bg); color: var(--info-text);
+    border: none; font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .15s; padding: 0; line-height: 1;
+  }
+  .fruit-card:hover .add-btn { opacity: 1; }
+
+  .tooltip {
+    position: absolute; bottom: calc(100% + 7px); left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface); border: 0.5px solid var(--border2);
+    border-radius: var(--radius); padding: 5px 9px;
+    font-size: 12px; white-space: nowrap;
+    pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 10;
+  }
+  .tooltip b { font-weight: 500; }
+  .tooltip span { color: var(--text2); }
+  .fruit-card:hover .tooltip { opacity: 1; }
+
+  /* MAIN LAYOUT */
+  .main-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+  @media (max-width: 540px) { .main-layout { grid-template-columns: 1fr; } }
+
+  .cart-zone {
+    background: var(--surface); border: 1.5px dashed var(--border2);
+    border-radius: var(--radius-lg); min-height: 200px; padding: 12px;
+    transition: border-color .15s, background .15s;
+  }
+  .cart-zone.drag-over { border-color: var(--blue); background: var(--surface2); }
+  .cart-zone-label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 10px; }
+  .empty-cart { text-align: center; color: var(--text3); font-size: 13px; padding: 2rem 0; }
+
+  .cart-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface2); border: 0.5px solid var(--border);
+    border-radius: var(--radius); padding: 7px 10px; margin-bottom: 6px;
+    animation: slideIn .18s ease;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .qty-ctrl { display: flex; align-items: center; gap: 4px; }
+  .qty-btn {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--surface); border: 0.5px solid var(--border2);
+    color: var(--text); font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .1s; padding: 0; line-height: 1;
+  }
+  .qty-btn:hover { background: var(--surface2); }
+  .qty-num { font-size: 13px; font-weight: 500; min-width: 18px; text-align: center; }
+
+  /* SUMMARY PANEL */
+  .summary-panel { display: flex; flex-direction: column; gap: 10px; }
+  .total-card { background: var(--surface2); border-radius: var(--radius-lg); padding: 1rem; }
+  .total-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .total-amount { font-size: 30px; font-weight: 500; }
+  .items-count { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+  .btn {
+    width: 100%; padding: 10px; background: var(--surface);
+    border: 0.5px solid var(--border2); border-radius: var(--radius);
+    font-size: 14px; font-weight: 500; color: var(--text);
+    cursor: pointer; transition: background .1s; text-align: center;
+    font-family: inherit;
+  }
+  .btn:hover { background: var(--surface2); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-ghost {
+    width: 100%; padding: 8px; background: none;
+    border: 0.5px solid var(--border); border-radius: var(--radius);
+    font-size: 13px; color: var(--text2); cursor: pointer;
+    transition: color .1s, border-color .1s; font-family: inherit;
+  }
+  .btn-ghost:hover { color: var(--danger-text); border-color: var(--danger-text); }
+
+  .hint { font-size: 12px; color: var(--text3); margin-top: .75rem; text-align: center; }
+
+  /* JSON PANEL */
+  .json-panel { margin-top: 1rem; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .json-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 0.5px solid var(--border); cursor: pointer; user-select: none; }
+  .json-header-left { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
+  .json-dot { width: 8px; height: 8px; border-radius: 50%; background: #639922; }
+  .json-body { padding: 12px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.7; overflow-x: auto; }
+  .jk { color: #185FA5; } .jn { color: #854F0B; } .js { color: #3B6D11; }
+
+  /* CHECKOUT PANEL */
+  .checkout-panel { margin-top: 1rem; background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); overflow: hidden; }
+  .step-bar { display: flex; border-bottom: 0.5px solid var(--border); }
+  .step-item {
+    flex: 1; padding: 10px 6px; text-align: center; font-size: 12px;
+    color: var(--text2); border-bottom: 2px solid transparent;
+    transition: color .2s, border-color .2s;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .step-item.active { color: var(--info-text); border-bottom-color: var(--blue); }
+  .step-item.done { color: var(--success-text); }
+  .step-num {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--surface2); font-size: 11px; font-weight: 500;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-item.active .step-num { background: var(--info-bg); color: var(--info-text); }
+  .step-item.done .step-num { background: var(--success-bg); color: var(--success-text); }
+  .step-content { padding: 1.25rem; }
+
+  /* FORMS */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .form-row.full { grid-template-columns: 1fr; }
+  .form-row.thirds { grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  @media (max-width: 480px) { .form-row, .form-row.thirds { grid-template-columns: 1fr; } }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 12px; color: var(--text2); }
+  .form-group input {
+    padding: 8px 10px; font-size: 13px;
+    border: 0.5px solid var(--border2); border-radius: var(--radius);
+    background: var(--surface2); color: var(--text); width: 100%;
+    font-family: inherit;
+  }
+  .form-group input:focus { outline: none; border-color: var(--blue); }
+  .form-group input.err { border-color: var(--danger-text); }
+  .err-msg { font-size: 11px; color: var(--danger-text); min-height: 14px; }
+
+  .step-nav { display: flex; gap: 8px; margin-top: 1rem; }
+  .step-nav .back-btn {
+    flex: 0 0 auto; padding: 9px 16px; background: none;
+    border: 0.5px solid var(--border2); border-radius: var(--radius);
+    font-size: 13px; color: var(--text2); cursor: pointer;
+    transition: background .1s; font-family: inherit;
+  }
+  .step-nav .back-btn:hover { background: var(--surface2); }
+  .step-nav .next-btn {
+    flex: 1; padding: 9px; background: var(--surface);
+    border: 0.5px solid var(--border2); border-radius: var(--radius);
+    font-size: 13px; font-weight: 500; color: var(--text);
+    cursor: pointer; transition: background .1s; font-family: inherit;
+  }
+  .step-nav .next-btn:hover { background: var(--surface2); }
+
+  .order-line { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+  .order-line:last-child { border-bottom: none; }
+  .order-total-line { display: flex; justify-content: space-between; padding: 10px 0 0; font-size: 15px; font-weight: 500; }
+
+  .fake-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--warn-bg); color: var(--warn-text);
+    font-size: 11px; font-weight: 500;
+    padding: 4px 10px; border-radius: var(--radius); margin-bottom: 12px;
+  }
+  .readonly-field {
+    padding: 8px 10px; font-size: 13px;
+    border: 0.5px solid var(--border); border-radius: var(--radius);
+    background: var(--surface2); color: var(--text2);
+    font-family: 'Courier New', monospace; letter-spacing: .04em;
+  }
+
+  .confirm-icon {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: var(--success-bg); display: flex; align-items: center;
+    justify-content: center; margin: 0 auto 1rem; font-size: 26px;
+  }
+  .confirm-detail {
+    background: var(--surface2); border-radius: var(--radius);
+    padding: 10px 14px; font-size: 13px; color: var(--text2); margin-bottom: 8px;
+  }
+  .confirm-detail b { color: var(--text); font-weight: 500; }
+
+  .footer { margin-top: 3rem; text-align: center; font-size: 12px; color: var(--text3); }
+  .footer a { color: var(--text2); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>&#127819; Fruit market</h1>
+  <p class="subtitle">A single-page HTML drag-and-drop shopping cart demo. Drag items to your cart, or tap +.</p>
+
+  <div class="section-label">Available items</div>
+  <div class="shelf" id="shelf" ondragover="onDragOver(event,'shelf')" ondragleave="onDragLeave(event,'shelf')" ondrop="onDrop(event,'shelf')">
+    <div class="fruit-card" draggable="true" data-type="apple" ondragstart="onDragStart(event,this)">
+      <div class="tooltip"><b>Apple</b> &nbsp;<span>$0.30 each</span></div>
+      <span class="fruit-emoji">&#127822;</span><span class="fruit-price-tag">$0.30</span>
+      <button class="add-btn" onclick="clickAdd('apple')" aria-label="Add apple">+</button>
+    </div>
+    <div class="fruit-card" draggable="true" data-type="banana" ondragstart="onDragStart(event,this)">
+      <div class="tooltip"><b>Banana</b> &nbsp;<span>$0.40 each</span></div>
+      <span class="fruit-emoji">&#127820;</span><span class="fruit-price-tag">$0.40</span>
+      <button class="add-btn" onclick="clickAdd('banana')" aria-label="Add banana">+</button>
+    </div>
+    <div class="fruit-card" draggable="true" data-type="strawberry" ondragstart="onDragStart(event,this)">
+      <div class="tooltip"><b>Strawberry</b> &nbsp;<span>$0.10 each</span></div>
+      <span class="fruit-emoji">&#127827;</span><span class="fruit-price-tag">$0.10</span>
+      <button class="add-btn" onclick="clickAdd('strawberry')" aria-label="Add strawberry">+</button>
+    </div>
+    <div class="fruit-card" draggable="true" data-type="grape" ondragstart="onDragStart(event,this)">
+      <div class="tooltip"><b>Grapes</b> &nbsp;<span>$0.50 each</span></div>
+      <span class="fruit-emoji">&#127815;</span><span class="fruit-price-tag">$0.50</span>
+      <button class="add-btn" onclick="clickAdd('grape')" aria-label="Add grapes">+</button>
+    </div>
+    <div class="fruit-card" draggable="true" data-type="lemon" ondragstart="onDragStart(event,this)">
+      <div class="tooltip"><b>Lemon</b> &nbsp;<span>$0.25 each</span></div>
+      <span class="fruit-emoji">&#127819;</span><span class="fruit-price-tag">$0.25</span>
+      <button class="add-btn" onclick="clickAdd('lemon')" aria-label="Add lemon">+</button>
+    </div>
+    <div class="fruit-card" draggable="true" data-type="watermelon" ondragstart="onDragStart(event,this)">
+      <div class="tooltip"><b>Watermelon</b> &nbsp;<span>$1.20 each</span></div>
+      <span class="fruit-emoji">&#127817;</span><span class="fruit-price-tag">$1.20</span>
+      <button class="add-btn" onclick="clickAdd('watermelon')" aria-label="Add watermelon">+</button>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <div>
+      <div class="section-label" style="margin-top:1rem">Your cart</div>
+      <div class="cart-zone" id="cart-zone" ondragover="onDragOver(event,'cart')" ondragleave="onDragLeave(event,'cart')" ondrop="onDrop(event,'cart')">
+        <div class="cart-zone-label">&#128722; Items</div>
+        <div id="cart-items"></div>
+      </div>
+    </div>
+    <div class="summary-panel" style="margin-top:1rem">
+      <div class="section-label">Order summary</div>
+      <div class="total-card">
+        <div class="total-label">Total</div>
+        <div class="total-amount" id="total">$0.00</div>
+        <div class="items-count" id="items-count">0 items</div>
+      </div>
+      <button class="btn" id="checkout-btn" onclick="openCheckout()" disabled>&#128179; Proceed to checkout</button>
+      <button class="btn-ghost" id="clear-btn" onclick="clearCart()" disabled>Clear cart</button>
+    </div>
+  </div>
+
+  <p class="hint">Drag items back to the shelf to remove &bull; Use +/- to adjust quantity</p>
+
+  <!-- JSON Panel -->
+  <div class="json-panel">
+    <div class="json-header" onclick="toggleJson()">
+      <div class="json-header-left"><div class="json-dot"></div><span>Live cart state (JSON)</span></div>
+      <span id="json-toggle-icon">&#8964;</span>
+    </div>
+    <div id="json-body" class="json-body"></div>
+  </div>
+
+  <!-- Checkout Panel -->
+  <div class="checkout-panel" id="checkout-panel" style="display:none">
+    <div class="step-bar">
+      <div class="step-item" id="si-0"><div class="step-num">1</div> Summary</div>
+      <div class="step-item" id="si-1"><div class="step-num">2</div> Shipping</div>
+      <div class="step-item" id="si-2"><div class="step-num">3</div> Payment</div>
+      <div class="step-item" id="si-3"><div class="step-num">4</div> Confirm</div>
+    </div>
+    <div class="step-content" id="step-content"></div>
+  </div>
+    </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Single-page HTML shopping cart demo &mdash; <a href="https://github.com/" target="_blank" rel="noopener">Host on GitHub Pages</a></p>
+  </div>
+
+</div>
+
+<script>
+/* =============================================
+   DATA
+   Prices and display info for each fruit type.
+   Adding a new fruit = add one entry here.
+============================================= */
+const PRICES   = { apple:.30, banana:.40, strawberry:.10, grape:.50, lemon:.25, watermelon:1.20 };
+const NAMES    = { apple:'Apple', banana:'Banana', strawberry:'Strawberry', grape:'Grapes', lemon:'Lemon', watermelon:'Watermelon' };
+const EMOJI    = { apple:'&#127822;', banana:'&#127820;', strawberry:'&#127827;', grape:'&#127815;', lemon:'&#127819;', watermelon:'&#127817;' };
+const FAKE_NAMES = ['Alex Johnson','Sam Rivera','Morgan Lee','Casey Kim','Jordan Patel','Taylor Brooks'];
+
+/* =============================================
+   STATE
+   cart = { type: quantity }
+   Everything else is derived from this object.
+============================================= */
+let cart   = {};
+let dragType  = null;
+let jsonOpen  = true;
+let currentStep = 0;
+let formData = { shipping:{}, payment:{} };
+let fakeCard = {};
+
+/* =============================================
+   CART OPERATIONS
+============================================= */
+function clickAdd(type) { adjustQty(type, 1); }
+
+function adjustQty(type, delta) {
+  if (!cart[type]) cart[type] = 0;
+  cart[type] = Math.max(0, cart[type] + delta);
+  if (cart[type] === 0) delete cart[type];
+  render();
+}
+
+function clearCart() { cart = {}; render(); closeCheckout(); }
+
+function getTotal() { return Object.keys(cart).reduce((s,t) => s + PRICES[t]*cart[t], 0); }
+function getCount() { return Object.values(cart).reduce((s,q) => s + q, 0); }
+
+/* =============================================
+   DRAG AND DROP (DESKTOP)
+   HTML5 Drag and Drop API.
+   dragstart -> store the fruit type
+   dragover  -> allow drop (preventDefault)
+   drop      -> add or remove from cart
+============================================= */
+function onDragStart(e, el) {
+  dragType = el.dataset.type;
+  el.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dragType);
+}
+
+document.querySelectorAll('.fruit-card').forEach(c =>
+  c.addEventListener('dragend', () => c.classList.remove('dragging'))
+);
+
+function onDragOver(e, zone) {
+  e.preventDefault();
+  document.getElementById(zone === 'cart' ? 'cart-zone' : 'shelf').classList.add('drag-over');
+}
+
+function onDragLeave(e, zone) {
+  document.getElementById(zone === 'cart' ? 'cart-zone' : 'shelf').classList.remove('drag-over');
+}
+
+function onDrop(e, zone) {
+  e.preventDefault();
+  const type = e.dataTransfer.getData('text/plain') || dragType;
+  document.getElementById(zone === 'cart' ? 'cart-zone' : 'shelf').classList.remove('drag-over');
+  if (!type) return;
+  if (zone === 'cart') adjustQty(type, 1);
+  else if (zone === 'shelf' && cart[type]) adjustQty(type, -1);
+}
+
+/* =============================================
+   TOUCH DRAG (MOBILE)
+   The HTML5 drag API doesn't fire on touch devices.
+   We simulate it: touchstart creates a floating clone,
+   touchmove repositions it, touchend checks drop target.
+============================================= */
+function setupTouch() {
+  let touchType = null, clone = null;
+  document.querySelectorAll('.fruit-card').forEach(card => {
+    card.addEventListener('touchstart', e => {
+      touchType = card.dataset.type;
+      const t = e.touches[0];
+      clone = card.cloneNode(true);
+      clone.style.cssText = 'position:fixed;top:'+(t.clientY-42)+'px;left:'+(t.clientX-42)+'px;width:85px;height:85px;opacity:.75;pointer-events:none;z-index:999;transition:none';
+      document.body.appendChild(clone);
+      e.preventDefault();
+    }, { passive: false });
+    card.addEventListener('touchmove', e => {
+      if (!clone) return;
+      const t = e.touches[0];
+      clone.style.top  = (t.clientY-42)+'px';
+      clone.style.left = (t.clientX-42)+'px';
+      e.preventDefault();
+    }, { passive: false });
+    card.addEventListener('touchend', e => {
+      if (!clone || !touchType) { clone = null; touchType = null; return; }
+      const t = e.changedTouches[0];
+      clone.remove(); clone = null;
+      const el = document.elementFromPoint(t.clientX, t.clientY);
+      if (el && (el.id === 'cart-zone' || el.closest('#cart-zone'))) adjustQty(touchType, 1);
+      touchType = null;
+    }, { passive: false });
+  });
+}
+
+/* =============================================
+   RENDER
+   Rebuilds cart UI and updates totals.
+   Called after every state change.
+============================================= */
+function render() {
+  const container = document.getElementById('cart-items');
+  const keys = Object.keys(cart);
+
+  if (!keys.length) {
+    container.innerHTML = '<div class="empty-cart">Drop fruit here to add to cart</div>';
+  } else {
+    container.innerHTML = '';
+    keys.forEach(type => {
+      const qty = cart[type];
+      const row = document.createElement('div');
+      row.className = 'cart-row';
+      row.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">${EMOJI[type]}</span>
+          <span style="font-size:13px">${NAMES[type]}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="qty-ctrl">
+            <button class="qty-btn" onclick="adjustQty('${type}',-1)" aria-label="Remove one">&#8722;</button>
+            <span class="qty-num">${qty}</span>
+            <button class="qty-btn" onclick="adjustQty('${type}',1)" aria-label="Add one">+</button>
+          </div>
+          <span style="font-size:12px;color:var(--text2);min-width:42px;text-align:right">$${(PRICES[type]*qty).toFixed(2)}</span>
+        </div>`;
+      container.appendChild(row);
+    });
+  }
+
+  const total = getTotal(), count = getCount();
+  document.getElementById('total').textContent = '$' + total.toFixed(2);
+  document.getElementById('items-count').textContent = count + (count === 1 ? ' item' : ' items');
+
+  const cb = document.getElementById('clear-btn');
+  cb.disabled = !count; cb.style.opacity = count ? '1' : '.4';
+  const chk = document.getElementById('checkout-btn');
+  chk.disabled = !count; chk.style.opacity = count ? '1' : '.4';
+
+  renderJson();
+}
+
+/* =============================================
+   JSON PANEL
+   Reflects cart state as formatted JSON in real time.
+   Useful for understanding the underlying data model.
+============================================= */
+function toggleJson() {
+  jsonOpen = !jsonOpen;
+  document.getElementById('json-body').style.display = jsonOpen ? 'block' : 'none';
+  document.getElementById('json-toggle-icon').textContent = jsonOpen ? '\u22C1' : '\u22C0';
+}
+
+function renderJson() {
+  if (!jsonOpen) return;
+  const keys = Object.keys(cart);
+  let lines = ['{', '  <span class="jk">"items"</span>: {'];
+  keys.forEach((t, i) => {
+    const c = i < keys.length-1 ? ',' : '';
+    lines.push('    <span class="jk">"'+t+'"</span>: { <span class="jk">"qty"</span>: <span class="jn">'+cart[t]+'</span>, <span class="jk">"unit_price"</span>: <span class="jn">'+PRICES[t].toFixed(2)+'</span>, <span class="jk">"subtotal"</span>: <span class="jn">'+(PRICES[t]*cart[t]).toFixed(2)+'</span> }'+c);
+  });
+  if (!keys.length) lines.push('    <span style="color:var(--text3)"><em>(empty)</em></span>');
+  lines.push('  },');
+  lines.push('  <span class="jk">"item_count"</span>: <span class="jn">'+getCount()+'</span>,');
+  lines.push('  <span class="jk">"total"</span>: <span class="jn">'+getTotal().toFixed(2)+'</span>');
+  lines.push('}');
+  document.getElementById('json-body').innerHTML = lines.join('\n');
+}
+
+/* =============================================
+   CHECKOUT FLOW
+   4 steps: summary -> shipping -> payment -> confirm
+   State is preserved between steps so back nav works.
+============================================= */
+function openCheckout() {
+  currentStep = 0;
+  fakeCard = genFakeCard();
+  document.getElementById('checkout-panel').style.display = 'block';
+  document.getElementById('checkout-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  renderStep();
+}
+
+function closeCheckout() {
+  document.getElementById('checkout-panel').style.display = 'none';
+}
+
+function goStep(n) {
+  currentStep = n;
+  renderStep();
+  document.getElementById('checkout-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function updateStepBar() {
+  for (let i = 0; i < 4; i++) {
+    const el = document.getElementById('si-'+i);
+    el.classList.remove('active','done');
+    if (i < currentStep) el.classList.add('done');
+    else if (i === currentStep) el.classList.add('active');
+  }
+}
+
+function renderStep() {
+  updateStepBar();
+  const c = document.getElementById('step-content');
+  if (currentStep === 0) renderSummaryStep(c);
+  else if (currentStep === 1) renderShippingStep(c);
+  else if (currentStep === 2) renderPaymentStep(c);
+  else if (currentStep === 3) renderConfirmStep(c);
+}
+
+/* STEP 1 — Order summary */
+function renderSummaryStep(c) {
+  const keys = Object.keys(cart);
+  const rows = keys.map(t =>
+    `<div class="order-line">
+      <div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">${EMOJI[t]}</span><span>${NAMES[t]} &times;${cart[t]}</span></div>
+      <span style="color:var(--text2)">$${(PRICES[t]*cart[t]).toFixed(2)}</span>
+    </div>`
+  ).join('');
+  c.innerHTML = `
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Review your items before continuing.</p>
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:4px">
+      ${rows}
+      <div class="order-total-line"><span>Total</span><span>$${getTotal().toFixed(2)}</span></div>
+    </div>
+    <div class="step-nav">
+      <button class="back-btn" onclick="closeCheckout()">&#10005; Cancel</button>
+      <button class="next-btn" onclick="goStep(1)">Continue to shipping &rarr;</button>
+    </div>`;
+}
+
+/* STEP 2 — Shipping */
+function renderShippingStep(c) {
+  const s = formData.shipping;
+  c.innerHTML = `
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Where should we deliver?</p>
+    <div class="form-row">
+      <div class="form-group"><label>First name</label><input id="s-fname" value="${s.fname||''}" placeholder="Jane"><div class="err-msg" id="e-fname"></div></div>
+      <div class="form-group"><label>Last name</label><input id="s-lname" value="${s.lname||''}" placeholder="Smith"><div class="err-msg" id="e-lname"></div></div>
+    </div>
+    <div class="form-row full"><div class="form-group"><label>Address</label><input id="s-addr" value="${s.addr||''}" placeholder="123 Main St"><div class="err-msg" id="e-addr"></div></div></div>
+    <div class="form-row">
+      <div class="form-group"><label>City</label><input id="s-city" value="${s.city||''}" placeholder="New York"><div class="err-msg" id="e-city"></div></div>
+      <div class="form-group"><label>ZIP</label><input id="s-zip" value="${s.zip||''}" placeholder="10001" maxlength="10"><div class="err-msg" id="e-zip"></div></div>
+    </div>
+    <div class="form-row full"><div class="form-group"><label>Email</label><input id="s-email" type="email" value="${s.email||''}" placeholder="jane@example.com"><div class="err-msg" id="e-email"></div></div></div>
+    <div class="step-nav">
+      <button class="back-btn" onclick="goStep(0)">&larr; Back</button>
+      <button class="next-btn" onclick="validateShipping()">Continue to payment &rarr;</button>
+    </div>`;
+}
+
+function validateShipping() {
+  const fields = [['fname','First name'],['lname','Last name'],['addr','Address'],['city','City'],['zip','ZIP'],['email','Email']];
+  let ok = true;
+  fields.forEach(([k, label]) => {
+    const val = gv('s-'+k);
+    const errEl = document.getElementById('e-'+k);
+    const inp = document.getElementById('s-'+k);
+    if (!val) { errEl.textContent = label+' is required'; inp.classList.add('err'); ok = false; }
+    else if (k === 'email' && !val.includes('@')) { errEl.textContent = 'Enter a valid email'; inp.classList.add('err'); ok = false; }
+    else { errEl.textContent = ''; inp.classList.remove('err'); }
+  });
+  if (ok) {
+    formData.shipping = { fname:gv('s-fname'), lname:gv('s-lname'), addr:gv('s-addr'), city:gv('s-city'), zip:gv('s-zip'), email:gv('s-email') };
+    goStep(2);
+  }
+}
+
+/* STEP 3 — Payment (fake, read-only) */
+function genFakeCard() {
+  const digits = Array.from({length:5}, () => Math.floor(Math.random()*10)).join('');
+  const num    = digits + '***********';
+  const mm     = String(Math.floor(Math.random()*12)+1).padStart(2,'0');
+  const yy     = String((new Date().getFullYear() + Math.floor(Math.random()*4)+1)).slice(-2);
+  const cvv    = String(Math.floor(Math.random()*900)+100);
+  const name   = FAKE_NAMES[Math.floor(Math.random()*FAKE_NAMES.length)];
+  return { num, exp: mm+'/'+yy, cvv, name };
+}
+
+function renderPaymentStep(c) {
+  formData.payment = { ...fakeCard };
+  c.innerHTML = `
+    <div class="fake-badge">&#9888; Demo mode &mdash; payment info is randomly generated. Do not enter real data.</div>
+    <div class="form-row full"><div class="form-group"><label>Name on card</label><div class="readonly-field">${fakeCard.name}</div></div></div>
+    <div class="form-row full"><div class="form-group"><label>Card number</label><div class="readonly-field" style="letter-spacing:.12em">${fakeCard.num}</div></div></div>
+    <div class="form-row thirds">
+      <div class="form-group"><label>Expiry</label><div class="readonly-field">${fakeCard.exp}</div></div>
+      <div class="form-group"><label>CVV</label><div class="readonly-field">${fakeCard.cvv}</div></div>
+      <div></div>
+    </div>
+    <div class="step-nav">
+      <button class="back-btn" onclick="goStep(1)">&larr; Back</button>
+      <button class="next-btn" onclick="goStep(3)">Place order &#10003;</button>
+    </div>`;
+}
+
+/* STEP 4 — Confirmation + download */
+function renderConfirmStep(c) {
+  const s = formData.shipping;
+  const orderId = 'ORD-' + Math.random().toString(36).substring(2,8).toUpperCase();
+  c.innerHTML = `
+    <div style="text-align:center;margin-bottom:1.25rem">
+      <div class="confirm-icon">&#10003;</div>
+      <p style="font-size:16px;font-weight:500;margin-bottom:4px">Order placed!</p>
+      <p style="font-size:13px;color:var(--text2)">Order ID: <span style="font-family:monospace">${orderId}</span></p>
+    </div>
+    <div class="confirm-detail">
+      <b>Delivering to</b><br>
+      ${s.fname} ${s.lname}<br>${s.addr}, ${s.city} ${s.zip}<br>${s.email}
+    </div>
+    <div class="confirm-detail" style="margin-bottom:1rem">
+      <b>Items ordered</b><br>
+      ${Object.keys(cart).map(t => `${EMOJI[t]} ${NAMES[t]} &times;${cart[t]} &mdash; $${(PRICES[t]*cart[t]).toFixed(2)}`).join('<br>')}
+      <div style="border-top:0.5px solid var(--border);margin-top:8px;padding-top:8px;font-weight:500">Total: $${getTotal().toFixed(2)}</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button class="btn" onclick="downloadReceipt('${orderId}')" style="flex:1">&#11015; Download receipt (.html)</button>
+      <button class="btn" onclick="downloadJSON('${orderId}')" style="flex:1">&#11015; Download order (.json)</button>
+    </div>
+    <button class="btn-ghost" onclick="startOver()">&#8635; Start over</button>`;
+}
+
+/* =============================================
+   EXPORT — HTML RECEIPT
+   Builds a minimal self-contained HTML receipt
+   and triggers a browser download.
+============================================= */
+function downloadReceipt(orderId) {
+  const s = formData.shipping;
+  const rows = Object.keys(cart).map(t =>
+    `<tr><td>${NAMES[t]}</td><td style="text-align:center">${cart[t]}</td><td style="text-align:right">$${PRICES[t].toFixed(2)}</td><td style="text-align:right">$${(PRICES[t]*cart[t]).toFixed(2)}</td></tr>`
+  ).join('');
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Receipt ${orderId}</title>
+<style>body{font-family:sans-serif;max-width:500px;margin:2rem auto;color:#222;padding:1rem}h2{margin-bottom:4px}p{margin:2px 0;font-size:14px;color:#555}table{width:100%;border-collapse:collapse;margin-top:1rem}th{text-align:left;font-size:12px;color:#888;border-bottom:1px solid #ddd;padding:6px 4px}td{padding:6px 4px;font-size:13px;border-bottom:1px solid #eee}.total{font-weight:bold;font-size:15px;text-align:right;margin-top:1rem}.footer{margin-top:2rem;font-size:11px;color:#aaa;text-align:center}</style>
+</head>
+<body>
+<h2>&#127819; Fruit Market</h2>
+<p>Order ID: <strong>${orderId}</strong></p>
+<p>Date: ${new Date().toLocaleDateString()}</p>
+<hr style="margin:1rem 0;border:none;border-top:1px solid #eee">
+<p><strong>Deliver to:</strong><br>${s.fname} ${s.lname}<br>${s.addr}, ${s.city} ${s.zip}<br>${s.email}</p>
+<table><thead><tr><th>Item</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit</th><th style="text-align:right">Subtotal</th></tr></thead><tbody>${rows}</tbody></table>
+<p class="total">Total: $${getTotal().toFixed(2)}</p>
+<div class="footer">Demo receipt &mdash; not a real transaction</div>
+</body></html>`;
+  triggerDownload('receipt-'+orderId+'.html', html, 'text/html');
+}
+
+/* =============================================
+   EXPORT — JSON ORDER
+   Serializes the full order state to JSON
+   and triggers a browser download.
+============================================= */
+function downloadJSON(orderId) {
+  const s = formData.shipping;
+  const payload = {
+    order_id: orderId,
+    date: new Date().toISOString(),
+    customer: { name: s.fname+' '+s.lname, email: s.email, address: s.addr+', '+s.city+' '+s.zip },
+    items: Object.keys(cart).map(t => ({ type: t, name: NAMES[t], qty: cart[t], unit_price: PRICES[t], subtotal: parseFloat((PRICES[t]*cart[t]).toFixed(2)) })),
+    item_count: getCount(),
+    total: parseFloat(getTotal().toFixed(2))
+  };
+  triggerDownload('order-'+orderId+'.json', JSON.stringify(payload, null, 2), 'application/json');
+}
+
+function triggerDownload(filename, content, mime) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function startOver() { cart = {}; formData = { shipping:{}, payment:{} }; fakeCard = {}; currentStep = 0; closeCheckout(); render(); }
+function gv(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+}
+
+/* =============================================
+   INIT
+============================================= */
+render();
+setupTouch();
+</script>
+</body>
+</html>
