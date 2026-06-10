@@ -220,7 +220,7 @@
             // Layer 4 (The absolute peak summit - 1 centered tile)
             [13,9,4]
         ];
-        
+
         const boardElement = document.getElementById('game-board');
         const restartBtn = document.getElementById('restart-btn');
         const shuffleBtn = document.getElementById('shuffle-btn');
@@ -239,6 +239,13 @@
             boardElement.innerHTML = '';
             selectedTileId = null;
             gameState = [];
+
+             // Stats Reset
+            score = 0;
+            scoreDisplay.innerText = `Score: ${score}`;
+            timeLeft = 600; 
+            clearInterval(timerInterval);
+            startCountdown();
 
             // Build a full 144 pool container (4 copies of each of our 36 types)
             let instancePool = [];
