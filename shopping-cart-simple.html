@@ -247,6 +247,14 @@
   }
   .confirm-detail b { color: var(--text); font-weight: 500; }
 
+  /* SOURCE PANEL */
+  .source-panel { margin-top: 2rem; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .source-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 0.5px solid var(--border); cursor: pointer; user-select: none; }
+  .source-header-left { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
+  .source-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); }
+  .source-body { padding: 0; }
+  .source-body pre { font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.6; color: var(--text2); background: #fafaf8; padding: 14px; overflow-x: auto; white-space: pre; }
+
   .footer { margin-top: 3rem; text-align: center; font-size: 12px; color: var(--text3); }
   .footer a { color: var(--text2); text-decoration: none; }
   .footer a:hover { text-decoration: underline; }
@@ -333,7 +341,9 @@
     </div>
     <div class="step-content" id="step-content"></div>
   </div>
-  </div>
+
+  <!-- View Source Panel -->
+
 
   <div class="footer">
     <p>Single-page HTML shopping cart demo &mdash; <a href="https://github.com/" target="_blank" rel="noopener">Host on GitHub Pages</a></p>
@@ -359,6 +369,8 @@ const FAKE_NAMES = ['Alex Johnson','Sam Rivera','Morgan Lee','Casey Kim','Jordan
 ============================================= */
 let cart   = {};
 let dragType  = null;
+let jsonOpen  = true;
+let sourceOpen = false;
 let currentStep = 0;
 let formData = { shipping:{}, payment:{} };
 let fakeCard = {};
@@ -735,6 +747,20 @@ function triggerDownload(filename, content, mime) {
 function startOver() { cart = {}; formData = { shipping:{}, payment:{} }; fakeCard = {}; currentStep = 0; closeCheckout(); render(); }
 function gv(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
 
+/* =============================================
+   VIEW SOURCE PANEL
+   Displays this file's own annotated source code
+   so learners can see exactly how it works.
+============================================= */
+function toggleSource() {
+  sourceOpen = !sourceOpen;
+  const body = document.getElementById('source-body');
+  body.style.display = sourceOpen ? 'block' : 'none';
+  document.getElementById('source-toggle-icon').textContent = sourceOpen ? '\u22C1' : '\u22C0';
+  if (sourceOpen && !document.getElementById('source-pre').textContent) {
+    const src = document.documentElement.outerHTML;
+    document.getElementById('source-pre').textContent = src;
+  }
 }
 
 /* =============================================
