@@ -136,6 +136,18 @@
             animation: shake 0.2s ease-in-out;
         }
 
+        .tile.hinted {
+            animation: pulse-gold 0.5s ease-in-out infinite alternate;
+            border-color: #ffd700 !important;
+            box-shadow: 0 0 15px #ffd700, inset 0 0 10px #ffd700 !important;
+            z-index: 100 !important;
+        }
+
+        @keyframes pulse-gold {
+            0% { background: #ffffff; }
+            100% { background: #fff2a3; }
+        }
+
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-4px); }
@@ -146,8 +158,15 @@
 <body>
 
     <header>
-        <h1>🀄 Mahjong Solitaire</h1>
+        <h1>Oz bring you - 🀄 Mahjong Solitaire</h1>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 5px;">
+            <div id="score-display">Score: 0</div>
+            <div id="timer-display" style="color: #ff9800;">Time: 10:00</div>
+        </div>
         <div class="controls">
+            <button id="undo-btn">↩️ Undo</button>
+            <button id="hint-btn">💡 Hint</button>
+            <button id="shuffle-btn">🔄 Shuffle</button>
             <button id="restart-btn">🔁 Restart</button>
         </div>
     </header>
@@ -169,18 +188,18 @@
         // 2. The Classic 144-Tile "Turtle" Layout Coordinates
         // Format: [x, y, layer] based on a 30-wide by 24-high half-tile grid.
         // Each tile is exactly 2 units wide and 2 units high.
-        const TURTLE_LAYOUT = [
-            // Layer 0 (Bottom Base Layout: 82 tiles)
+         const TURTLE_LAYOUT = [
+            // Layer 0 (Bottom base level - 82 tiles)
             [2,2,0],[4,2,0],[6,2,0],[8,2,0],[10,2,0],[12,2,0],[14,2,0],[16,2,0],[18,2,0],[20,2,0],[22,2,0],[24,2,0],
-            [6,4,0],[8,4,0],[10,4,0],[12,4,0],[14,4,0],[16,4,0],[18,4,0],[20,4,0],[22,4,0],
-            [4,6,0],[6,6,0],[8,6,0],[10,6,0],[12,6,0],[14,6,0],[16,6,0],[18,6,0],[20,6,0],[22,6,0],[24,6,0],
-            [0,8,0],[4,8,0],[6,8,0],[8,8,0],[10,8,0],[12,8,0],[14,8,0],[16,8,0],[18,8,0],[20,8,0],[22,8,0],[24,8,0],[26,8,0],
-            [0,10,0],[2,10,0],[4,10,0],[6,10,0],[8,10,0],[10,10,0],[12,10,0],[14,10,0],[16,10,0],[18,10,0],[20,10,0],[22,10,0],[24,10,0],[26,10,0],[28,10,0],
-            [4,12,0],[6,12,0],[8,12,0],[10,12,0],[12,12,0],[14,12,0],[16,12,0],[18,12,0],[20,12,0],[22,12,0],[24,12,0],
-            [6,14,0],[8,14,0],[10,14,0],[12,14,0],[14,14,0],[16,14,0],[18,14,0],[20,14,0],[22,14,0],
+            [6,4,0],[8,4,0],[10,4,0],[12,4,0],[14,4,0],[16,4,0],[18,4,0],[20,4,0],
+            [4,6,0],[6,6,0],[8,6,0],[10,6,0],[12,6,0],[14,6,0],[16,6,0],[18,6,0],[20,6,0],[22,6,0],
+            [0,8,0],[2,8,0],[4,8,0],[6,8,0],[8,8,0],[10,8,0],[12,8,0],[14,8,0],[16,8,0],[18,8,0],[20,8,0],[22,8,0],[24,8,0],[26,8,0],
+            [0,10,0],[2,10,0],[4,10,0],[6,10,0],[8,10,0],[10,10,0],[12,10,0],[16,10,0],[18,10,0],[20,10,0],[22,10,0],[24,10,0],[26,10,0],[28,10,0],
+            [4,12,0],[6,12,0],[8,12,0],[10,12,0],[12,12,0],[14,12,0],[16,12,0],[18,12,0],[20,12,0],[22,12,0],
+            [6,14,0],[8,14,0],[10,14,0],[12,14,0],[14,14,0],[16,14,0],[18,14,0],[20,14,0],
             [2,16,0],[4,16,0],[6,16,0],[8,16,0],[10,16,0],[12,16,0],[14,16,0],[16,16,0],[18,16,0],[20,16,0],[22,16,0],[24,16,0],
 
-            // Layer 1 (Stack Level 2: 36 tiles)
+            // Layer 1 (Second stack tier - 36 tiles)
             [8,4,1],[10,4,1],[12,4,1],[14,4,1],[16,4,1],[18,4,1],
             [8,6,1],[10,6,1],[12,6,1],[14,6,1],[16,6,1],[18,6,1],
             [8,8,1],[10,8,1],[12,8,1],[14,8,1],[16,8,1],[18,8,1],
@@ -188,25 +207,32 @@
             [8,12,1],[10,12,1],[12,12,1],[14,12,1],[16,12,1],[18,12,1],
             [8,14,1],[10,14,1],[12,14,1],[14,14,1],[16,14,1],[18,14,1],
 
-            // Layer 2 (Stack Level 3: 16 tiles)
+            // Layer 2 (Third stack tier - 16 tiles)
             [10,6,2],[12,6,2],[14,6,2],[16,6,2],
             [10,8,2],[12,8,2],[14,8,2],[16,8,2],
             [10,10,2],[12,10,2],[14,10,2],[16,10,2],
             [10,12,2],[12,12,2],[14,12,2],[16,12,2],
 
-            // Layer 3 (Stack Level 4: 4 tiles)
+            // Layer 3 (Fourth stack tier - 4 tiles)
             [12,8,3],[14,8,3],
             [12,10,3],[14,10,3],
 
-            // Layer 4 (The Crest Summit: 1 top tile centered)
+            // Layer 4 (The absolute peak summit - 1 centered tile)
             [13,9,4]
         ];
-
-        let gameState = [];
-        let selectedTileId = null;
-
+        
         const boardElement = document.getElementById('game-board');
         const restartBtn = document.getElementById('restart-btn');
+        const shuffleBtn = document.getElementById('shuffle-btn');
+        const hintBtn = document.getElementById('hint-btn');
+        const scoreDisplay = document.getElementById('score-display');
+        const timerDisplay = document.getElementById('timer-display');
+
+        let gameState = [];
+        let score = 0;
+        let timeLeft = 600; // 10 minutes game length in seconds
+        let timerInterval = null;
+
 
         // Initialize Engine
         function initGame() {
@@ -341,11 +367,76 @@
                     firstTile.active = false;
                     targetTile.active = false;
                     selectedTileId = null;
+                    renderBoard();
+                    checkGameState(); // <--- Verifies if player just won or got stuck
+                    return;
                 } else {
                     // Mismatch: Change selection focus to the new tile
                     selectedTileId = id;
                 }
                 renderBoard();
+            }
+        }
+        restartBtn.addEventListener('click', initGame);
+        shuffleBtn.addEventListener('click', shuffleRemaining); // <--- Links the button to code
+
+        // Run Engine on load
+        initGame();
+
+        // Shuffle only the REMAINING active tiles on the board
+        function shuffleRemaining() {
+            // Extract symbols from currently active tiles
+            let activeTiles = gameState.filter(t => t.active);
+            let activeSymbols = activeTiles.map(t => t.symbol);
+            
+            if (activeSymbols.length === 0) return;
+
+            // Scramble the remaining symbols
+            shuffleArray(activeSymbols);
+
+            // Re-assign scrambled symbols back to active layout positions
+            let symbolIndex = 0;
+            gameState.forEach(tile => {
+                if (tile.active) {
+                    tile.symbol = activeSymbols[symbolIndex];
+                    symbolIndex++;
+                }
+            });
+
+            selectedTileId = null;
+            renderBoard();
+            checkGameState();
+        }
+
+        // Check if the player has won, lost (no moves), or can keep playing
+        function checkGameState() {
+            let activeTiles = gameState.filter(t => t.active);
+            
+            // Win condition
+            if (activeTiles.length === 0) {
+                setTimeout(() => alert("🎉 Congratulations! You cleared the board!"), 300);
+                return;
+            }
+
+            // Look for any valid match among remaining free tiles
+            let freeTiles = activeTiles.filter(t => isTileFree(t));
+            let incomingMovePossible = false;
+
+            for (let i = 0; i < freeTiles.length; i++) {
+                for (let j = i + 1; j < freeTiles.length; j++) {
+                    if (freeTiles[i].symbol === freeTiles[j].symbol) {
+                        incomingMovePossible = true;
+                        break;
+                    }
+                }
+                if (incomingMovePossible) break;
+            }
+
+            // Game Over (No moves left) condition
+            if (!incomingMovePossible) {
+                setTimeout(() => {
+                    alert("🚫 No moves left! Use the Shuffle button to mix up remaining tiles.");
+                }, 300);
             }
         }
 
