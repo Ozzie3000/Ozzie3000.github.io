@@ -225,10 +225,12 @@
         const restartBtn = document.getElementById('restart-btn');
         const shuffleBtn = document.getElementById('shuffle-btn');
         const hintBtn = document.getElementById('hint-btn');
+        const undoBtn = document.getElementById('undo-btn'); // <--- Captures Undo Button
         const scoreDisplay = document.getElementById('score-display');
         const timerDisplay = document.getElementById('timer-display');
 
         let gameState = [];
+        let moveHistory = []; // <--- Tracks all removed matches
         let score = 0;
         let timeLeft = 600; // 10 minutes game length in seconds
         let timerInterval = null;
@@ -239,6 +241,7 @@
             boardElement.innerHTML = '';
             selectedTileId = null;
             gameState = [];
+            moveHistory = []; // <--- Wipes out undo history state
 
              // Stats Reset
             score = 0;
@@ -370,10 +373,18 @@
                 const firstTile = gameState.find(t => t.id === selectedTileId);
 
                 if (firstTile.symbol === targetTile.symbol) {
-                    // Match found! Process removal
+                    // Match found! Save snapshot to history stack first
+                    moveHistory.push({
+                        tile1Id: firstTile.id,
+                        tile2Id: targetTile.id,
+                        pointsEarned: 100
+                    });
+
+                    // Process removal
                     firstTile.active = false;
                     targetTile.active = false;
                     selectedTileId = null;
+                    updateScore(100);
                     renderBoard();
                     checkGameState(); // <--- Verifies if player just won or got stuck
                     return;
@@ -435,9 +446,10 @@
                 }
             }
         }
-        
+
         restartBtn.addEventListener('click', initGame);
         shuffleBtn.addEventListener('click', shuffleRemaining); // <--- Links the button to code
+        hintBtn.addEventListener('click', triggerVisualHint); // <--- Links hint button
 
         // Run Engine on load
         initGame();
