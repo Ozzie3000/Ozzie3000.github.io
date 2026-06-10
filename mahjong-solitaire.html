@@ -249,6 +249,11 @@
             gameState = [];
             moveHistory = []; // <--- Wipes out undo history state
 
+            // Hide Victory Screen
+            victoryOverlay.style.display = 'none';
+            victoryOverlay.style.opacity = '0';
+            victoryContent.style.transform = 'scale(0.8)';
+
              // Stats Reset
             score = 0;
             scoreDisplay.innerText = `Score: ${score}`;
