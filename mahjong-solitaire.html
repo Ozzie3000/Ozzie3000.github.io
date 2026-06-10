@@ -447,6 +447,33 @@
             }
         }
 
+        // Undo System: Pops the latest match state and restores elements
+        function executeUndoMove() {
+            if (moveHistory.length === 0) return; // Exit if no moves have been made yet
+
+            // Grab the last matching pair record
+            const lastMove = moveHistory.pop();
+
+            // Locate tiles in our game state
+            const tile1 = gameState.find(t => t.id === lastMove.tile1Id);
+            const tile2 = gameState.find(t => t.id === lastMove.tile2Id);
+
+            if (tile1 && tile2) {
+                // Re-activate tiles
+                tile1.active = true;
+                tile2.active = true;
+                
+                // Deduct points previously earned
+                updateScore(-lastMove.pointsEarned);
+                
+                // Clear active selection states to avoid anomalies
+                selectedTileId = null;
+                
+                // Redraw layout screen
+                renderBoard();
+            }
+        }
+
         restartBtn.addEventListener('click', initGame);
         shuffleBtn.addEventListener('click', shuffleRemaining); // <--- Links the button to code
         hintBtn.addEventListener('click', triggerVisualHint); // <--- Links hint button
