@@ -267,7 +267,7 @@
   <h1>&#127819; Fruit market</h1>
   <p class="subtitle">A single-page HTML drag-and-drop shopping cart demo. Drag items to your cart, or tap +.</p>
 
-  <div class="section-label">Available items</div>
+  <div class="section-label" id="storeInventory">Available items</div>
   <div class="shelf" id="shelf" ondragover="onDragOver(event,'shelf')" ondragleave="onDragLeave(event,'shelf')" ondrop="onDrop(event,'shelf')">
     <div class="fruit-card" draggable="true" data-type="apple" ondragstart="onDragStart(event,this)" onclick="handleCardClick(event,this)">
       <div class="tooltip"><b>Apple</b> &nbsp;<span>$0.30 each</span></div>
@@ -772,8 +772,12 @@ function toggleSource() {
 /* =============================================
    INIT
 ============================================= */
+
 render();
 setupTouch();
+setTimeout(() => {
+  document.getElementById('storeInventory').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}, 4000);
 </script>
 </body>
 </html>
