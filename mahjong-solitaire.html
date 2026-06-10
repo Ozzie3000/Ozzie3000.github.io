@@ -228,6 +228,12 @@
         const undoBtn = document.getElementById('undo-btn'); // <--- Captures Undo Button
         const scoreDisplay = document.getElementById('score-display');
         const timerDisplay = document.getElementById('timer-display');
+        // Victory Panel elements
+        const victoryOverlay = document.getElementById('victory-overlay');
+        const victoryContent = victoryOverlay.querySelector('div');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const finalTimeDisplay = document.getElementById('final-time');
+        const victoryPlayAgainBtn = document.getElementById('victory-play-again-btn');
 
         let gameState = [];
         let moveHistory = []; // <--- Tracks all removed matches
