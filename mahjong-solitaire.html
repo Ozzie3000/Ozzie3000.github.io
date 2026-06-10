@@ -477,6 +477,7 @@
         restartBtn.addEventListener('click', initGame);
         shuffleBtn.addEventListener('click', shuffleRemaining); // <--- Links the button to code
         hintBtn.addEventListener('click', triggerVisualHint); // <--- Links hint button
+        undoBtn.addEventListener('click', executeUndoMove); // <--- Triggers undo routine on click
 
         // Run Engine on load
         initGame();
