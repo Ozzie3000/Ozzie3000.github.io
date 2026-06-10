@@ -440,13 +440,17 @@ function setupTouch() {
     card.addEventListener('touchstart', e => {
       touchType = card.dataset.type;
       const t = e.touches[0];
+      let startX = t.clientX, startY = t.clientY;
+      let didDrag = false;
       clone = card.cloneNode(true);
       clone.style.cssText = 'position:fixed;top:'+(t.clientY-42)+'px;left:'+(t.clientX-42)+'px;width:85px;height:85px;opacity:.75;pointer-events:none;z-index:999;transition:none';
       document.body.appendChild(clone);
+      if (Math.abs(t.clientX - startX) > 5 || Math.abs(t.clientY - startY) > 5) return;
       e.preventDefault();
     }, { passive: false });
     card.addEventListener('touchmove', e => {
       if (!clone) return;
+      didDrag = true;
       const t = e.touches[0];
       clone.style.top  = (t.clientY-42)+'px';
       clone.style.left = (t.clientX-42)+'px';
@@ -454,6 +458,7 @@ function setupTouch() {
     }, { passive: false });
     card.addEventListener('touchend', e => {
       if (!clone || !touchType) { clone = null; touchType = null; return; }
+      if (!didDrag) { clone.remove(); clone = null; clickAdd(touchType); touchType = null; return; }
       const t = e.changedTouches[0];
       clone.remove(); clone = null;
       const el = document.elementFromPoint(t.clientX, t.clientY);
