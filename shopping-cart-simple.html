@@ -87,6 +87,7 @@
     opacity: 0; transition: opacity .15s; padding: 0; line-height: 1;
   }
   .fruit-card:hover .add-btn { opacity: 1; }
+  @media (hover: none) { .add-btn { opacity: 1; } }
 
   .tooltip {
     position: absolute; bottom: calc(100% + 7px); left: 50%;
@@ -268,32 +269,32 @@
 
   <div class="section-label">Available items</div>
   <div class="shelf" id="shelf" ondragover="onDragOver(event,'shelf')" ondragleave="onDragLeave(event,'shelf')" ondrop="onDrop(event,'shelf')">
-    <div class="fruit-card" draggable="true" data-type="apple" ondragstart="onDragStart(event,this)">
+    <div class="fruit-card" draggable="true" data-type="apple" ondragstart="onDragStart(event,this)" onclick="handleCardClick(event,this)">
       <div class="tooltip"><b>Apple</b> &nbsp;<span>$0.30 each</span></div>
       <span class="fruit-emoji">&#127822;</span><span class="fruit-price-tag">$0.30</span>
       <button class="add-btn" onclick="clickAdd('apple')" aria-label="Add apple">+</button>
     </div>
-    <div class="fruit-card" draggable="true" data-type="banana" ondragstart="onDragStart(event,this)">
+    <div class="fruit-card" draggable="true" data-type="banana" ondragstart="onDragStart(event,this) onclick="handleCardClick(event,this)"">
       <div class="tooltip"><b>Banana</b> &nbsp;<span>$0.40 each</span></div>
       <span class="fruit-emoji">&#127820;</span><span class="fruit-price-tag">$0.40</span>
       <button class="add-btn" onclick="clickAdd('banana')" aria-label="Add banana">+</button>
     </div>
-    <div class="fruit-card" draggable="true" data-type="strawberry" ondragstart="onDragStart(event,this)">
+    <div class="fruit-card" draggable="true" data-type="strawberry" ondragstart="onDragStart(event,this) onclick="handleCardClick(event,this)"">
       <div class="tooltip"><b>Strawberry</b> &nbsp;<span>$0.10 each</span></div>
       <span class="fruit-emoji">&#127827;</span><span class="fruit-price-tag">$0.10</span>
       <button class="add-btn" onclick="clickAdd('strawberry')" aria-label="Add strawberry">+</button>
     </div>
-    <div class="fruit-card" draggable="true" data-type="grape" ondragstart="onDragStart(event,this)">
+    <div class="fruit-card" draggable="true" data-type="grape" ondragstart="onDragStart(event,this) onclick="handleCardClick(event,this)"">
       <div class="tooltip"><b>Grapes</b> &nbsp;<span>$0.50 each</span></div>
       <span class="fruit-emoji">&#127815;</span><span class="fruit-price-tag">$0.50</span>
       <button class="add-btn" onclick="clickAdd('grape')" aria-label="Add grapes">+</button>
     </div>
-    <div class="fruit-card" draggable="true" data-type="lemon" ondragstart="onDragStart(event,this)">
+    <div class="fruit-card" draggable="true" data-type="lemon" ondragstart="onDragStart(event,this) onclick="handleCardClick(event,this)"">
       <div class="tooltip"><b>Lemon</b> &nbsp;<span>$0.25 each</span></div>
       <span class="fruit-emoji">&#127819;</span><span class="fruit-price-tag">$0.25</span>
       <button class="add-btn" onclick="clickAdd('lemon')" aria-label="Add lemon">+</button>
     </div>
-    <div class="fruit-card" draggable="true" data-type="watermelon" ondragstart="onDragStart(event,this)">
+    <div class="fruit-card" draggable="true" data-type="watermelon" ondragstart="onDragStart(event,this) onclick="handleCardClick(event,this)"">
       <div class="tooltip"><b>Watermelon</b> &nbsp;<span>$1.20 each</span></div>
       <span class="fruit-emoji">&#127817;</span><span class="fruit-price-tag">$1.20</span>
       <button class="add-btn" onclick="clickAdd('watermelon')" aria-label="Add watermelon">+</button>
@@ -460,6 +461,12 @@ function setupTouch() {
       touchType = null;
     }, { passive: false });
   });
+}
+
+//mobile clicking to add to cart
+function handleCardClick(e, el) {
+  if (e.target.classList.contains('add-btn') || e.target.closest('.add-btn')) return;
+  if (window.matchMedia('(hover: none)').matches) clickAdd(el.dataset.type);
 }
 
 /* =============================================
