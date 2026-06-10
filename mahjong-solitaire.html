@@ -175,6 +175,19 @@
         <div class="board" id="game-board"></div>
     </div>
 
+    <!-- Beautiful Modern Victory Panel Overlay Overlay -->
+    <div id="victory-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 9999; opacity: 0; transition: opacity 0.3s ease;">
+        <div style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 3px solid #ffd700; max-width: 90%; width: 350px; color: #ffffff; transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <h2 style="font-size: 2.2rem; color: #ffd700; margin-bottom: 15px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🎉 VICTORY!</h2>
+            <p style="font-size: 1.1rem; margin-bottom: 20px; opacity: 0.9;">You successfully cleared the board!</p>
+            <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-bottom: 25px;">
+                <div id="final-score" style="font-size: 1.3rem; font-weight: bold; margin-bottom: 8px;">Final Score: 0</div>
+                <div id="final-time" style="font-size: 1.1rem; color: #ff9800;">Time Remaining: 00:00</div>
+            </div>
+            <button id="victory-play-again-btn" style="background: #ffd700; color: #1b5e20; border: none; padding: 12px 30px; font-size: 1.1rem; font-weight: bold; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 15px rgba(255,215,0,0.4); transition: transform 0.1s;">Play Again</button>
+        </div>
+    </div>
+    
     <script>
         // 1. Emoji Tile Definition Pool (36 unique patterns x 4 of each = 144 tiles)
         const TILE_SYMBOLS = [
@@ -573,18 +586,5 @@
         // Run Engine on load
         initGame();
     </script>
-
-    <!-- Beautiful Modern Victory Panel Overlay Overlay -->
-    <div id="victory-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 9999; opacity: 0; transition: opacity 0.3s ease;">
-        <div style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 3px solid #ffd700; max-width: 90%; width: 350px; color: #ffffff; transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
-            <h2 style="font-size: 2.2rem; color: #ffd700; margin-bottom: 15px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🎉 VICTORY!</h2>
-            <p style="font-size: 1.1rem; margin-bottom: 20px; opacity: 0.9;">You successfully cleared the board!</p>
-            <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-bottom: 25px;">
-                <div id="final-score" style="font-size: 1.3rem; font-weight: bold; margin-bottom: 8px;">Final Score: 0</div>
-                <div id="final-time" style="font-size: 1.1rem; color: #ff9800;">Time Remaining: 00:00</div>
-            </div>
-            <button id="victory-play-again-btn" style="background: #ffd700; color: #1b5e20; border: none; padding: 12px 30px; font-size: 1.1rem; font-weight: bold; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 15px rgba(255,215,0,0.4); transition: transform 0.1s;">Play Again</button>
-        </div>
-    </div>
 </body>
 </html>            
