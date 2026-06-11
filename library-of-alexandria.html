@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>The Library of Babel</title>
+<style>
+  :root{
+    --ink:#191007; --paper:#ece1c8; --paper-dim:#cdbf9e; --amber:#e7b368;
+    --amber-dim:#a87f46; --wood:#2a1c10; --veil:rgba(10,7,4,.86);
+    --serif:'Iowan Old Style','Palatino Linotype',Palatino,'Book Antiqua',Georgia,serif;
+    --mono:'Courier Prime','Courier New',Courier,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#070503;color:var(--paper);
+    font-family:var(--serif);-webkit-font-smoothing:antialiased}
+  #scene{position:fixed;inset:0}
+  canvas{display:block}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .6s}
+  #hud.on{opacity:1}
+  #crosshair{position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px;
+    border-radius:50%;background:rgba(236,225,200,.75);box-shadow:0 0 6px rgba(0,0,0,.8)}
+  #plaque{position:absolute;top:18px;left:18px;background:linear-gradient(170deg,rgba(26,17,9,.85),rgba(14,9,5,.85));
+    border:1px solid rgba(231,179,104,.35);padding:10px 16px 11px;max-width:330px;
+    box-shadow:0 4px 18px rgba(0,0,0,.5)}
+  #plaque .eyebrow{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--amber-dim)}
+  #plaque .loc{font-size:15px;margin-top:3px;color:var(--paper)}
+  #plaque .hexid{font-family:var(--mono);font-size:11px;color:var(--paper-dim);margin-top:4px;word-break:break-all}
+  #prompt{position:absolute;left:50%;bottom:18%;transform:translateX(-50%);
+    font-size:15px;letter-spacing:.04em;color:var(--paper);text-shadow:0 1px 4px #000;
+    background:rgba(12,8,4,.55);padding:7px 16px;border:1px solid rgba(231,179,104,.25);
+    opacity:0;transition:opacity .15s;max-width:80vw;text-align:center}
+  #prompt.on{opacity:1}
+  #prompt b{color:var(--amber);font-weight:600}
+  #hints{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+    font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(205,191,158,.6)}
+  #toast{position:absolute;top:18px;left:50%;transform:translateX(-50%) translateY(-8px);
+    background:var(--veil);border:1px solid rgba(231,179,104,.4);padding:10px 20px;
+    font-size:14.5px;max-width:560px;text-align:center;opacity:0;transition:all .4s;line-height:1.45}
+  #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  #vignette{position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse at center,transparent 52%,rgba(0,0,0,.55) 100%)}
+
+  /* ---------- shared overlay chrome ---------- */
+  .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+    background:var(--veil);z-index:30}
+  .overlay.on{display:flex}
+  .panel{background:linear-gradient(165deg,#211608,#150d05 60%);border:1px solid rgba(231,179,104,.45);
+    box-shadow:0 0 0 6px rgba(0,0,0,.35),0 24px 70px rgba(0,0,0,.7);
+    padding:34px 40px;max-width:640px;width:min(92vw,640px);max-height:88vh;overflow:auto}
+  .panel h2{font-size:13px;letter-spacing:.3em;text-transform:uppercase;color:var(--amber);
+    font-weight:500;margin-bottom:14px}
+  .panel p{font-size:15px;line-height:1.55;color:var(--paper-dim);margin-bottom:12px}
+  .panel p strong{color:var(--paper);font-weight:600}
+  button{font-family:var(--serif);font-size:14px;letter-spacing:.08em;cursor:pointer;
+    background:transparent;color:var(--amber);border:1px solid rgba(231,179,104,.55);
+    padding:9px 22px;transition:all .15s}
+  button:hover,button:focus-visible{background:rgba(231,179,104,.14);outline:none}
+  button.primary{background:var(--amber);color:#1c1206;border-color:var(--amber);font-weight:600}
+  button.primary:hover{background:#f0c684}
+  .btnrow{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+
+  /* ---------- title ---------- */
+  #title .panel{text-align:center;background:transparent;border:none;box-shadow:none;max-width:760px}
+  #title h1{font-size:clamp(34px,6.5vw,64px);font-weight:500;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--paper);text-shadow:0 0 40px rgba(231,179,104,.25)}
+  #title h1 span{color:var(--amber)}
+  #title .sub{margin:14px 0 6px;font-style:italic;font-size:16px;color:var(--paper-dim)}
+  #title .desc{font-size:14.5px;color:var(--paper-dim);max-width:520px;margin:18px auto 26px;line-height:1.6}
+  #title .keys{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber-dim);margin-top:22px}
+
+  /* ---------- reader ---------- */
+  #reader .panel{max-width:none;width:auto;padding:0;background:none;border:none;box-shadow:none;
+    display:flex;flex-direction:column;align-items:center;max-height:94vh}
+  #bookhead{display:flex;align-items:baseline;gap:18px;margin-bottom:10px;flex-wrap:wrap;justify-content:center}
+  #booktitle{font-size:20px;letter-spacing:.3em;color:var(--amber);text-transform:lowercase}
+  #bookloc{font-size:12.5px;color:var(--paper-dim);letter-spacing:.05em}
+  #cover{display:none;flex-direction:column;align-items:center;justify-content:center;
+    width:300px;height:430px;border-radius:4px 10px 10px 4px;position:relative;
+    box-shadow:inset 0 0 60px rgba(0,0,0,.55),12px 14px 40px rgba(0,0,0,.7);
+    border:1px solid rgba(0,0,0,.5)}
+  #cover.on{display:flex}
+  #cover::before{content:'';position:absolute;left:14px;top:0;bottom:0;width:2px;
+    background:rgba(0,0,0,.35)}
+  #cover .glyphs{font-size:21px;letter-spacing:.34em;color:rgba(20,12,5,.8);
+    text-transform:lowercase;text-shadow:0 1px 0 rgba(255,235,190,.25);padding:0 20px;text-align:center}
+  #cover .rule{width:54%;height:1px;background:rgba(20,12,5,.45);margin:16px 0}
+  #cover .vols{font-size:11px;letter-spacing:.2em;color:rgba(20,12,5,.6);text-transform:uppercase}
+  #pagewrap{display:none;background:linear-gradient(105deg,#efe5cc,#e6d8b6 55%,#dfd0aa);
+    color:#241a0e;padding:26px 30px 20px;box-shadow:12px 14px 40px rgba(0,0,0,.75);
+    border:1px solid #b5a37c;max-width:96vw}
+  #pagewrap.on{display:block}
+  #pagetext{font-family:var(--mono);white-space:pre;line-height:1.32;overflow:auto;
+    max-height:62vh;color:#241a0e}
+  #pagetext mark{background:rgba(231,142,40,.45);color:#1a0f02;border-radius:2px}
+  #pagefoot{display:flex;justify-content:space-between;align-items:center;margin-top:14px;
+    font-size:13px;color:#5d4d33}
+  #pagefoot button{color:#5d4d33;border-color:#a8956c;padding:5px 14px}
+  #pagefoot button:hover{background:rgba(90,70,40,.12)}
+  #pagenum{font-style:italic}
+  #pagenum input{width:54px;font-family:var(--serif);font-size:13px;text-align:center;
+    background:transparent;border:none;border-bottom:1px solid #a8956c;color:#241a0e}
+  #readerbtns{margin-top:14px;display:flex;gap:12px}
+
+  /* ---------- seek ---------- */
+  #seek textarea{width:100%;height:110px;background:rgba(0,0,0,.35);border:1px solid rgba(231,179,104,.4);
+    color:var(--paper);font-family:var(--mono);font-size:14px;padding:10px;resize:vertical}
+  #seek textarea:focus{outline:1px solid var(--amber)}
+  #sanitized{font-family:var(--mono);font-size:12.5px;color:var(--paper-dim);margin-top:8px;
+    min-height:34px;word-break:break-all;max-height:90px;overflow:auto}
+  #sanitized b{color:var(--amber);font-weight:400}
+  .radios{display:flex;gap:22px;margin-top:14px;font-size:14px;color:var(--paper-dim)}
+  .radios label{cursor:pointer;display:flex;gap:7px;align-items:center}
+  #seekresult{display:none;margin-top:20px;border-top:1px solid rgba(231,179,104,.3);padding-top:16px}
+  #seekresult.on{display:block}
+  #seekresult .row{display:flex;justify-content:space-between;font-size:14.5px;padding:3px 0;color:var(--paper)}
+  #seekresult .row span:first-child{color:var(--paper-dim)}
+
+  /* ---------- stairs ---------- */
+  #stairs .panel{text-align:center}
+
+  /* ---------- touch ---------- */
+  #touchui{display:none;position:fixed;inset:0;pointer-events:none;z-index:20}
+  body.touch #touchui{display:block}
+  #stick{position:absolute;left:36px;bottom:36px;width:110px;height:110px;border-radius:50%;
+    border:1.5px solid rgba(231,179,104,.4);background:rgba(0,0,0,.25)}
+  #knob{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px;border-radius:50%;
+    background:rgba(231,179,104,.4)}
+  .tbtn{position:absolute;pointer-events:auto;background:rgba(12,8,4,.6);border:1px solid rgba(231,179,104,.45);
+    color:var(--amber);font-family:var(--serif);font-size:13px;padding:10px 16px;letter-spacing:.1em}
+  #tseek{right:24px;bottom:118px}
+  #tact{right:24px;bottom:52px}
+  @media (prefers-reduced-motion:reduce){ #toast{transition:opacity .2s} }
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <div id="crosshair"></div>
+  <div id="plaque">
+    <div class="eyebrow">You stand in</div>
+    <div class="loc" id="locline">Floor 0 · Gallery 0</div>
+    <div class="hexid" id="hexline">hexagon 0</div>
+  </div>
+  <div id="prompt"></div>
+  <div id="hints">wasd move &nbsp;·&nbsp; mouse / arrows look &nbsp;·&nbsp; e take &nbsp;·&nbsp; t seek text &nbsp;·&nbsp; esc menu</div>
+  <div id="toast"></div>
+</div>
+
+<div id="touchui">
+  <div id="stick"><div id="knob"></div></div>
+  <button class="tbtn" id="tseek">Seek text</button>
+  <button class="tbtn" id="tact">Take / use</button>
+</div>
+
+<!-- title / pause -->
+<div class="overlay on" id="title">
+  <div class="panel">
+    <h1>The Library<br>of <span>Babel</span></h1>
+    <div class="sub">after the story by Jorge Luis Borges, 1941</div>
+    <p class="desc">An endless honeycomb of hexagonal galleries, each wall bearing five shelves,
+      each shelf thirty-five volumes, every volume four hundred ten pages of twenty-five symbols.
+      Every book that can exist is here, once, somewhere. Take volumes from the shelves and read them.
+      Or name any passage you wish existed — the library will tell you exactly where it has always been,
+      and carry you to it.</p>
+    <button class="primary" id="enterbtn">Enter the library</button>
+    <div class="keys" id="titlekeys">wasd walk · mouse or arrow keys look · e take a book · t seek a text · shift hurry</div>
+  </div>
+</div>
+
+<!-- book reader -->
+<div class="overlay" id="reader">
+  <div class="panel">
+    <div id="bookhead">
+      <div id="booktitle"></div>
+      <div id="bookloc"></div>
+    </div>
+    <div id="cover">
+      <div class="glyphs" id="coverglyphs"></div>
+      <div class="rule"></div>
+      <div class="vols">410 pages · uniform format</div>
+    </div>
+    <div id="pagewrap">
+      <div id="pagetext"></div>
+      <div id="pagefoot">
+        <button id="prevpg">&#8592; prev</button>
+        <div id="pagenum">page <input id="pginput" inputmode="numeric"> of 410</div>
+        <button id="nextpg">next &#8594;</button>
+      </div>
+    </div>
+    <div id="readerbtns">
+      <button class="primary" id="openbook">Open the volume</button>
+      <button id="shelve">Shelve it</button>
+    </div>
+  </div>
+</div>
+
+<!-- seek -->
+<div class="overlay" id="seek">
+  <div class="panel">
+    <h2>Seek a text</h2>
+    <p>The library knows twenty-two letters, the space, the comma and the period.
+      Other characters will be translated into the nearest symbol, or fall away.
+      Whatever remains exists, already, on some page — the library will reveal where.</p>
+    <textarea id="seektext" maxlength="4000" placeholder="oh time thy pyramids"></textarea>
+    <div id="sanitized"></div>
+    <div class="radios">
+      <label><input type="radio" name="seekmode" value="random" checked> buried among random letters</label>
+      <label><input type="radio" name="seekmode" value="alone"> alone on its page</label>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="seekgo">Seek</button>
+      <button id="seekclose">Never mind</button>
+    </div>
+    <div id="seekresult">
+      <div class="row"><span>Hexagon</span><span id="rhexshort"></span></div>
+      <div class="row"><span>Floor</span><span id="rfloor"></span></div>
+      <div class="row"><span>Wall</span><span id="rwall"></span></div>
+      <div class="row"><span>Shelf</span><span id="rshelf"></span></div>
+      <div class="row"><span>Volume</span><span id="rvolume"></span></div>
+      <div class="row"><span>Page</span><span id="rpage"></span></div>
+      <div class="btnrow">
+        <button class="primary" id="travel">Travel there</button>
+        <button id="copyaddr">Copy full address</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- stairs -->
+<div class="overlay" id="stairs">
+  <div class="panel">
+    <h2>The spiral stairway</h2>
+    <p>It sinks abysmally and soars upward to remote distances.</p>
+    <div class="btnrow" style="justify-content:center">
+      <button class="primary" id="goup">Climb up</button>
+      <button class="primary" id="godown">Descend</button>
+      <button id="staystair">Stay</button>
+    </div>
+  </div>
+</div>
+
+<!-- pause -->
+<div class="overlay" id="pause">
+  <div class="panel">
+    <h2>A moment of rest</h2>
+    <p><strong>Walk</strong> with WASD or the arrow keys; hold Shift to hurry. <strong>Look</strong> with the mouse.</p>
+    <p><strong>Take a book</strong> by looking at it and pressing E or clicking. Flip its pages with the arrow keys.</p>
+    <p><strong>Seek any text</strong> with T. The library computes the one address where your words already sit,
+      and can carry you there. The volume will glow until you find it.</p>
+    <p><strong>Climb</strong> between floors at the spiral stairways in the corridors.</p>
+    <div class="btnrow">
+      <button class="primary" id="resume">Return to the shelves</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ============================================================
+   BABEL CORE — see header comments in source module.
+   ============================================================ */
+'use strict';
+const LETTERS = 'abcdefghijlmnoprstuvyz';
+const ALPHABET = LETTERS + ' ,.';
+const PAGE_LINES = 40, LINE_CHARS = 80;
+const PAGE_CHARS = PAGE_LINES * LINE_CHARS;
+const PAGES = 410n, VOLUMES = 35n, SHELVES = 5n, WALLS = 4n;
+const BASE = 25n;
+const M = BASE ** BigInt(PAGE_CHARS);
+const SYM_TO_DIGIT = {};
+for (let i = 0; i < ALPHABET.length; i++) SYM_TO_DIGIT[ALPHABET[i]] = i;
+
+function mulberry32(seed){let a=seed>>>0;return function(){a|=0;a=(a+0x6D2B79F5)|0;
+  let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;
+  return ((t^(t>>>14))>>>0)/4294967296;};}
+
+function bigConstant(seed,digits){const rng=mulberry32(seed);let n=0n;
+  for(let i=0;i<digits;i++)n=n*BASE+BigInt(Math.floor(rng()*25));return n%M;}
+function makeMultiplier(seed){let a=bigConstant(seed,PAGE_CHARS);while(a%5n===0n)a+=1n;return a;}
+const A1=makeMultiplier(0xB0B1E5), C1=bigConstant(0x1941,PAGE_CHARS);
+const A2=makeMultiplier(0xCAFE17), C2=bigConstant(0xBABE1,PAGE_CHARS);
+
+function modInverse(a,m){let or_=a%m,r=m,os=1n,s=0n;
+  while(r!==0n){const q=or_/r;[or_,r]=[r,or_-q*r];[os,s]=[s,os-q*s];}
+  if(or_!==1n)throw new Error('not invertible');return ((os%m)+m)%m;}
+const A1_INV=modInverse(A1,M), A2_INV=modInverse(A2,M);
+function mod(n,m){return ((n%m)+m)%m;}
+
+function bigToDigits(n){const s=n.toString(25);const d=new Uint8Array(PAGE_CHARS);
+  const off=PAGE_CHARS-s.length;
+  for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);d[off+i]=c<=57?c-48:c-87;}return d;}
+function digitsToBig(d){const CHUNK=8,CB=BASE**8n;let n=0n,i=0;
+  const whole=Math.floor(d.length/CHUNK)*CHUNK;
+  for(;i<whole;i+=CHUNK){let part=0;for(let j=0;j<CHUNK;j++)part=part*25+d[i+j];n=n*CB+BigInt(part);}
+  for(;i<d.length;i++)n=n*BASE+BigInt(d[i]);return n;}
+function reverseBig(n){const d=bigToDigits(n);d.reverse();return digitsToBig(d);}
+
+function contentNumberFromIndex(idx){const r1=reverseBig(mod(idx*A1+C1,M));return mod(r1*A2+C2,M);}
+function indexFromContentNumber(n){const r1=reverseBig(mod((n-C2)*A2_INV,M));return mod((r1-C1)*A1_INV,M);}
+
+function composeIndex(hex,wall,shelf,volume,page){
+  return (((hex*WALLS+BigInt(wall))*SHELVES+BigInt(shelf))*VOLUMES+BigInt(volume))*PAGES+BigInt(page);}
+function decomposeIndex(idx){
+  const page=Number(idx%PAGES);idx/=PAGES;
+  const volume=Number(idx%VOLUMES);idx/=VOLUMES;
+  const shelf=Number(idx%SHELVES);idx/=SHELVES;
+  const wall=Number(idx%WALLS);idx/=WALLS;
+  return {hex:idx,wall,shelf,volume,page};}
+
+function pageText(hex,wall,shelf,volume,page){
+  const n=contentNumberFromIndex(composeIndex(hex,wall,shelf,volume,page));
+  const d=bigToDigits(n);let out='';
+  for(let i=0;i<PAGE_CHARS;i++)out+=ALPHABET[d[i]];return out;}
+
+const SUBST={k:'c',q:'c',w:'v',x:'s'};
+function sanitize(text){let out='';
+  for(let ch of text.toLowerCase()){
+    if(SUBST[ch])ch=SUBST[ch];
+    if(ch==='\n'||ch==='\t')ch=' ';
+    if(SYM_TO_DIGIT[ch]!==undefined)out+=ch;}
+  return out.slice(0,PAGE_CHARS);}
+
+function findText(rawText,mode,rng){
+  const text=sanitize(rawText);
+  if(!text.length)return null;
+  const d=new Uint8Array(PAGE_CHARS);let offset;
+  if(mode==='alone'){offset=0;d.fill(SYM_TO_DIGIT[' ']);}
+  else{offset=Math.floor(rng()*(PAGE_CHARS-text.length+1));
+    for(let i=0;i<PAGE_CHARS;i++)d[i]=Math.floor(rng()*25);}
+  for(let i=0;i<text.length;i++)d[offset+i]=SYM_TO_DIGIT[text[i]];
+  const idx=indexFromContentNumber(digitsToBig(d));
+  const loc=decomposeIndex(idx);
+  return {...loc,offset,length:text.length,sanitized:text};}
+
+function zig(s){return s>=0n?2n*s:-2n*s-1n;}
+function zag(n){return n%2n===0n?n/2n:-(n+1n)/2n;}
+function pairHex(floorZ,posZ){let a=zig(floorZ),b=zig(posZ),out=0n,shift=0n;
+  while(a>0n||b>0n){out|=(a&1n)<<shift;a>>=1n;out|=(b&1n)<<(shift+1n);b>>=1n;shift+=2n;}return out;}
+function unpairHex(h){let a=0n,b=0n,shift=0n,n=h;
+  while(n>0n){a|=(n&1n)<<shift;n>>=1n;b|=(n&1n)<<shift;n>>=1n;shift+=1n;}
+  return {floor:zag(a),pos:zag(b)};}
+
+function hexName(h){const s=h.toString(36);
+  if(s.length<=18)return s;
+  return s.slice(0,8)+'\u2026'+s.slice(-8)+' ('+s.length+' chars)';}
+function hexHash32(h){return Number(h%4294967291n)>>>0;}
+function bookSeedH(hh,wall,shelf,volume){
+  let x=(hh^Math.imul(wall*175+shelf*35+volume+1,2654435761))>>>0;
+  x=Math.imul(x^(x>>>16),0x45d9f3b)>>>0;
+  x=Math.imul(x^(x>>>16),0x45d9f3b)>>>0;
+  return (x^(x>>>16))>>>0;}
+function bookSeed(hex,wall,shelf,volume){
+  return bookSeedH(hexHash32(hex),wall,shelf,volume);}
+function spineGlyphsH(hh,wall,shelf,volume){
+  const rng=mulberry32(bookSeedH(hh,wall,shelf,volume));
+  const groups=1+Math.floor(rng()*2);const parts=[];
+  for(let g=0;g<groups;g++){let w='';const len=2+Math.floor(rng()*3);
+    for(let i=0;i<len;i++)w+=LETTERS[Math.floor(rng()*22)];parts.push(w);}
+  return parts.join(' ');}
+function spineGlyphs(hex,wall,shelf,volume){
+  return spineGlyphsH(hexHash32(hex),wall,shelf,volume);}
+
+function bigDisplay(n){
+  const neg=n<0n; const s=(neg?-n:n).toString();
+  if(s.length<=12) return (neg?'\u2212':'')+s.replace(/\B(?=(\d{3})+(?!\d))/g,'\u202f');
+  return (neg?'\u2212':'')+'\u2248'+s[0]+'.'+s.slice(1,3)+'\u00d710^'+(s.length-1);}
+
+/* ============================================================
+   WORLD GEOMETRY CONSTANTS
+   ============================================================ */
+const SIDE=4.8;                       // hexagon wall length (m)
+const APO=SIDE*Math.sqrt(3)/2;        // apothem
+const H=2.7;                          // floor-to-ceiling (scarcely exceeds a bookcase)
+const SLAB=0.5, F2F=H+SLAB;           // floor-to-floor
+const DOOR_W=1.5, DOOR_H=2.15;
+const HALL_LEN=4.4, HALL_W=2.2;
+const SPACING=2*APO+HALL_LEN;         // hexagon centre to centre
+const SHAFT_R=1.55;                   // air-shaft railing circumradius
+const RAIL_H=0.62;                    // very low railing
+const SHELF_YS=[0.30,0.76,1.22,1.68,2.14];
+const SHELF_T=0.045, CASE_D=0.32;
+const BOOK_W=0.118, BOOK_H=0.345, BOOK_D=0.26;
+const HEX_RANGE=2;                    // render hexes -2..2
+const DOOR_WALLS=[0,3];               // geometric walls facing +x / -x
+const BOOK_WALL_GEO=[1,2,4,5];        // geometric walls bearing shelves
+const PER_HEX=4*5*35;                 // 700 volumes per gallery
+const N_INSTANCES=(2*HEX_RANGE+1)*PER_HEX;
+const EYE=1.62, PRADIUS=0.34;
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state={
+  started:false,
+  floor:0n, pos:0n,                    // BigInt coordinates of current hexagon
+  px:0, pz:2.6, yaw:Math.PI, pitch:0,  // local position in current-hex frame
+  vx:0, vz:0,
+  keys:{},
+  overlay:'title',                     // which overlay is open
+  target:null,                         // sought volume {hexStr,wall,shelf,volume,page,offset,length}
+  targetInstance:-1,
+  reader:{open:false, id:null, page:0},
+  stairAsk:null,
+  seekRng:mulberry32((Math.random()*4294967296)>>>0),
+  reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches,
+  bob:0,
+};
+
+/* ============================================================
+   THREE SETUP
+   ============================================================ */
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputEncoding=THREE.sRGBEncoding;
+document.getElementById('scene').appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x070503);
+scene.fog=new THREE.FogExp2(0x080502,0.052);
+
+const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,0.05,140);
+
+/* ---------- procedural textures ---------- */
+function canvasTex(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;
+  draw(c.getContext('2d'));const t=new THREE.CanvasTexture(c);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping;return t;}
+
+const woodTex=canvasTex(256,256,ctx=>{
+  ctx.fillStyle='#54402b';ctx.fillRect(0,0,256,256);
+  const r=mulberry32(11);
+  for(let i=0;i<420;i++){const x=r()*256;
+    ctx.strokeStyle=`rgba(${20+r()*40|0},${12+r()*26|0},${4+r()*14|0},${0.10+r()*0.22})`;
+    ctx.lineWidth=0.6+r()*1.8;ctx.beginPath();ctx.moveTo(x,-6);
+    ctx.bezierCurveTo(x+(r()-0.5)*14,80,x+(r()-0.5)*14,176,x+(r()-0.5)*10,262);ctx.stroke();}
+  for(let i=0;i<24;i++){const x=r()*256,y=r()*256;
+    ctx.fillStyle='rgba(16,9,3,0.30)';ctx.beginPath();
+    ctx.ellipse(x,y,1.2+r()*2.4,3+r()*7,0,0,7);ctx.fill();}});
+
+const stoneTex=canvasTex(256,256,ctx=>{
+  ctx.fillStyle='#46403a';ctx.fillRect(0,0,256,256);
+  const r=mulberry32(99);
+  for(let i=0;i<2600;i++){ctx.fillStyle=`rgba(${r()<0.5?20:80},${70*r()|0},${50*r()|0},${0.04+r()*0.07})`;
+    ctx.fillRect(r()*256,r()*256,1+r()*3,1+r()*3);}
+  ctx.strokeStyle='rgba(18,14,10,.5)';ctx.lineWidth=1.2;
+  for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(0,i*52+12);ctx.lineTo(256,i*52+18);ctx.stroke();}});
+
+const paperTex=canvasTex(128,128,ctx=>{
+  ctx.fillStyle='#d8c9a4';ctx.fillRect(0,0,128,128);
+  const r=mulberry32(5);
+  for(let i=0;i<700;i++){ctx.fillStyle=`rgba(120,100,60,${0.05+r()*0.08})`;
+    ctx.fillRect(r()*128,r()*128,1,1+r()*2);}});
+
+woodTex.repeat.set(2,1); stoneTex.repeat.set(2,2);
+
+/* ---------- materials ---------- */
+const MAT={
+  wall:new THREE.MeshLambertMaterial({map:woodTex,color:0x9c8763,side:THREE.DoubleSide}),
+  wallDark:new THREE.MeshLambertMaterial({map:woodTex,color:0x6e5b40}),
+  shelf:new THREE.MeshLambertMaterial({map:woodTex,color:0x7a6344}),
+  floor:new THREE.MeshLambertMaterial({map:stoneTex,color:0x9a8f80}),
+  ceil:new THREE.MeshLambertMaterial({map:woodTex,color:0x55462f,side:THREE.DoubleSide}),
+  rail:new THREE.MeshLambertMaterial({color:0x2e2317}),
+  brass:new THREE.MeshPhongMaterial({color:0x8a6a35,shininess:60,specular:0x665522}),
+  lamp:new THREE.MeshBasicMaterial({color:0xffd9a0}),
+  mirror:new THREE.MeshPhongMaterial({color:0x1c222b,shininess:160,specular:0xaabbcc}),
+  dark:new THREE.MeshLambertMaterial({color:0x14100a}),
+  phantom:new THREE.MeshLambertMaterial({color:0x241b10}),
+  pages:new THREE.MeshLambertMaterial({map:paperTex,color:0xcfc09a}),
+  book:new THREE.MeshLambertMaterial({color:0xffffff}),
+  step:new THREE.MeshLambertMaterial({map:woodTex,color:0x86704c}),
+};
+
+/* ---------- helpers ---------- */
+const segs=[];   // collision segments {ax,az,bx,bz}
+function addSeg(ax,az,bx,bz){segs.push({ax,az,bx,bz});}
+const interactables=[];   // meshes raycastable besides books
+
+function wallFrame(cx,i){ // returns centre + tangent + inward normal of wall i
+  const th=i*60*Math.PI/180;
+  const nx=-Math.cos(th),nz=-Math.sin(th);             // inward
+  const tx=-Math.sin(th),tz=Math.cos(th);              // along the wall
+  return {wx:cx+Math.cos(th)*APO,wz:Math.sin(th)*APO,nx,nz,tx,tz,th};}
+
+/* ---------- hexagon gallery ---------- */
+function hexShapePath(radius){
+  const s=new THREE.Shape();
+  for(let j=0;j<6;j++){const a=(30+60*j)*Math.PI/180;
+    const x=Math.cos(a)*radius,y=Math.sin(a)*radius;
+    if(j===0)s.moveTo(x,y);else s.lineTo(x,y);}
+  s.closePath();return s;}
+
+function hexHolePath(radius){
+  const p=new THREE.Path();
+  for(let j=0;j<6;j++){const a=(30+60*j)*Math.PI/180;
+    const x=Math.cos(a)*radius,y=Math.sin(a)*radius;
+    if(j===0)p.moveTo(x,y);else p.lineTo(x,y);}
+  p.closePath();return p;}
+
+function flatHexMesh(outerR,holeR,mat){
+  const shape=hexShapePath(outerR);
+  if(holeR)shape.holes.push(hexHolePath(holeR));
+  const g=new THREE.ShapeGeometry(shape);
+  const m=new THREE.Mesh(g,mat);
+  m.rotation.x=-Math.PI/2;          // lie flat, +y up; shape y -> world -z
+  return m;}
+
+function buildBookWall(group,cx,i){
+  const f=wallFrame(cx,i);
+  const wg=new THREE.Group();
+  wg.position.set(f.wx,0,f.wz);
+  wg.rotation.y=Math.atan2(f.nx,f.nz);   // local +z points inward
+  // back panel
+  const back=new THREE.Mesh(new THREE.PlaneGeometry(SIDE,H),MAT.wall);
+  back.position.set(0,H/2,0.01);
+  wg.add(back);
+  // shelf boards
+  for(const y of SHELF_YS){
+    const b=new THREE.Mesh(new THREE.BoxGeometry(SIDE-0.06,SHELF_T,CASE_D),MAT.shelf);
+    b.position.set(0,y-SHELF_T/2,CASE_D/2);
+    wg.add(b);}
+  // top board + side boards
+  const top=new THREE.Mesh(new THREE.BoxGeometry(SIDE-0.06,SHELF_T,CASE_D),MAT.shelf);
+  top.position.set(0,SHELF_YS[4]+BOOK_H+0.08,CASE_D/2);wg.add(top);
+  for(const s of[-1,1]){
+    const sb=new THREE.Mesh(new THREE.BoxGeometry(0.05,H-0.2,CASE_D),MAT.wallDark);
+    sb.position.set(s*(SIDE/2-0.05),H/2-0.06,CASE_D/2);wg.add(sb);}
+  group.add(wg);
+  addSeg(...segOfWall(cx,i,null));}
+
+function segOfWall(cx,i){ // full wall collision (pushed out by case depth on book walls)
+  const f=wallFrame(cx,i);
+  const inset=BOOK_WALL_GEO.includes(i)?CASE_D:0;
+  const wx=f.wx+f.nx*inset,wz=f.wz+f.nz*inset;
+  return [wx-f.tx*SIDE/2,wz-f.tz*SIDE/2,wx+f.tx*SIDE/2,wz+f.tz*SIDE/2];}
+
+function buildDoorWall(group,cx,i){
+  const f=wallFrame(cx,i);
+  const wg=new THREE.Group();
+  wg.position.set(f.wx,0,f.wz);
+  wg.rotation.y=Math.atan2(f.nx,f.nz);
+  const panelW=(SIDE-DOOR_W)/2;
+  for(const s of[-1,1]){
+    const p=new THREE.Mesh(new THREE.BoxGeometry(panelW,H,0.16),MAT.wall);
+    p.position.set(s*(DOOR_W/2+panelW/2),H/2,0);wg.add(p);}
+  const lintel=new THREE.Mesh(new THREE.BoxGeometry(DOOR_W+0.02,H-DOOR_H,0.16),MAT.wall);
+  lintel.position.set(0,DOOR_H+(H-DOOR_H)/2,0);wg.add(lintel);
+  // door frame trim
+  for(const s of[-1,1]){
+    const t=new THREE.Mesh(new THREE.BoxGeometry(0.07,DOOR_H,0.2),MAT.wallDark);
+    t.position.set(s*DOOR_W/2,DOOR_H/2,0);wg.add(t);}
+  group.add(wg);
+  // collision: two segments with a centred gap
+  const gapHalf=DOOR_W/2;
+  const ax=f.wx-f.tx*SIDE/2, az=f.wz-f.tz*SIDE/2;
+  addSeg(ax,az,f.wx-f.tx*gapHalf,f.wz-f.tz*gapHalf);
+  addSeg(f.wx+f.tx*gapHalf,f.wz+f.tz*gapHalf,f.wx+f.tx*SIDE/2,f.wz+f.tz*SIDE/2);}
+
+function buildRailing(group,cx){
+  const pts=[];
+  for(let j=0;j<6;j++){const a=(30+60*j)*Math.PI/180;
+    pts.push([cx+Math.cos(a)*SHAFT_R,Math.sin(a)*SHAFT_R]);}
+  for(let j=0;j<6;j++){
+    const [ax,az]=pts[j],[bx,bz]=pts[(j+1)%6];
+    // posts
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,RAIL_H,6),MAT.rail);
+    post.position.set(ax,RAIL_H/2,az);group.add(post);
+    // top rail along edge
+    const len=Math.hypot(bx-ax,bz-az);
+    const rail=new THREE.Mesh(new THREE.BoxGeometry(len,0.05,0.05),MAT.rail);
+    rail.position.set((ax+bx)/2,RAIL_H,(az+bz)/2);
+    rail.rotation.y=-Math.atan2(bz-az,bx-ax);
+    group.add(rail);
+    const mid=new THREE.Mesh(new THREE.BoxGeometry(len,0.03,0.03),MAT.rail);
+    mid.position.set((ax+bx)/2,RAIL_H*0.55,(az+bz)/2);
+    mid.rotation.y=-Math.atan2(bz-az,bx-ax);
+    group.add(mid);
+    addSeg(ax,az,bx,bz);}}
+
+function buildLamps(group,cx){
+  // two spherical lamps, transversally placed
+  for(const s of[-1,1]){
+    const x=cx+s*(APO-1.15);
+    const rod=new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.015,0.5,6),MAT.brass);
+    rod.position.set(x,H-0.25,0);group.add(rod);
+    const lamp=new THREE.Mesh(new THREE.SphereGeometry(0.15,18,14),MAT.lamp);
+    lamp.position.set(x,H-0.52,0);
+    lamp.userData={type:'lamp'};
+    group.add(lamp);interactables.push(lamp);}}
+
+function buildPhantomFloors(group,cx){
+  // glimpses of the floors above and below, seen through the air shaft
+  for(const dy of[-2,-1,1,2]){
+    const slabTop=flatHexMesh(SIDE,SHAFT_R,MAT.phantom);
+    slabTop.position.set(cx,dy*F2F,0);
+    group.add(slabTop);
+    if(dy>1){const under=flatHexMesh(SIDE,SHAFT_R,MAT.dark);
+      under.rotation.x=Math.PI/2;under.position.set(cx,dy*F2F-SLAB,0);group.add(under);}
+    // faint railings
+    for(let j=0;j<6;j++){const a=(30+60*j)*Math.PI/180,b=(30+60*(j+1))*Math.PI/180;
+      const ax=cx+Math.cos(a)*SHAFT_R,az=Math.sin(a)*SHAFT_R;
+      const bx=cx+Math.cos(b)*SHAFT_R,bz=Math.sin(b)*SHAFT_R;
+      const len=Math.hypot(bx-ax,bz-az);
+      const rail=new THREE.Mesh(new THREE.BoxGeometry(len,0.05,0.05),MAT.rail);
+      rail.position.set((ax+bx)/2,dy*F2F+RAIL_H,(az+bz)/2);
+      rail.rotation.y=-Math.atan2(bz-az,bx-ax);group.add(rail);}}
+  // terminate the shaft in darkness
+  for(const dy of[-2.6,2.6]){
+    const cap=flatHexMesh(SHAFT_R*1.4,0,new THREE.MeshBasicMaterial({color:0x000000,side:THREE.DoubleSide}));
+    cap.position.set(cx,dy*F2F,0);group.add(cap);}}
+
+function buildShaftRim(group,cx,yTop){
+  // dark rim inside the slab holes so you don't see through the slab edge
+  const pts=[];
+  for(let j=0;j<6;j++){const a=(30+60*j)*Math.PI/180;
+    pts.push([cx+Math.cos(a)*SHAFT_R,Math.sin(a)*SHAFT_R]);}
+  for(let j=0;j<6;j++){
+    const [ax,az]=pts[j],[bx,bz]=pts[(j+1)%6];
+    const len=Math.hypot(bx-ax,bz-az);
+    const rim=new THREE.Mesh(new THREE.PlaneGeometry(len,SLAB),MAT.dark);
+    rim.position.set((ax+bx)/2,yTop-SLAB/2,(az+bz)/2);
+    rim.rotation.y=-Math.atan2(bz-az,bx-ax);
+    rim.material.side=THREE.DoubleSide;
+    group.add(rim);}}
+
+function buildHex(group,k){
+  const cx=k*SPACING;
+  const floor=flatHexMesh(SIDE,SHAFT_R,MAT.floor);
+  floor.position.set(cx,0,0);group.add(floor);
+  const ceil=flatHexMesh(SIDE,SHAFT_R,MAT.ceil);
+  ceil.position.set(cx,H,0);group.add(ceil);
+  buildShaftRim(group,cx,0);
+  buildShaftRim(group,cx,H+SLAB);
+  for(const i of BOOK_WALL_GEO)buildBookWall(group,cx,i);
+  for(const i of DOOR_WALLS)buildDoorWall(group,cx,i);
+  buildRailing(group,cx);
+  buildLamps(group,cx);
+  buildPhantomFloors(group,cx);}
+
+/* ---------- hallway ---------- */
+function rectShape(x1,z1,x2,z2,holeCx,holeCz,holeR){
+  const s=new THREE.Shape();
+  s.moveTo(x1,z1);s.lineTo(x2,z1);s.lineTo(x2,z2);s.lineTo(x1,z2);s.closePath();
+  if(holeR){const p=new THREE.Path();p.absarc(holeCx,holeCz,holeR,0,Math.PI*2,true);s.holes.push(p);}
+  return s;}
+
+function flatShapeMesh(shape,mat){
+  const m=new THREE.Mesh(new THREE.ShapeGeometry(shape),mat);
+  m.rotation.x=-Math.PI/2;return m;}
+
+function buildStair(group,sx,sz){
+  const sg=new THREE.Group();
+  sg.userData={type:'stair'};
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,F2F*4,10),MAT.brass);
+  pole.position.set(sx,0,sz);sg.add(pole);
+  const STEPS=13;
+  for(let i=-STEPS;i<=STEPS*2;i++){
+    const ang=i*(Math.PI*2/STEPS);
+    const y=i*(F2F/STEPS);
+    if(y<-F2F*1.4||y>F2F*2.2)continue;
+    const st=new THREE.Mesh(new THREE.BoxGeometry(0.95,0.05,0.3),MAT.step);
+    st.position.set(sx+Math.cos(ang)*0.5,y,sz+Math.sin(ang)*0.5);
+    st.rotation.y=-ang+Math.PI/2;
+    sg.add(st);}
+  group.add(sg);
+  // small collision diamond around the pole
+  const pr=0.32;
+  addSeg(sx-pr,sz,sx,sz-pr);addSeg(sx,sz-pr,sx+pr,sz);
+  addSeg(sx+pr,sz,sx,sz+pr);addSeg(sx,sz+pr,sx-pr,sz);
+  // every child should report the stair on raycast
+  sg.traverse(o=>{if(o.isMesh){o.userData={type:'stair'};interactables.push(o);}});}
+
+function buildHallway(group,k){
+  // connects hex k and k+1; x from xa to xb
+  const xa=k*SPACING+APO, xb=(k+1)*SPACING-APO;
+  const hcx=(xa+xb)/2, hw=HALL_W/2;
+  const ALC_HW=1.05, ALC_D=2.0;       // stair alcove on +z side
+  const stairX=hcx, stairZ=hw+ALC_D-0.95;
+  // floor: corridor + alcove (alcove floor has the stairwell hole)
+  const f1=flatShapeMesh(rectShape(xa,-hw,xb,hw),MAT.floor);
+  f1.position.y=0;group.add(f1);
+  const f2=flatShapeMesh(rectShape(hcx-ALC_HW,hw,hcx+ALC_HW,hw+ALC_D,stairX,stairZ,0.92),MAT.floor);
+  group.add(f2);
+  // ceilings
+  const c1=flatShapeMesh(rectShape(xa,-hw,xb,hw),MAT.ceil);c1.position.y=H;group.add(c1);
+  const c2=flatShapeMesh(rectShape(hcx-ALC_HW,hw,hcx+ALC_HW,hw+ALC_D,stairX,stairZ,0.92),MAT.ceil);
+  c2.position.y=H;group.add(c2);
+  // south wall (-z): closets + mirror
+  const south=new THREE.Mesh(new THREE.BoxGeometry(xb-xa,H,0.14),MAT.wall);
+  south.position.set(hcx,H/2,-hw-0.07);group.add(south);
+  addSeg(xa,-hw,xb,-hw);
+  for(const s of[-1,1]){ // closet doors
+    const d=new THREE.Mesh(new THREE.BoxGeometry(0.78,1.95,0.06),MAT.wallDark);
+    d.position.set(hcx+s*1.32,1.95/2,-hw+0.012);
+    d.userData={type:'closet'};group.add(d);interactables.push(d);
+    const knob=new THREE.Mesh(new THREE.SphereGeometry(0.028,10,8),MAT.brass);
+    knob.position.set(hcx+s*1.32+s*-0.28,1.0,-hw+0.05);group.add(knob);}
+  // the mirror
+  const frame=new THREE.Mesh(new THREE.BoxGeometry(1.0,1.7,0.05),MAT.brass);
+  frame.position.set(hcx,1.45,-hw+0.02);group.add(frame);
+  const mirror=new THREE.Mesh(new THREE.PlaneGeometry(0.88,1.58),MAT.mirror);
+  mirror.position.set(hcx,1.45,-hw+0.052);
+  mirror.userData={type:'mirror'};group.add(mirror);interactables.push(mirror);
+  // north wall (+z): split around alcove opening
+  for(const [x1,x2] of [[xa,hcx-ALC_HW],[hcx+ALC_HW,xb]]){
+    const w=new THREE.Mesh(new THREE.BoxGeometry(x2-x1,H,0.14),MAT.wall);
+    w.position.set((x1+x2)/2,H/2,hw+0.07);group.add(w);
+    addSeg(x1,hw,x2,hw);}
+  // alcove walls
+  const back=new THREE.Mesh(new THREE.BoxGeometry(ALC_HW*2,H,0.14),MAT.wall);
+  back.position.set(hcx,H/2,hw+ALC_D+0.07);group.add(back);
+  addSeg(hcx-ALC_HW,hw+ALC_D,hcx+ALC_HW,hw+ALC_D);
+  for(const s of[-1,1]){
+    const w=new THREE.Mesh(new THREE.BoxGeometry(0.14,H,ALC_D),MAT.wall);
+    w.position.set(hcx+s*(ALC_HW+0.07),H/2,hw+ALC_D/2);group.add(w);
+    addSeg(hcx+s*ALC_HW,hw,hcx+s*ALC_HW,hw+ALC_D);}
+  buildStair(group,stairX,stairZ);
+  // lintel above hallway entrances is the hex door wall itself
+}
+
+/* ---------- books (instanced) ---------- */
+const bookGeo=new THREE.BoxGeometry(BOOK_W-0.014,BOOK_H,BOOK_D);
+const booksMesh=new THREE.InstancedMesh(bookGeo,MAT.book,N_INSTANCES);
+booksMesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+
+function instanceId(hexSlot,wall,shelf,vol){ // hexSlot -2..2, wall 0..3
+  return (((hexSlot+HEX_RANGE)*4+wall)*5+shelf)*35+vol;}
+function instanceIdentity(id){
+  const vol=id%35;id=(id-vol)/35;
+  const shelf=id%5;id=(id-shelf)/5;
+  const wall=id%4;id=(id-wall)/4;
+  return {hexSlot:id-HEX_RANGE,wall,shelf,vol};}
+
+function layoutBooks(){
+  const m=new THREE.Matrix4(),q=new THREE.Quaternion(),pos=new THREE.Vector3(),
+    scl=new THREE.Vector3(1,1,1),up=new THREE.Vector3(0,1,0);
+  const slotJitter=mulberry32(2024);
+  for(let hs=-HEX_RANGE;hs<=HEX_RANGE;hs++){
+    const cx=hs*SPACING;
+    for(let w=0;w<4;w++){
+      const gi=BOOK_WALL_GEO[w];
+      const f=wallFrame(cx,gi);
+      const rotY=Math.atan2(f.nx,f.nz);
+      q.setFromAxisAngle(up,rotY);
+      for(let sh=0;sh<5;sh++){
+        for(let v=0;v<35;v++){
+          const t=(v-17)*(SIDE-0.6)/34;          // spread along the wall
+          const depth=0.155+slotJitter()*0.02;   // a few mm of shelf-jitter
+          pos.set(f.wx+f.tx*t+f.nx*depth,
+                  SHELF_YS[sh]+BOOK_H/2+0.005,
+                  f.wz+f.tz*t+f.nz*depth);
+          m.compose(pos,q,scl);
+          booksMesh.setMatrixAt(instanceId(hs,w,sh,v),m);}}}}
+  booksMesh.instanceMatrix.needsUpdate=true;}
+
+const SPINE_PALETTE=[
+  [0.052,0.52,0.30],[0.075,0.46,0.34],[0.026,0.42,0.26],[0.10,0.40,0.36],
+  [0.066,0.30,0.22],[0.32,0.18,0.26],[0.58,0.12,0.24],[0.99,0.34,0.24],
+];
+const tmpColor=new THREE.Color();
+
+function hexNumberAt(slot){return pairHex(state.floor,state.pos+BigInt(slot));}
+
+const hexCache={nums:[],strs:[],hashes:[]};
+
+function recolorBooks(){
+  state.targetInstance=-1;
+  for(let hs=-HEX_RANGE;hs<=HEX_RANGE;hs++){
+    const hn=hexNumberAt(hs);
+    hexCache.nums[hs+HEX_RANGE]=hn;
+    hexCache.strs[hs+HEX_RANGE]=hn.toString();
+    hexCache.hashes[hs+HEX_RANGE]=hexHash32(hn);}
+  const tgt=state.target;
+  for(let hs=-HEX_RANGE;hs<=HEX_RANGE;hs++){
+    const hh=hexCache.hashes[hs+HEX_RANGE];
+    const isTgtHex=tgt&&tgt.hexStr===hexCache.strs[hs+HEX_RANGE];
+    for(let w=0;w<4;w++)for(let sh=0;sh<5;sh++)for(let v=0;v<35;v++){
+      const id=instanceId(hs,w,sh,v);
+      const rng=mulberry32(bookSeedH(hh,w,sh,v));
+      const p=SPINE_PALETTE[Math.floor(rng()*SPINE_PALETTE.length)];
+      tmpColor.setHSL(p[0]+(rng()-0.5)*0.02,p[1],p[2]+(rng()-0.5)*0.09);
+      booksMesh.setColorAt(id,tmpColor);
+      if(isTgtHex&&tgt.wall===w&&tgt.shelf===sh&&tgt.volume===v)state.targetInstance=id;}}
+  booksMesh.instanceColor.needsUpdate=true;}
+
+/* ---------- assemble world ---------- */
+const world=new THREE.Group();
+for(let k=-HEX_RANGE;k<=HEX_RANGE;k++)buildHex(world,k);
+for(let k=-HEX_RANGE-1;k<=HEX_RANGE;k++)buildHallway(world,k);
+// far caps
+for(const s of[-1,1]){
+  const capX=s*((HEX_RANGE+1)*SPACING-APO+0.05);
+  const cap=new THREE.Mesh(new THREE.PlaneGeometry(8,5),
+    new THREE.MeshBasicMaterial({color:0x000000}));
+  cap.position.set(capX,H/2,0);
+  cap.rotation.y=s>0?-Math.PI/2:Math.PI/2;
+  world.add(cap);
+  addSeg(capX,-4,capX,4);}
+world.add(booksMesh);
+scene.add(world);
+layoutBooks();
+recolorBooks();
+
+/* ---------- lights ---------- */
+scene.add(new THREE.HemisphereLight(0x7a6645,0x140d06,0.5));
+const lampLights=[];
+for(let i=0;i<6;i++){
+  const L=new THREE.PointLight(0xffb45e,0,13,2);
+  scene.add(L);lampLights.push(L);}
+function placeLights(){
+  // two real lights in the current hexagon, dimmer ones in neighbours
+  let n=0;
+  for(const k of[0,-1,1]){
+    const cx=k*SPACING, base=k===0?0.95:0.45;
+    for(const s of[-1,1]){
+      const L=lampLights[n++];
+      L.position.set(cx+s*(APO-1.15),H-0.52,0);
+      L.userData.base=base;
+      L.intensity=base;}}}
+placeLights();
+
+/* ============================================================
+   INPUT & PLAYER
+   ============================================================ */
+const dom=renderer.domElement;
+let locked=false, dragLook=false, dragging=false, dragMoved=0, dlx=0, dly=0;
+function tryLock(){
+  if(isTouch||dragLook)return;
+  try{
+    const p=dom.requestPointerLock();
+    if(p&&p.catch)p.catch(()=>{dragLook=true;});
+  }catch(_){dragLook=true;}}
+document.addEventListener('pointerlockerror',()=>{
+  dragLook=true;
+  toast('Mouse capture is unavailable here — <b>drag</b> to look around, or use the <b>arrow keys</b>.');});
+dom.addEventListener('click',()=>{
+  if(state.started&&!state.overlay&&!locked&&!isTouch)tryLock();});
+document.addEventListener('pointerlockchange',()=>{
+  locked=document.pointerLockElement===dom;
+  if(!locked&&state.started&&!state.overlay)openOverlay('pause');});
+document.addEventListener('mousemove',e=>{
+  if(locked){
+    state.yaw-=e.movementX*0.0021;
+    state.pitch=Math.max(-1.45,Math.min(1.45,state.pitch-e.movementY*0.0021));return;}
+  if(dragging){
+    state.yaw-=(e.clientX-dlx)*0.0042;
+    state.pitch=Math.max(-1.45,Math.min(1.45,state.pitch-(e.clientY-dly)*0.0042));
+    dragMoved+=Math.abs(e.clientX-dlx)+Math.abs(e.clientY-dly);
+    dlx=e.clientX;dly=e.clientY;}});
+dom.addEventListener('mousedown',e=>{
+  if(e.button!==0)return;
+  if(locked){tryInteract();return;}
+  if(state.started&&!state.overlay&&!state.reader.open){
+    dragging=true;dragMoved=0;dlx=e.clientX;dly=e.clientY;}});
+addEventListener('mouseup',()=>{
+  if(dragging){
+    if(dragLook&&dragMoved<6)tryInteract();  // a tap, not a drag
+    dragging=false;}});
+
+addEventListener('keydown',e=>{
+  const typing=/^(INPUT|TEXTAREA)$/.test(e.target.tagName);
+  if(state.reader.open){
+    if(typing)return;
+    if(e.key==='ArrowLeft')flipPage(-1);
+    else if(e.key==='ArrowRight')flipPage(1);
+    else if(e.key==='Escape'&&performance.now()-overlayOpenedAt>400)closeReader();
+    return;}
+  if(state.overlay){
+    if(e.key==='Escape'&&state.overlay!=='title'
+       &&performance.now()-overlayOpenedAt>400)closeOverlay();
+    return;}
+  state.keys[e.code]=true;
+  if(e.code==='KeyE')tryInteract();
+  if(e.code==='KeyT')openSeek();
+  if(e.key==='Escape'&&state.started&&!locked)openOverlay('pause');});
+addEventListener('keyup',e=>{state.keys[e.code]=false;});
+
+/* ---------- touch ---------- */
+const isTouch='ontouchstart' in window;
+if(isTouch){document.body.classList.add('touch');
+  document.getElementById('titlekeys').textContent=
+    'left pad walk · drag look · tap a book to take it';}
+const stick={active:false,id:-1,dx:0,dy:0};
+const lookT={id:-1,lx:0,ly:0};
+const stickEl=document.getElementById('stick'),knob=document.getElementById('knob');
+if(isTouch){
+  addEventListener('touchstart',e=>{
+    if(!state.started||state.overlay||state.reader.open)return;
+    for(const t of e.changedTouches){
+      if(t.clientX<innerWidth*0.42&&t.clientY>innerHeight*0.45&&!stick.active){
+        stick.active=true;stick.id=t.identifier;
+        stickEl.style.left=(t.clientX-55)+'px';stickEl.style.top=(t.clientY-55)+'px';
+        stickEl.style.bottom='auto';stick.dx=0;stick.dy=0;}
+      else if(lookT.id===-1){lookT.id=t.identifier;lookT.lx=t.clientX;lookT.ly=t.clientY;}}},
+    {passive:true});
+  addEventListener('touchmove',e=>{
+    for(const t of e.changedTouches){
+      if(t.identifier===stick.id){
+        const r=stickEl.getBoundingClientRect();
+        let dx=t.clientX-(r.left+55),dy=t.clientY-(r.top+55);
+        const d=Math.hypot(dx,dy);if(d>44){dx*=44/d;dy*=44/d;}
+        stick.dx=dx/44;stick.dy=dy/44;
+        knob.style.transform=`translate(${dx}px,${dy}px)`;}
+      else if(t.identifier===lookT.id){
+        state.yaw-=(t.clientX-lookT.lx)*0.005;
+        state.pitch=Math.max(-1.45,Math.min(1.45,state.pitch-(t.clientY-lookT.ly)*0.005));
+        lookT.lx=t.clientX;lookT.ly=t.clientY;}}},
+    {passive:true});
+  addEventListener('touchend',e=>{
+    for(const t of e.changedTouches){
+      if(t.identifier===stick.id){stick.active=false;stick.id=-1;stick.dx=0;stick.dy=0;
+        knob.style.transform='';stickEl.style.left='36px';stickEl.style.top='auto';stickEl.style.bottom='36px';}
+      if(t.identifier===lookT.id)lookT.id=-1;}},
+    {passive:true});
+  document.getElementById('tact').addEventListener('click',tryInteract);
+  document.getElementById('tseek').addEventListener('click',openSeek);}
+
+/* ---------- collision ---------- */
+function collide(px,pz){
+  for(let pass=0;pass<2;pass++){
+    for(const s of segs){
+      const dx=s.bx-s.ax,dz=s.bz-s.az;
+      const L2=dx*dx+dz*dz;if(L2===0)continue;
+      let t=((px-s.ax)*dx+(pz-s.az)*dz)/L2;
+      t=Math.max(0,Math.min(1,t));
+      const cx=s.ax+t*dx,cz=s.az+t*dz;
+      let ox=px-cx,oz=pz-cz;
+      const d=Math.hypot(ox,oz);
+      if(d<PRADIUS&&d>1e-6){
+        const push=(PRADIUS-d)/d;
+        px+=ox*push;pz+=oz*push;}
+      else if(d<=1e-6){px+=PRADIUS;}}}
+  return [px,pz];}
+
+/* ---------- raycasting / interaction ---------- */
+const raycaster=new THREE.Raycaster();
+raycaster.far=3.6;
+const center=new THREE.Vector2(0,0);
+let hoverFrame=0;
+
+function castFromView(){
+  raycaster.setFromCamera(center,camera);
+  const hits=raycaster.intersectObjects([booksMesh,...interactables],false);
+  return hits.length?hits[0]:null;}
+
+function describeHover(hit){
+  if(!hit)return null;
+  if(hit.object===booksMesh){
+    const ident=instanceIdentity(hit.instanceId);
+    const glyphs=spineGlyphsH(hexCache.hashes[ident.hexSlot+HEX_RANGE],ident.wall,ident.shelf,ident.vol);
+    return {kind:'book',text:`<b>${glyphs}</b> — ${isTouch?'tap Take':'E'} to take the volume`,hit};}
+  const t=hit.object.userData.type;
+  if(t==='stair')return {kind:'stair',text:`the spiral stairway — <b>${isTouch?'Take / use':'E'}</b> to climb`,hit};
+  if(t==='mirror')return {kind:'mirror',text:'the mirror faithfully duplicates all appearances',hit};
+  if(t==='closet')return {kind:'closet',text:'a closet barely large enough to sleep in, standing up',hit};
+  if(t==='lamp')return {kind:'lamp',text:'the light it gives is insufficient, and incessant',hit};
+  return null;}
+
+function tryInteract(){
+  if(!state.started||state.overlay||state.reader.open)return;
+  const h=describeHover(castFromView());
+  if(!h)return;
+  if(h.kind==='book'){
+    const ident=instanceIdentity(h.hit.instanceId);
+    openReader(ident);}
+  else if(h.kind==='stair')openOverlay('stairs');}
+
+/* ============================================================
+   OVERLAY MANAGEMENT
+   ============================================================ */
+const overlays={title:document.getElementById('title'),reader:document.getElementById('reader'),
+  seek:document.getElementById('seek'),stairs:document.getElementById('stairs'),
+  pause:document.getElementById('pause')};
+
+let overlayOpenedAt=0;
+function openOverlay(name){
+  if(state.overlay)overlays[state.overlay].classList.remove('on');
+  state.overlay=name;overlays[name].classList.add('on');
+  overlayOpenedAt=performance.now();
+  if(locked)document.exitPointerLock();}
+function closeOverlay(){
+  if(!state.overlay)return;
+  overlays[state.overlay].classList.remove('on');
+  state.overlay=null;
+  tryLock();}
+
+document.getElementById('enterbtn').addEventListener('click',()=>{
+  state.started=true;closeOverlay();
+  document.getElementById('hud').classList.add('on');
+  toast('You were born in one of these hexagons. The shelves hold every book that can be written.');});
+document.getElementById('resume').addEventListener('click',closeOverlay);
+document.getElementById('staystair').addEventListener('click',closeOverlay);
+document.getElementById('goup').addEventListener('click',()=>climb(1n));
+document.getElementById('godown').addEventListener('click',()=>climb(-1n));
+
+/* ---------- toast ---------- */
+let toastTimer=null;
+function toast(msg,ms=6000){
+  const t=document.getElementById('toast');
+  t.innerHTML=msg;t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('on'),ms);}
+
+/* ---------- HUD ---------- */
+function refreshHUD(){
+  document.getElementById('locline').textContent=
+    `Floor ${bigDisplay(state.floor)} · Gallery ${bigDisplay(state.pos)}`;
+  document.getElementById('hexline').textContent='hexagon '+hexName(hexNumberAt(0));}
+
+/* ============================================================
+   FLOOR TRAVEL / FADE
+   ============================================================ */
+const fadeEl=document.createElement('div');
+fadeEl.style.cssText='position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .45s;z-index:25';
+document.body.appendChild(fadeEl);
+function fade(cb){
+  fadeEl.style.opacity='1';
+  setTimeout(()=>{cb();fadeEl.style.opacity='0';},state.reducedMotion?60:480);}
+
+function climb(d){
+  closeOverlay();
+  fade(()=>{
+    state.floor+=d;
+    recolorBooks();refreshHUD();
+    toast(d>0n?'You climb. Another floor, identical to the last — and yet no volume here repeats any other.':
+      'You descend. The stair sinks abysmally; the books here exist nowhere else.');});}
+
+/* ============================================================
+   READER
+   ============================================================ */
+const readerEls={
+  title:document.getElementById('booktitle'),loc:document.getElementById('bookloc'),
+  cover:document.getElementById('cover'),coverglyphs:document.getElementById('coverglyphs'),
+  pagewrap:document.getElementById('pagewrap'),pagetext:document.getElementById('pagetext'),
+  openbtn:document.getElementById('openbook'),pginput:document.getElementById('pginput')};
+
+function openReader(ident){
+  const slot=ident.hexSlot+HEX_RANGE;
+  const hn=hexCache.nums[slot], hh=hexCache.hashes[slot];
+  const glyphs=spineGlyphsH(hh,ident.wall,ident.shelf,ident.vol);
+  state.reader={open:true,page:0,
+    id:{hexStr:hexCache.strs[slot],hexNum:hn,wall:ident.wall,shelf:ident.shelf,volume:ident.vol}};
+  // if this is the sought volume, open straight to the sought page
+  const t=state.target;
+  let isTarget=false;
+  if(t&&t.hexStr===state.reader.id.hexStr&&t.wall===ident.wall
+     &&t.shelf===ident.shelf&&t.volume===ident.vol){
+    state.reader.page=t.page;isTarget=true;}
+  readerEls.title.textContent=glyphs;
+  readerEls.loc.textContent=
+    `wall ${ident.wall+1} · shelf ${ident.shelf+1} · volume ${ident.vol+1} of 35`;
+  // cover colour echoes the spine
+  const rng=mulberry32(bookSeedH(hh,ident.wall,ident.shelf,ident.vol));
+  const p=SPINE_PALETTE[Math.floor(rng()*SPINE_PALETTE.length)];
+  tmpColor.setHSL(p[0]+(rng()-0.5)*0.02,p[1],p[2]+(rng()-0.5)*0.09);
+  readerEls.cover.style.background=
+    `linear-gradient(115deg,${tmpColor.getStyle()},#1a0f06 160%)`;
+  readerEls.coverglyphs.textContent=glyphs;
+  readerEls.cover.classList.add('on');
+  readerEls.pagewrap.classList.remove('on');
+  readerEls.openbtn.style.display='';
+  openOverlay('reader');
+  if(isTarget)toast('This is the volume you sought.');}
+
+document.getElementById('openbook').addEventListener('click',()=>{
+  readerEls.cover.classList.remove('on');
+  readerEls.pagewrap.classList.add('on');
+  readerEls.openbtn.style.display='none';
+  renderPage();});
+document.getElementById('shelve').addEventListener('click',closeReader);
+document.getElementById('prevpg').addEventListener('click',()=>flipPage(-1));
+document.getElementById('nextpg').addEventListener('click',()=>flipPage(1));
+readerEls.pginput.addEventListener('change',()=>{
+  let v=parseInt(readerEls.pginput.value,10);
+  if(isNaN(v))v=state.reader.page+1;
+  v=Math.max(1,Math.min(410,v));
+  state.reader.page=v-1;renderPage();});
+
+function closeReader(){
+  state.reader.open=false;
+  if(state.targetSeen){
+    state.target=null;state.targetSeen=false;
+    recolorBooks();
+    toast('The volume returns to its place. It will wait there, unchanged, forever.');}
+  closeOverlay();}
+
+function flipPage(d){
+  if(!readerEls.pagewrap.classList.contains('on')){
+    if(d>0)document.getElementById('openbook').click();
+    return;}
+  state.reader.page=Math.max(0,Math.min(409,state.reader.page+d));
+  renderPage();}
+
+function escapeHtml(s){return s;} // alphabet contains no html-significant chars
+
+function renderPage(){
+  const id=state.reader.id,pg=state.reader.page;
+  const txt=pageText(id.hexNum,id.wall,id.shelf,id.volume,pg);
+  const t=state.target;
+  let hi=null;
+  if(t&&t.hexStr===id.hexStr&&t.wall===id.wall&&t.shelf===id.shelf
+     &&t.volume===id.volume&&t.page===pg){hi=[t.offset,t.offset+t.length];state.targetSeen=true;}
+  let html='';
+  for(let ln=0;ln<PAGE_LINES;ln++){
+    const a=ln*LINE_CHARS,b=a+LINE_CHARS;
+    let line=txt.slice(a,b);
+    if(hi&&hi[0]<b&&hi[1]>a){
+      const s=Math.max(hi[0]-a,0),e=Math.min(hi[1]-a,LINE_CHARS);
+      line=escapeHtml(line.slice(0,s))+'<mark>'+escapeHtml(line.slice(s,e))+'</mark>'+escapeHtml(line.slice(e));}
+    html+=line+(ln<PAGE_LINES-1?'\n':'');}
+  readerEls.pagetext.innerHTML=html;
+  readerEls.pginput.value=pg+1;
+  fitPageFont();}
+
+function fitPageFont(){
+  const w=Math.min(innerWidth*0.92-64,1100);
+  const fs=Math.max(7.5,Math.min(14.5,w/(LINE_CHARS*0.602)));
+  readerEls.pagetext.style.fontSize=fs+'px';}
+addEventListener('resize',fitPageFont);
+
+/* ============================================================
+   SEEK
+   ============================================================ */
+const seekEls={text:document.getElementById('seektext'),san:document.getElementById('sanitized'),
+  result:document.getElementById('seekresult')};
+let seekFound=null;
+
+function openSeek(){
+  if(!state.started||state.reader.open)return;
+  seekEls.result.classList.remove('on');seekFound=null;
+  openOverlay('seek');
+  setTimeout(()=>seekEls.text.focus(),50);}
+
+seekEls.text.addEventListener('input',()=>{
+  const s=sanitize(seekEls.text.value);
+  seekEls.san.innerHTML=s?
+    `as the library will write it &nbsp;<b>${s}</b>&nbsp; · ${s.length} of 3200 symbols`:
+    '<i>nothing the library can write, yet</i>';});
+
+document.getElementById('seekclose').addEventListener('click',closeOverlay);
+document.getElementById('seekgo').addEventListener('click',()=>{
+  const mode=document.querySelector('input[name=seekmode]:checked').value;
+  const r=findText(seekEls.text.value,mode,state.seekRng);
+  if(!r){seekEls.san.innerHTML='<i>nothing the library can write, yet</i>';return;}
+  seekFound=r;
+  const u=unpairHex(r.hex);
+  document.getElementById('rhexshort').textContent=hexName(r.hex);
+  document.getElementById('rfloor').textContent=bigDisplay(u.floor);
+  document.getElementById('rwall').textContent=(r.wall+1)+' of 4';
+  document.getElementById('rshelf').textContent=(r.shelf+1)+' of 5, counting upward';
+  document.getElementById('rvolume').textContent=(r.volume+1)+' of 35, left to right';
+  document.getElementById('rpage').textContent=(r.page+1)+' of 410';
+  seekEls.result.classList.add('on');});
+
+document.getElementById('copyaddr').addEventListener('click',()=>{
+  if(!seekFound)return;
+  const a=`hexagon ${seekFound.hex.toString(36)} : wall ${seekFound.wall+1}, shelf ${seekFound.shelf+1}, volume ${seekFound.volume+1}, page ${seekFound.page+1}`;
+  navigator.clipboard&&navigator.clipboard.writeText(a);
+  toast('The full address is on your clipboard — all '+seekFound.hex.toString(36).length+' characters of the hexagon\u2019s name.');});
+
+document.getElementById('travel').addEventListener('click',()=>{
+  if(!seekFound)return;
+  const r=seekFound;
+  const u=unpairHex(r.hex);
+  state.target={hexStr:r.hex.toString(),wall:r.wall,shelf:r.shelf,volume:r.volume,
+    page:r.page,offset:r.offset,length:r.length};
+  const floorsCrossed=(u.floor>=state.floor?u.floor-state.floor:state.floor-u.floor);
+  closeOverlay();
+  fade(()=>{
+    state.floor=u.floor;state.pos=u.pos;
+    // stand between the shaft and the sought wall, facing it
+    const gi=BOOK_WALL_GEO[r.wall];
+    const th=gi*60*Math.PI/180;
+    const d=(SHAFT_R+APO)/2+0.3;
+    state.px=Math.cos(th)*d;state.pz=Math.sin(th)*d;
+    const wx=Math.cos(th)*APO,wz=Math.sin(th)*APO;
+    state.yaw=Math.atan2(state.px-wx,state.pz-wz);
+    state.pitch=0;state.vx=0;state.vz=0;
+    recolorBooks();refreshHUD();
+    toast(`You are carried across ${bigDisplay(floorsCrossed)} floors in an instant. `+
+      `The volume you seek glows on <b>wall ${r.wall+1}, shelf ${r.shelf+1}</b> — the ${ordinal(r.volume+1)} book. Your words wait on page ${r.page+1}.`,9000);});});
+
+function ordinal(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+
+/* ============================================================
+   MAIN LOOP
+   ============================================================ */
+const promptEl=document.getElementById('prompt');
+let last=performance.now();
+let flickerT=0;
+
+function frame(now){
+  requestAnimationFrame(frame);
+  const dt=Math.min(0.05,(now-last)/1000);last=now;
+  if(state.started&&!state.overlay&&!state.reader.open){
+    // movement
+    let fwd=0,str=0;
+    if(state.keys.KeyW)fwd+=1;
+    if(state.keys.KeyS)fwd-=1;
+    if(state.keys.KeyA)str-=1;
+    if(state.keys.KeyD)str+=1;
+    // arrow keys look around
+    if(state.keys.ArrowLeft)state.yaw+=2.1*dt;
+    if(state.keys.ArrowRight)state.yaw-=2.1*dt;
+    if(state.keys.ArrowUp)state.pitch=Math.min(1.45,state.pitch+1.5*dt);
+    if(state.keys.ArrowDown)state.pitch=Math.max(-1.45,state.pitch-1.5*dt);
+    if(isTouch&&stick.active){fwd=-stick.dy;str=stick.dx;}
+    const mag=Math.hypot(fwd,str);
+    if(mag>1){fwd/=mag;str/=mag;}
+    const speed=(state.keys.ShiftLeft||state.keys.ShiftRight)?5.2:3.1;
+    const ax=(Math.sin(state.yaw)*-fwd+Math.cos(state.yaw)*str)*speed;
+    const az=(Math.cos(state.yaw)*-fwd-Math.sin(state.yaw)*str)*speed;
+    const k=Math.min(1,dt*10);
+    state.vx+=(ax-state.vx)*k;state.vz+=(az-state.vz)*k;
+    let nx=state.px+state.vx*dt,nz=state.pz+state.vz*dt;
+    [nx,nz]=collide(nx,nz);
+    state.px=nx;state.pz=nz;
+    // hex crossing — recentre the world
+    if(state.px>SPACING/2){state.pos+=1n;state.px-=SPACING;recolorBooks();refreshHUD();}
+    else if(state.px<-SPACING/2){state.pos-=1n;state.px+=SPACING;recolorBooks();refreshHUD();}
+    // head bob
+    const moving=Math.hypot(state.vx,state.vz)>0.4;
+    if(!state.reducedMotion&&moving)state.bob+=dt*Math.hypot(state.vx,state.vz)*1.9;
+    // hover prompt (raycasting all book instances is the costly part — 20 Hz is plenty)
+    if(++hoverFrame%3===0){
+      const h=describeHover(castFromView());
+      if(h){promptEl.innerHTML=h.text;promptEl.classList.add('on');}
+      else promptEl.classList.remove('on');}
+  }
+  // camera
+  camera.position.set(state.px,EYE+(state.reducedMotion?0:Math.sin(state.bob)*0.035),state.pz);
+  camera.rotation.order='YXZ';
+  camera.rotation.y=state.yaw;
+  camera.rotation.x=state.pitch;
+  // lamp flicker — insufficient, incessant
+  if(!state.reducedMotion){
+    flickerT+=dt;
+    for(let i=0;i<lampLights.length;i++){
+      const L=lampLights[i];
+      L.intensity=L.userData.base*(0.93+0.07*Math.sin(flickerT*7+i*2.1)+0.03*Math.sin(flickerT*23+i));}}
+  // the sought volume pulses
+  if(state.targetInstance>=0){
+    const g=0.6+0.4*Math.sin(now*0.006);
+    tmpColor.setRGB(1.4*g+0.4,1.1*g+0.3,0.25);
+    booksMesh.setColorAt(state.targetInstance,tmpColor);
+    booksMesh.instanceColor.needsUpdate=true;}
+  renderer.render(scene,camera);}
+
+addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);});
+
+refreshHUD();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
