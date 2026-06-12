@@ -353,11 +353,13 @@
             document.getElementById('btn-o').disabled = true;
             updateScoreboard();
             
-            if (playerSymbol === "O") {
+            if (gameMode === 'ai' && playerSymbol === "O") {
                 document.getElementById("status").innerText = "AI is thinking...";
                 setTimeout(aiMove, 600);
+            } else if (gameMode === 'ai') {
+                document.getElementById("status").innerText = `Your turn (${playerSymbol})`;
             } else {
-                document.getElementById("status").innerText = "Your turn (X)";
+                document.getElementById("status").innerText = "Player X's Turn";
             }
                         // Scroll to board on mobile
             setTimeout(() => {
@@ -514,6 +516,8 @@
                 document.getElementById('btn-x').classList.add('selected');
                 document.getElementById('btn-o').classList.remove('selected');
             }
+            // Local mode has no symbol selection, so it is always ready to play
+            if (gameMode === 'local') gameStarted = true;
             board = ["", "", "", "", "", "", "", "", ""];
             gameActive = gameStarted;
             currentPlayer = "X";
@@ -523,11 +527,13 @@
             });
 
             if (gameStarted) {
-                if (playerSymbol === "O") {
+                if (gameMode === 'ai' && playerSymbol === "O") {
                     document.getElementById("status").innerText = "AI is thinking...";
                     setTimeout(aiMove, 600);
-                } else {
+                } else if (gameMode === 'ai') {
                     document.getElementById("status").innerText = `Your turn (${playerSymbol})`;
+                } else {
+                    document.getElementById("status").innerText = "Player X's Turn";
                 }
             }
             updateScoreboard();
@@ -598,8 +604,8 @@
             }
         }
 
-        // Initialize
-        updateScoreboard();
+        // Initialize — default mode is local, which starts immediately
+        resetGame(true);
     </script>
 </body>
 </html>
