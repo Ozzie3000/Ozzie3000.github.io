@@ -120,13 +120,13 @@ function Logo({theme}){
 }
 
 // cardW + cardH passed in from parent — no hardcoded sizes inside
-function Card({card,theme,ss,cardW,cardH,small,cssStyle,onMouseDown,onTouchStart,dragging}){
+function Card({card,theme,ss,cardW,cardH,small,cssStyle,onMouseDown,onTouchStart,onDoubleClick,onTouchEnd,dragging}){
   const t=THEMES[theme];
   const isRed=card.faceUp&&getSuitColor(card.suit,ss)===1;
   const sColor=isRed?t.redSuit:t.blackSuit;
   const base={width:cardW,height:cardH,borderRadius:7,boxShadow:dragging?t.glow:"0 2px 8px #00000080",flexShrink:0,...(cssStyle||{})};
   if(!card.faceUp)return(
-    <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} style={{...base,background:t.cardBack,border:`1.5px solid ${t.cardBorder}`,cursor:"default"}}>
+    <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} onDoubleClick={onDoubleClick} onTouchEnd={onTouchEnd} style={{...base,background:t.cardBack,border:`1.5px solid ${t.cardBorder}`,cursor:"default"}}>
       <div style={{width:"100%",height:"100%",borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",background:"repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(255,255,255,0.03) 4px,rgba(255,255,255,0.03) 8px)"}}>
         <span style={{fontSize:Math.round(cardW*0.28),opacity:0.5}}>🚀</span>
       </div>
@@ -136,7 +136,7 @@ function Card({card,theme,ss,cardW,cardH,small,cssStyle,onMouseDown,onTouchStart
   const fs2=Math.round(cardW*0.17); // suit corner
   const fs3=Math.round(cardW*0.36); // centre suit
   return(
-    <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} style={{...base,background:t.cardFace,border:`1.5px solid ${t.cardBorder}`,cursor:"grab",display:"flex",flexDirection:"column",padding:"3px 5px",userSelect:"none"}}>
+    <div onMouseDown={onMouseDown} onTouchStart={onTouchStart} onDoubleClick={onDoubleClick} onTouchEnd={onTouchEnd} style={{...base,background:t.cardFace,border:`1.5px solid ${t.cardBorder}`,cursor:"grab",display:"flex",flexDirection:"column",padding:"3px 5px",userSelect:"none"}}>
       <div style={{fontSize:fs1,fontWeight:"bold",color:sColor,lineHeight:1}}>{card.rankLabel}</div>
       <div style={{fontSize:fs2,lineHeight:1,color:sColor}}>{card.suit}</div>
       <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",fontSize:fs3,color:sColor}}>{card.suit}</div>
@@ -204,6 +204,13 @@ function GameScreen({settings,onStartOver,score,setScore}){
   const[dragPos,setDragPos]=useState({x:0,y:0});
   const boardRef=useRef(null);
   const timerRef=useRef(null);
+  const[,setResizeTick]=useState(0);
+
+  useEffect(()=>{
+    const onResize=()=>setResizeTick(n=>n+1);
+    window.addEventListener("resize",onResize);
+    return()=>window.removeEventListener("resize",onResize);
+  },[]);
 
   useEffect(()=>{
     clearInterval(timerRef.current);
@@ -256,22 +263,11 @@ function GameScreen({settings,onStartOver,score,setScore}){
 }
 
   function clickStock(){
+    if(!gs.stock.length&&!gs.waste.length)return;
     saveHistory(gs);
-    if(!gs.stock.length){if(!gs.waste.length)return;setGs(g=>({...g,stock:[...g.waste].reverse().map(c=>({...c,faceUp:false})),waste:[],moves:g.moves+1}));return;}
+    if(!gs.stock.length){setGs(g=>({...g,stock:[...g.waste].reverse().map(c=>({...c,faceUp:false})),waste:[],moves:g.moves+1}));return;}
     const drawn=gs.stock.slice(-drawMode).map(c=>({...c,faceUp:true}));
     setGs(g=>({...g,stock:g.stock.slice(0,-drawMode),waste:[...g.waste,...drawn],moves:g.moves+1}));
-  }
-
-  function clickWasteTop(){
-    if(!gs.waste.length)return;
-    const card=gs.waste[gs.waste.length-1];
-    for(let fi=0;fi<4;fi++){if(canFoundation(card,gs.foundations[fi])){saveHistory(gs);applyMove({...gs,waste:gs.waste.slice(0,-1),foundations:gs.foundations.map((f,i)=>i===fi?[...f,card]:f),moves:gs.moves+1});return;}}
-  }
-
-  function clickTableauCard(ci,cardi){
-    const col=gs.tableau[ci];
-    if(cardi!==col.length-1||!col[cardi].faceUp)return;
-    // single click does nothing to foundation now
   }
 
   const lastTap=useRef({});
