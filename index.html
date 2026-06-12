@@ -4,13 +4,84 @@
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
 
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+
+    <style>
+      /* ---- Night campsite scene ---- */
+      body{
+        background: linear-gradient(to bottom,
+          #04060f 0%, #070d1f 30%, #0c1530 55%, #1b2b4d 66%, #0d1526 100%);
+        background-attachment: fixed;
+      }
+      #scene{ position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+      .star{ position: absolute; border-radius: 50%; background: #fff; opacity: 0;
+        animation: twinkle var(--d,3s) ease-in-out infinite; animation-delay: var(--dl,0s); }
+      @keyframes twinkle{ 0%,100%{ opacity: 0; } 50%{ opacity: var(--o,.7); } }
+      .moon{ position: absolute; top: 8%; right: 12%; width: 58px; height: 58px; border-radius: 50%;
+        background: #f1ecdc; box-shadow: 0 0 46px 14px rgba(241,236,220,.22); }
+      .shooting-star{ position: absolute; width: 130px; height: 2px; border-radius: 2px;
+        background: linear-gradient(90deg, transparent, #fff); transform: rotate(18deg);
+        opacity: 0; animation: shoot 11s linear infinite 5s; }
+      @keyframes shoot{
+        0%,90%{ opacity: 0; top: 9%; left: -12%; }
+        91%{ opacity: .9; }
+        100%{ opacity: 0; top: 30%; left: 72%; }
+      }
+      .mountains{ position: absolute; bottom: 0; left: 0; width: 100%; height: 36vh; display: block; }
+      .tent{ position: absolute; bottom: 1.5vh; right: 3vw; width: clamp(128px, 7vw, 200px); }
+      .tent .glowpart{ animation: lantern 4.5s ease-in-out infinite; }
+      @keyframes lantern{ 0%,100%{ opacity: 1; } 35%{ opacity: .85; } 60%{ opacity: .93; } 80%{ opacity: .88; } }
+      /* readable content panel over the scene */
+      .container{ background: rgba(4,7,16,.55); border-radius: 10px; padding: 6px 40px 28px; }
+      header{ background: rgba(0,0,0,.25); }
+      header .container{ background: none; padding: 0; }
+      @media (prefers-reduced-motion: reduce){
+        .star, .shooting-star, .tent .glowpart{ animation: none; }
+        .star{ opacity: .5; }
+      }
+    </style>
 
     <title>Ozzie3000.github.io by Oz</title>
   </head>
 
   <body>
+    <!-- night campsite scene (sits behind all content) -->
+    <div id="scene" aria-hidden="true">
+      <div class="moon"></div>
+      <div class="shooting-star"></div>
+      <svg class="mountains" viewBox="0 0 1440 400" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="haze" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#23395f" stop-opacity="0"/>
+            <stop offset="1" stop-color="#101b33" stop-opacity=".95"/>
+          </linearGradient>
+        </defs>
+        <rect width="1440" height="400" fill="url(#haze)"/>
+        <path d="M0 250 L150 140 L270 225 L400 110 L530 220 L660 145 L810 240 L940 130 L1090 230 L1210 160 L1340 235 L1440 170 L1440 400 L0 400 Z" fill="#1c2b4c"/>
+        <path d="M0 320 L180 220 L340 310 L480 205 L650 310 L830 225 L1000 320 L1150 230 L1310 315 L1440 250 L1440 400 L0 400 Z" fill="#121d37"/>
+        <path d="M0 400 L0 350 L210 295 L430 365 L610 300 L840 375 L1040 312 L1260 380 L1440 332 L1440 400 Z" fill="#0a1124"/>
+      </svg>
+      <svg class="tent" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="tentglow" cx="50%" cy="78%" r="60%">
+            <stop offset="0%" stop-color="#ffd27a" stop-opacity=".5"/>
+            <stop offset="100%" stop-color="#ffd27a" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <ellipse class="glowpart" cx="100" cy="115" rx="96" ry="42" fill="url(#tentglow)"/>
+        <ellipse cx="100" cy="131" rx="72" ry="7" fill="#000" opacity=".4"/>
+        <path d="M100 32 L28 130 L172 130 Z" fill="#27486b"/>
+        <path d="M100 32 L28 130 L64 130 Z" fill="#1d3a59"/>
+        <path class="glowpart" d="M100 54 L74 130 L126 130 Z" fill="#ffc966"/>
+        <path d="M100 54 L90 130 L102 130 Z" fill="#ffe3a6" opacity=".9"/>
+        <line x1="100" y1="32" x2="100" y2="14" stroke="#8a96a8" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M100 14 L100 4 L120 9 Z" fill="#b5e853"/>
+      </svg>
+    </div>
+
      <header>
       <div class="container">
         <h1>Ozzie3000.github.io</h1>
@@ -64,6 +135,23 @@
       </footer>
     </div>
 
-    
+    <script>
+      // sprinkle twinkling stars across the upper two-thirds of the sky
+      (function(){
+        var scene = document.getElementById('scene');
+        for (var i = 0; i < 130; i++) {
+          var s = document.createElement('div');
+          s.className = 'star';
+          var sz = (Math.random() * 2.2 + 0.6).toFixed(1);
+          s.style.cssText = 'width:' + sz + 'px;height:' + sz + 'px;' +
+            'top:' + (Math.random() * 62).toFixed(1) + '%;' +
+            'left:' + (Math.random() * 100).toFixed(1) + '%;' +
+            '--d:' + (Math.random() * 4 + 2).toFixed(1) + 's;' +
+            '--o:' + (Math.random() * 0.6 + 0.25).toFixed(2) + ';' +
+            '--dl:' + (Math.random() * 6).toFixed(1) + 's;';
+          scene.appendChild(s);
+        }
+      })();
+    </script>
   </body>
 </html>
