@@ -155,70 +155,41 @@ body{ width: 700px;}
 <script src="https://code.jquery.com/jquery-2.1.1.js"></script>
 <script>
 
- function picker(){
-      var ceiling = prompt("Pick the highest possible number it could be");
-      this.ceiling = Number(ceiling);
-      if (isNaN(ceiling)== true){
-        alert("please pick a NUMERIC number");
-        picker();
-      }
-    }
-
-    function realNo(){
-      alert(randoNum + " was the real number.");
-    }
+    var ceiling;   // upper end of the guessing range
+    var randoNum;  // the number to guess
+    var g_1;       // current guess
+    var i = 0;     // guesses used (jumps past 20 when the game is won)
 
     function mr_rando(){
-      var rando = Math.round(Math.random()*ceiling);
-      this.randoNum = rando;
+      randoNum = Math.round(Math.random()*ceiling);
     }
 
     function showIt(){
-     document.getElementById("lucky_num_id").innerHTML = "The random number was : " + randoNum;
+      document.getElementById("lucky_num_id").innerHTML = "The random number was : " + randoNum;
     }
-
-    function picker(){
-      var ceiling = prompt("Pick the highest possible number it could be");
-      this.ceiling = Number(ceiling);
-      if (ceiling.isNan){
-        alert("please pick a NUMERIC number");
-        picker();
-      }
-    }
-    
-    i=0;
 
     function numberz(){
-      if (i<20){
-        var guessA = g_1;
-        this.guessA = Number(guessA);
-        if (i >= 20) {
-          $(".guessed").hide();
-          $(".guess_2").remove();
-          $(".guess_3").remove();
-        };
-        if((guessA == null) || (isNaN(guessA) == true)){
-          document.getElementById("nan").innerHTML = "Please pick a Numeric value";
-          x = true;
-          return this.x;
-        }else{
-          if(guessA > randoNum){
-            document.getElementById("too_high").innerHTML = "Nope: "+guessA+" is too high. Go lower.";
-          }
-          if(guessA < randoNum){
-            document.getElementById("too_low").innerHTML = "Nope: "+guessA+" is too low. Go higher.";
-          }
-          if(guessA == randoNum){
-            document.getElementById("perfecto").innerHTML = "Dude you are the man/woman! "+randoNum+" was correct";
-            i = 23;
-            $(".guessed").hide();
-            $(".guess_2").remove();
-            $(".guess_3").remove();
-          }
-        }
-        i++;
+      // Returns true when the guess was not a usable number
+      if (i >= 20) return;
+      if (isNaN(g_1)){
+        document.getElementById("nan").innerHTML = "Please pick a Numeric value";
+        return true;
       }
-    };
+      if (g_1 > randoNum){
+        document.getElementById("too_high").innerHTML = "Nope: "+g_1+" is too high. Go lower.";
+      }
+      if (g_1 < randoNum){
+        document.getElementById("too_low").innerHTML = "Nope: "+g_1+" is too low. Go higher.";
+      }
+      if (g_1 == randoNum){
+        document.getElementById("perfecto").innerHTML = "Dude you are the man/woman! "+randoNum+" was correct";
+        i = 23;
+        $(".guessed").hide();
+        $(".guess_2").remove();
+        $(".guess_3").remove();
+      }
+      i++;
+    }
 
 
   $(document).ready(function(){
@@ -227,70 +198,59 @@ body{ width: 700px;}
 
 
     $("#dom_1").on("click", function() {
-      ceiling = $(this).prev().val();
-      this.ceiling = Number(ceiling);
-      if((isNaN(ceiling) == true) || (ceiling == "")){
+      var raw = $(this).prev().val();
+      ceiling = Number(raw);
+      if (raw === "" || isNaN(ceiling)){
         $("#error_nan").text("please pick a NUMERIC value");
-        //alert("please pick a NUMERIC value");
       }else{
         $("#picked").delay(500).text(ceiling);
-         mr_rando();
-        $(this).prev().andSelf().fadeOut(1500);
+        mr_rando();
+        $(this).prev().addBack().fadeOut(1500);
         $("#error_nan").fadeOut(1400);
         $(".guess_1").fadeIn(1500);
       }
-      
     });
 
     $("#guess_1").on("click", function() {
-      g_1 = $(this).prev().val();
-      this.g_1 = Number(g_1);
-      if((isNaN(g_1) == true) || (g_1 == "")){
-        //alert("please pick a NUMERIC value");
+      var raw = $(this).prev().val();
+      g_1 = Number(raw);
+      if (raw === "" || isNaN(g_1)){
         $("#nan").text("Please pick a Numeric value");
         $("#nan").delay(2000).fadeOut(1500);
       }else{
-        numberz();
-        if (numberz() != true){
-          $(this).prev().andSelf().fadeOut(500);
+        if (numberz() !== true){
+          $(this).prev().addBack().fadeOut(500);
           $(".guess_2").fadeIn(1500);
           $("#nan").text("").show();
-        } 
+        }
       }
     });
     $("#guess_2").on("click", function() {
-      g_1 = $(this).prev().val();
-      this.g_1 = Number(g_1);
-      if(i >21){
-        $(".guess_2 .guess_3").remove();
-      }
-      if((isNaN(g_1) == true) || (g_1 == "")){
-       //alert("please pick a NUMERIC value");
+      var raw = $(this).prev().val();
+      g_1 = Number(raw);
+      if (raw === "" || isNaN(g_1)){
         $("#nan").text("Please pick a Numeric value");
         $("#nan").delay(1500).fadeOut(1500);
       }else{
-        numberz();
-        if (numberz() != true){
-          $(this).prev().andSelf().fadeOut(500);
+        if (numberz() !== true){
+          $(this).prev().addBack().fadeOut(500);
           $(".guess_3").fadeIn(1500);
           $("#nan").text("").show();
-        } 
+        }
       }
     });
     $("#guess_3").on("click", function() {
-      g_1 = $(this).prev().val();
-      this.g_1 = Number(g_1);
-      if((isNaN(g_1) == true) || (g_1 == "")){
-        //alert("please pick a NUMERIC value");
+      var raw = $(this).prev().val();
+      g_1 = Number(raw);
+      if (raw === "" || isNaN(g_1)){
         $("#nan").text("Please pick a Numeric value");
         $("#nan").delay(1500).fadeOut(1500);
       }else{
-        numberz();
-        if (numberz() != true){
-          $(this).prev().andSelf().fadeOut(500); 
+        if (numberz() !== true){
+          $(this).prev().addBack().fadeOut(500);
           $(".lucky_num").show();
           $(".lucky_num").css("color", "red");
-        } 
+        }
       }
     });
 
