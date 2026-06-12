@@ -274,27 +274,27 @@
       <span class="fruit-emoji">&#127822;</span><span class="fruit-price-tag">$0.30</span>
       <button class="add-btn" onclick="clickAdd('apple')" aria-label="Add apple">+</button>
     </div>
-    <div class="fruit-card" draggable="true" data-type="banana" ondragstart="onDragStart(event,this) onclick="handleCardClick(event,this)">
+    <div class="fruit-card" draggable="true" data-type="banana" ondragstart="onDragStart(event,this)" onclick="handleCardClick(event,this)">
       <div class="tooltip"><b>Banana</b> &nbsp;<span>$0.40 each</span></div>
       <span class="fruit-emoji">&#127820;</span><span class="fruit-price-tag">$0.40</span>
       <button class="add-btn" onclick="clickAdd('banana')" aria-label="Add banana">+</button>
     </div>
-    <div class="fruit-card" draggable="true" data-type="strawberry" ondragstart="onDragStart(event,this) onclick="handleCardClick(event,this)">
+    <div class="fruit-card" draggable="true" data-type="strawberry" ondragstart="onDragStart(event,this)" onclick="handleCardClick(event,this)">
       <div class="tooltip"><b>Strawberry</b> &nbsp;<span>$0.10 each</span></div>
       <span class="fruit-emoji">&#127827;</span><span class="fruit-price-tag">$0.10</span>
       <button class="add-btn" onclick="clickAdd('strawberry')" aria-label="Add strawberry">+</button>
     </div>
-    <div class="fruit-card" draggable="true" data-type="grape" ondragstart="onDragStart(event,this) onclick="handleCardClick(event,this)">
+    <div class="fruit-card" draggable="true" data-type="grape" ondragstart="onDragStart(event,this)" onclick="handleCardClick(event,this)">
       <div class="tooltip"><b>Grapes</b> &nbsp;<span>$2.50 each</span></div>
       <span class="fruit-emoji">&#127815;</span><span class="fruit-price-tag">$2.50</span>
       <button class="add-btn" onclick="clickAdd('grape')" aria-label="Add grapes">+</button>
     </div>
-    <div class="fruit-card" draggable="true" data-type="lemon" ondragstart="onDragStart(event,this) onclick="handleCardClick(event,this)">
+    <div class="fruit-card" draggable="true" data-type="lemon" ondragstart="onDragStart(event,this)" onclick="handleCardClick(event,this)">
       <div class="tooltip"><b>Lemon</b> &nbsp;<span>$0.25 each</span></div>
       <span class="fruit-emoji">&#127819;</span><span class="fruit-price-tag">$0.25</span>
       <button class="add-btn" onclick="clickAdd('lemon')" aria-label="Add lemon">+</button>
     </div>
-    <div class="fruit-card" draggable="true" data-type="watermelon" ondragstart="onDragStart(event,this) onclick="handleCardClick(event,this)">
+    <div class="fruit-card" draggable="true" data-type="watermelon" ondragstart="onDragStart(event,this)" onclick="handleCardClick(event,this)">
       <div class="tooltip"><b>Watermelon</b> &nbsp;<span>$4.00 each</span></div>
       <span class="fruit-emoji">&#127817;</span><span class="fruit-price-tag">$4.00</span>
       <button class="add-btn" onclick="clickAdd('watermelon')" aria-label="Add watermelon">+</button>
@@ -435,17 +435,17 @@ function onDrop(e, zone) {
    touchmove repositions it, touchend checks drop target.
 ============================================= */
 function setupTouch() {
-  let touchType = null, clone = null;
+  let touchType = null, clone = null, didDrag = false;
   document.querySelectorAll('.fruit-card').forEach(card => {
     card.addEventListener('touchstart', e => {
+      // Touch began on the + button: let its native click fire instead of simulating a drag
+      if (e.target.closest('.add-btn')) return;
       touchType = card.dataset.type;
+      didDrag = false;
       const t = e.touches[0];
-      let startX = t.clientX, startY = t.clientY;
-      let didDrag = false;
       clone = card.cloneNode(true);
       clone.style.cssText = 'position:fixed;top:'+(t.clientY-42)+'px;left:'+(t.clientX-42)+'px;width:85px;height:85px;opacity:.75;pointer-events:none;z-index:999;transition:none';
       document.body.appendChild(clone);
-      if (Math.abs(t.clientX - startX) > 5 || Math.abs(t.clientY - startY) > 5) return;
       e.preventDefault();
     }, { passive: false });
     card.addEventListener('touchmove', e => {
@@ -783,7 +783,11 @@ function toggleSource() {
 
 render();
 setupTouch();
+// Auto-scroll to the inventory after 4s, but only if the user hasn't scrolled on their own
+let userHasScrolled = false;
+window.addEventListener('scroll', () => { userHasScrolled = true; }, { once: true, passive: true });
 setTimeout(() => {
+  if (userHasScrolled) return;
   document.getElementById('storeInventory').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }, 4000);
 </script>
