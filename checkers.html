@@ -218,10 +218,11 @@
         const AI_KING = 4;
 
         let board = [];
-        let turn = PLAYER; 
+        let turn = PLAYER;
         let selectedPiece = null;
         let validMovesForSelected = [];
         let mandatoryJumpsAvailable = [];
+        let mustContinueWith = null; // piece that must keep jumping mid-sequence
         let playerScore = 0;
         let aiScore = 0;
 
@@ -296,7 +297,12 @@
 
         function handlePieceClick(r, c) {
             if (turn !== PLAYER) return;
-            
+
+            if (mustContinueWith && (r !== mustContinueWith.r || c !== mustContinueWith.c)) {
+                statusEl.textContent = "Keep jumping with the same piece!";
+                return;
+            }
+
             if (mandatoryJumpsAvailable.length > 0) {
                 const canThisPieceJump = mandatoryJumpsAvailable.some(m => m.fromR === r && m.fromC === c);
                 if (!canThisPieceJump) {
@@ -311,44 +317,55 @@
         }
 
         function handleMoveExecute(move) {
-            executeMove(move, board);
-            
-            if (move.isJump) {
+            if (turn !== PLAYER) return; // ignore clicks on stale hints after the turn ended
+            const crowned = executeMove(move, board);
+
+            // Crowning ends the turn — no further jumps allowed
+            if (move.isJump && !crowned) {
                 const successiveJumps = getJumpsForPiece(move.toR, move.toC, board);
                 if (successiveJumps.length > 0) {
                     selectedPiece = { r: move.toR, c: move.toC };
                     validMovesForSelected = successiveJumps;
+                    mustContinueWith = { r: move.toR, c: move.toC };
                     renderBoard();
                     statusEl.textContent = "Keep jumping!";
                     return;
                 }
             }
 
+            mustContinueWith = null;
             selectedPiece = null;
             validMovesForSelected = [];
             turn = AI;
             statusEl.textContent = "AI is thinking...";
+            // Re-render now: shows the player's move immediately and removes
+            // stale move hints so nothing is clickable during the AI's turn
+            renderBoard();
             setTimeout(handleAiTurn, 600);
         }
 
         function executeMove(move, targetBoard) {
             const p = targetBoard[move.fromR][move.fromC];
             targetBoard[move.fromR][move.fromC] = EMPTY;
-            
-            if (p === PLAYER && move.toR === 0) targetBoard[move.toR][move.toC] = PLAYER_KING;
-            else if (p === AI && move.toR === 7) targetBoard[move.toR][move.toC] = AI_KING;
+
+            let crowned = false;
+            if (p === PLAYER && move.toR === 0) { targetBoard[move.toR][move.toC] = PLAYER_KING; crowned = true; }
+            else if (p === AI && move.toR === 7) { targetBoard[move.toR][move.toC] = AI_KING; crowned = true; }
             else targetBoard[move.toR][move.toC] = p;
 
             if (move.isJump) {
                 targetBoard[move.jumpedR][move.jumpedC] = EMPTY;
             }
+            return crowned;
         }
 
         function getLegalMovesForPiece(r, c, b) {
             const jumps = getJumpsForPiece(r, c, b);
             if (jumps.length > 0) return jumps;
-            
-            const totalJumpsOnBoard = getAllJumps(b[r][c], b);
+
+            // getAllJumps expects a side (PLAYER/AI), not a piece type — map kings to their side
+            const side = (b[r][c] === PLAYER || b[r][c] === PLAYER_KING) ? PLAYER : AI;
+            const totalJumpsOnBoard = getAllJumps(side, b);
             if (totalJumpsOnBoard.length > 0) return [];
 
             return getStepsForPiece(r, c, b);
@@ -460,13 +477,15 @@
                 chosenMove = getBestAiMove(board, aiMoves);
             }
 
-            executeMove(chosenMove, board);
+            let crowned = executeMove(chosenMove, board);
 
-            if (chosenMove.isJump) {
+            // Crowning ends the turn — no further jumps allowed
+            if (chosenMove.isJump && !crowned) {
                 let successiveJumps = getJumpsForPiece(chosenMove.toR, chosenMove.toC, board);
                 while (successiveJumps.length > 0) {
                     const nextJump = successiveJumps[0];
-                    executeMove(nextJump, board);
+                    crowned = executeMove(nextJump, board);
+                    if (crowned) break;
                     successiveJumps = getJumpsForPiece(nextJump.toR, nextJump.toC, board);
                 }
             }
@@ -542,11 +561,12 @@
         }
 
         function checkGameOver() {
+            if (turn === null) return;
             let playerPieces = 0;
             let aiPieces = 0;
 
             for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) { 
+                for (let c = 0; c < 8; c++) {
                     if (board[r][c] === PLAYER || board[r][c] === PLAYER_KING) playerPieces++;
                     if (board[r][c] === AI || board[r][c] === AI_KING) aiPieces++;
                 }
@@ -562,6 +582,12 @@
                 document.getElementById('player-score').textContent = playerScore;
                 statusEl.textContent = "You Win!";
                 turn = null;
+            } else if (turn === PLAYER && getAllMoves(PLAYER, board).length === 0) {
+                // Player is blocked: pieces remain but no legal moves
+                aiScore++;
+                document.getElementById('ai-score').textContent = aiScore;
+                statusEl.textContent = "AI Wins! You have no moves left.";
+                turn = null;
             }
         }
 
@@ -569,6 +595,7 @@
             turn = PLAYER;
             selectedPiece = null;
             validMovesForSelected = [];
+            mustContinueWith = null;
             statusEl.textContent = "Your Turn (White)";
             initBoard();
             renderBoard();
