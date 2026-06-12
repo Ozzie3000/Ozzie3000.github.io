@@ -250,6 +250,7 @@
         const victoryPlayAgainBtn = document.getElementById('victory-play-again-btn');
 
         let gameState = [];
+        let selectedTileId = null;
         let moveHistory = []; // <--- Tracks all removed matches
         let score = 0;
         let timeLeft = 600; // 10 minutes game length in seconds
@@ -271,7 +272,8 @@
              // Stats Reset
             score = 0;
             scoreDisplay.innerText = `Score: ${score}`;
-            timeLeft = 600; 
+            timeLeft = 600;
+            timerDisplay.innerText = 'Time: 10:00';
             clearInterval(timerInterval);
             startCountdown();
 
@@ -581,11 +583,6 @@
                 }, 300);
             }
         }
-
-        restartBtn.addEventListener('click', initGame);
-
-        // Run Engine on load
-        initGame();
     </script>
 </body>
 </html>            
