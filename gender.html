@@ -46,9 +46,11 @@
     function getName(){
       var str = prompt("Hello what is your name?");
       if((str == "")||(str==null)){
-        getName();
+        return getName();
+      }else if(str !=""){
+        $("#filledPrompt").text("Name captured correctly");
       };
-      name = str.toUpperCase();
+      var name = str.toUpperCase();
       //console.log(name);
 
       $("#name").text(name);
@@ -99,7 +101,8 @@
 <body>
 	<input type="button" id="submit" class="btn" value="Refreshness" onclick="location.reload();" />
 	<br /><br />
-  <h1><span id="name" title="Your name goes here if you can follow directions">Hello</span> choose your gender below.</h1>
+  <h1 id="filledPrompt">Please follow instructions and provide a name</h1>
+  <h2>Hello <span id="name"></span> choose your gender below.</h2>
 
   <form>
   	<select id="gender">
@@ -121,7 +124,7 @@
 
 
   <div id="small_wrapper">
-    <div id="foot1" class="hide_me"><span id="ashley"></span> is loves Portland</div>
+    <div id="foot1" class="hide_me"><span id="ashley"></span> loves Portland</div>
     <div id="foot2" class="hide_me"><span id="steven"></span> is too close to work</div>
     <div id="foot3" class="hide_me"><span id="angel"></span> is laughing right now</div>
   </div>
