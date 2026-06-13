@@ -6,30 +6,60 @@
 <meta name="description" content="HTML5 demos" />
 <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
 <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
-<style type="text/css">
-	body{ 
-		background-color: #eeeeee;
-		/* local */
-		/*background: url("..//pictures/background-wallpapers-60.png"); */
-		/* not local */
-		/*background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");  */
-		background: url("http://host2post.com/server13/photos/pxEcaC16L764vM~/15-really-cool-world-map-wallpapers.jpg");
-		background-attachment: fixed;
-		background-size: cover;
-		background-repeat: no-repeat;
-		background-position: center center;
-		color: white;
-		font-size: 18px;
-	}
-	#map{
-		width:75%;
-		height:800px;
-		display: table;
-    margin: 0 auto;
-	}
-	h1{ color: white; font-family: sans-serif; text-align: center; font-size: 26px;}
-	p{ text-align: center;}
-	/******* responsive  *****/
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #c9a84c;
+    --gold-dim: #7a6230;
+    --gold-glow: rgba(201,168,76,0.15);
+    --night: #0c0e18;
+    --night2: #13162a;
+    --sung: #e8c060;
+    --dim: rgba(255,255,255,0.28);
+    --mid: rgba(255,255,255,0.6);
+  }
+
+  body {
+    background: var(--night);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Subtle radial glow behind card */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(ellipse, rgba(201,168,76,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Stars */
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .star {
+    position: absolute; border-radius: 50%; background: white;
+    animation: twinkle var(--d,3s) ease-in-out infinite;
+    animation-delay: var(--dl, 0s);
+    opacity: 0;
+  }
+  @keyframes twinkle {
+    0%,100% { opacity: 0; }
+    50% { opacity: var(--o, 0.5); }
+  }
+
 	@media screen and (max-width: 479px){#map{height: 200px;}}
 	@media screen and (min-width: 480px) and (max-width: 599px){#map{height: 300px;}}
 	@media screen and (min-width: 600px) and (max-width: 720px){#map{height: 400px;}}
@@ -129,6 +159,7 @@
 </script>
 </head> 
 <body>
+	<div class="stars" id="stars"></div>
 	<h1>Your Location and Natural Wonders of the World</h1>
 	<input type="button" value="Refreshness" onclick="location.reload()" />
 	<br /><br />
@@ -146,5 +177,17 @@
 	<div id="map"></div>
 	<br /><br /><br /><br />
 	<footer class="footer">Ozzie3000. <br />Google Maps API.  Background some cool pic I found @ http://host2post.com/server13/photos/pxEcaC16L764vM~/15-really-cool-world-map-wallpapers.jpg<br /><a href="index.html">Back to Home page</a></footer>
+
+<script>
+  // Stars
+const starContainer = document.getElementById('stars');
+for (let i = 0; i < 130; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const sz = Math.random() * 3.8 + 0.8;
+  s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${(Math.random()*4+2).toFixed(1)}s;--o:${(Math.random()*0.55+0.15).toFixed(2)};--dl:${(Math.random()*6).toFixed(1)}s;`;
+  starContainer.appendChild(s);
+}
+</script>  
 </body>
 </html>
