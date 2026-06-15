@@ -269,6 +269,11 @@ a {
   zoom:1;
 }
 
+.list-title {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
 .diff_title:hover {
   color: red;
   position: relative;
