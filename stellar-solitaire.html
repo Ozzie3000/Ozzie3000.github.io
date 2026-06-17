@@ -34,31 +34,38 @@ const SUIT_COLOR_C = {"♠":0,"♣":0,"♥":1,"♦":1};
 const SUIT_COLOR_S = {"⭐":0,"🚀":0,"🪐":1,"👾":1};
 
 // ─── CARD SIZE CONFIG ─────────────────────────────────────────
-const CARD_W_DESKTOP = 180;    // ← tune desktop independently
-const CARD_W_TABLET  = 78;     // ← tune tablet independently
-const CARD_RATIO     = 1.4;    // height = width × ratio (locked)
+const CARD_RATIO    = 1.4;   // height = width × ratio (locked)
+// ADJUST CARD SIZE HERE: raise/lower CARD_W_MAX to make cards bigger/smaller on large screens (e.g. 260 = larger, fills more width).
+const CARD_W_MAX    = 220;   // ← largest a card may grow to on big screens (tune me)
+const CARD_W_MIN    = 40;    // ← smallest a card may shrink to on phones
+const CONTAINER_PCT = 0.9;   // ← fraction of viewport the game uses on larger screens
+const COLS          = 7;     // tableau columns
+const SCROLLBAR     = 14;    // reserve for the board's vertical scrollbar
 
+// Container (game column) width — full-width on phones, % of viewport otherwise
+function getMaxWidth() {
+  const vw = window.innerWidth;
+  if (vw < 600) return vw;                 // phones: use the whole screen
+  return Math.round(vw * CONTAINER_PCT);   // larger: centered, % of viewport
+}
+
+// Card dimensions derived from the actual container so COLS columns always fit
 function getCardDims() {
   const vw = window.innerWidth;
-  const w = vw >= 1024 ? CARD_W_DESKTOP
-           : vw >= 520  ? CARD_W_TABLET
-           : Math.floor(vw / 8.5);   // mobile: scales to viewport
+  const containerW = Math.min(vw, getMaxWidth());
+  const small = vw < 520;
+  const padX  = small ? 4 : 8;             // board horizontal padding (each side)
+  const gap   = small ? 4 : 8;             // gap between columns
+  const avail = containerW - padX * 2 - gap * (COLS - 1) - SCROLLBAR;
+  let w = Math.floor(avail / COLS);
+  w = Math.max(CARD_W_MIN, Math.min(w, CARD_W_MAX));
   return {
     cardW:   w,
     cardH:   Math.round(w * CARD_RATIO),
     overlap: Math.round(w * 0.32),
     fanOff:  Math.round(w * 0.22),
-    small:   vw < 520,
+    small,
   };
-}
-
-function getMaxWidth() {
-  const vw = window.innerWidth;
-  if (vw >= 3840) return 1800;
-  if (vw >= 2560) return 1400;
-  if (vw >= 1920) return 900;
-  if (vw >= 1280) return 750;
-  return 700;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -449,6 +456,8 @@ function App(){
   const[screen,setScreen]=useState("intro");
   const[settings,setSettings]=useState({drawMode:1,suitStyle:"classic",theme:"gold"});
   const[score,setScore]=useState({wins:0,games:0});
+  const[,setResizeTick]=useState(0);
+  useEffect(()=>{const r=()=>setResizeTick(n=>n+1);window.addEventListener("resize",r);return()=>window.removeEventListener("resize",r);},[]);
 
   function handleSetup(vals){
     const ns={...settings,...vals};
