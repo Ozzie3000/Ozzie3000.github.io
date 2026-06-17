@@ -204,6 +204,8 @@ function GameScreen({settings,onStartOver,score,setScore}){
   const[dragPos,setDragPos]=useState({x:0,y:0});
   const boardRef=useRef(null);
   const timerRef=useRef(null);
+  const dragMoved=useRef(false);   // did the pointer actually move (real drag vs tap)
+  const dragStart=useRef({x:0,y:0});
   const[,setResizeTick]=useState(0);
 
   useEffect(()=>{
@@ -254,7 +256,7 @@ function GameScreen({settings,onStartOver,score,setScore}){
   for(let fi=0;fi<4;fi++){
     if(canFoundation(card,gs.foundations[fi])){
       saveHistory(gs);
-      const next=removeFromSource(gs,source,fromIdx);
+      const next=removeFromSource(gs,source,fromIdx,card.id);
       applyMove({...next,foundations:next.foundations.map((f,i)=>i===fi?[...f,card]:f),moves:gs.moves+1});
       return true;
     }
@@ -283,8 +285,8 @@ function GameScreen({settings,onStartOver,score,setScore}){
 
   useEffect(()=>{
     if(!drag)return;
-    const onMove=e=>{const p=e.touches?e.touches[0]:e;setDragPos({x:p.clientX,y:p.clientY});};
-    const onUp=e=>{const p=e.changedTouches?e.changedTouches[0]:e;dropCards(p.clientX,p.clientY);setDrag(null);};
+    const onMove=e=>{const p=e.touches?e.touches[0]:e;if(Math.abs(p.clientX-dragStart.current.x)>8||Math.abs(p.clientY-dragStart.current.y)>8)dragMoved.current=true;setDragPos({x:p.clientX,y:p.clientY});};
+    const onUp=e=>{const p=e.changedTouches?e.changedTouches[0]:e;if(dragMoved.current)dropCards(p.clientX,p.clientY);setDrag(null);};
     window.addEventListener("mousemove",onMove);window.addEventListener("mouseup",onUp);
     window.addEventListener("touchmove",onMove,{passive:true});window.addEventListener("touchend",onUp);
     return()=>{window.removeEventListener("mousemove",onMove);window.removeEventListener("mouseup",onUp);window.removeEventListener("touchmove",onMove);window.removeEventListener("touchend",onUp);};
@@ -298,18 +300,22 @@ function GameScreen({settings,onStartOver,score,setScore}){
     const{cards,from,fromIdx}=drag;
     if(target.startsWith("f")&&cards.length===1){
       const fi=parseInt(target[1]);
-      if(canFoundation(cards[0],gs.foundations[fi])){saveHistory(gs);const next=removeFromSource(gs,from,fromIdx);applyMove({...next,foundations:next.foundations.map((f,i)=>i===fi?[...f,cards[0]]:f),moves:gs.moves+1});return;}
+      if(canFoundation(cards[0],gs.foundations[fi])){saveHistory(gs);const next=removeFromSource(gs,from,fromIdx,cards[0].id);applyMove({...next,foundations:next.foundations.map((f,i)=>i===fi?[...f,cards[0]]:f),moves:gs.moves+1});return;}
     }
     if(target.startsWith("t")){
       const ti=parseInt(target.slice(1));
       const col=gs.tableau[ti];
       const onto=col.length?col[col.length-1]:null;
-      if(canStack(cards[0],onto,suitStyle)){saveHistory(gs);const next=removeFromSource(gs,from,fromIdx);applyMove({...next,tableau:next.tableau.map((tc,i)=>i===ti?[...tc,...cards]:tc),moves:gs.moves+1});}
+      if(canStack(cards[0],onto,suitStyle)){saveHistory(gs);const next=removeFromSource(gs,from,fromIdx,cards[0].id);applyMove({...next,tableau:next.tableau.map((tc,i)=>i===ti?[...tc,...cards]:tc),moves:gs.moves+1});}
     }
   }
 
-  function removeFromSource(state,from,fromIdx){
-    if(from==="waste")return{...state,waste:state.waste.slice(0,-1)};
+  function removeFromSource(state,from,fromIdx,cardId){
+    if(from==="waste"){
+      // remove the specific card by id when known (guards against state shifting mid-gesture)
+      if(cardId&&!state.waste.some(c=>c.id===cardId))return state;
+      return{...state,waste:cardId?state.waste.filter(c=>c.id!==cardId):state.waste.slice(0,-1)};
+    }
     if(from.startsWith("t")){
       const ti=parseInt(from.slice(1));
       return{...state,tableau:state.tableau.map((tc,i)=>{if(i!==ti)return tc;const nc=tc.slice(0,fromIdx);if(nc.length&&!nc[nc.length-1].faceUp)nc[nc.length-1]={...nc[nc.length-1],faceUp:true};return nc;})};
@@ -320,6 +326,8 @@ function GameScreen({settings,onStartOver,score,setScore}){
   function startDragFrom(cards,from,fromIdx,e){
     e.preventDefault();
     const p=e.touches?e.touches[0]:e;
+    dragMoved.current=false;            // reset: assume tap until pointer actually moves
+    dragStart.current={x:p.clientX,y:p.clientY};
     setDrag({cards,from,fromIdx});
     setDragPos({x:p.clientX,y:p.clientY});
   }
