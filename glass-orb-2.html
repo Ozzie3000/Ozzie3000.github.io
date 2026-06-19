@@ -171,8 +171,8 @@
       <button data-z="font">Z: Font</button>
     </div>
     <label class="sliderwrap">
-      <span class="lbl">Transparency <span class="val" id="opacityVal">0%</span></span>
-      <input id="opacity" type="range" min="0" max="100" value="0" />
+      <span class="lbl">Transparency <span class="val" id="opacityVal">15%</span></span>
+      <input id="opacity" type="range" min="0" max="100" value="15" />
     </label>
     <label class="sliderwrap">
       <span class="lbl">Size <span class="val" id="sizeVal">1.0&times;</span></span>
@@ -187,8 +187,8 @@
       <input id="travelY" type="range" min="0" max="20" step="0.5" value="4.4" />
     </label>
     <label class="sliderwrap">
-      <span class="lbl">Travel Z <span class="val" id="travelZVal">12</span></span>
-      <input id="travelZ" type="range" min="0" max="24" step="0.5" value="12" />
+      <span class="lbl">Travel Z <span class="val" id="travelZVal">48</span></span>
+      <input id="travelZ" type="range" min="0" max="104" step="0.5" value="48" />
     </label>
   </div>
 
@@ -219,9 +219,9 @@
     renderer.autoClear = false;
     container.appendChild(renderer.domElement);
 
-    // ---------- Cameras / scenes ----------
+    // ---------- Cameras / scenes cam.p apparent distance----------
     const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
-    camera.position.set(0, 0, 34);
+    camera.position.set(0, 0, 48);
 
     const particleScene = new THREE.Scene();
     const glassScene = new THREE.Scene();
