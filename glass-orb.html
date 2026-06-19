@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Glass Orb — Refractive Particle Field</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body {
+    margin: 0; padding: 0; height: 100%; overflow: hidden;
+    background: #05060f;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; }
+
+  /* Vignette + ambient grain over the canvas */
+  #vignette {
+    position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 120% at 50% 40%, transparent 45%, rgba(0,0,0,0.55) 100%);
+    mix-blend-mode: multiply;
+  }
+
+  .ui {
+    position: fixed; left: 28px; bottom: 24px; pointer-events: none;
+    color: #cdd6ff; user-select: none;
+  }
+  .ui h1 {
+    margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.18em;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #7af7ff, #b69bff 45%, #ff7ae0);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .ui p { margin: 6px 0 0; font-size: 12px; color: #6f7aa8; letter-spacing: 0.04em; }
+
+  #loader {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #8b95c9; font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase;
+    transition: opacity 0.6s ease; z-index: 5;
+  }
+</style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="vignette"></div>
+  <div id="loader">Initializing scene…</div>
+  <div class="ui">
+    <h1>Aurora Glass</h1>
+    <p>Move your cursor — particles scatter, the orb tilts and bends the light.</p>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+  (function () {
+    "use strict";
+
+    const container = document.getElementById("app");
+    const loader = document.getElementById("loader");
+
+    // ---------- Renderer ----------
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    renderer.setPixelRatio(DPR);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x05060f, 1);
+    renderer.autoClear = false;
+    container.appendChild(renderer.domElement);
+
+    // ---------- Cameras / scenes ----------
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(0, 0, 34);
+
+    const particleScene = new THREE.Scene();
+    const glassScene = new THREE.Scene();
+
+    // Render target that captures the particle field for refraction sampling
+    function makeTarget() {
+      const t = new THREE.WebGLRenderTarget(
+        Math.floor(window.innerWidth * DPR),
+        Math.floor(window.innerHeight * DPR),
+        { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat }
+      );
+      return t;
+    }
+    let bgTarget = makeTarget();
+
+    // ---------- Particle field ----------
+    const COUNT = 650;
+    const SPREAD_X = 46, SPREAD_Y = 30, SPREAD_Z = 26;
+
+    const positions = new Float32Array(COUNT * 3);
+    const basePositions = new Float32Array(COUNT * 3);
+    const velocities = new Float32Array(COUNT * 3);
+    const sizes = new Float32Array(COUNT);
+    const seeds = new Float32Array(COUNT);
+    const colors = new Float32Array(COUNT * 3);
+
+    // Mixed gradient palette: deep blues/purples + neon cyan/magenta highlights
+    const palette = [
+      new THREE.Color(0x4d6bff), // indigo
+      new THREE.Color(0x9b6bff), // violet
+      new THREE.Color(0xff5fc8), // magenta
+      new THREE.Color(0x46f0ff), // neon cyan
+      new THREE.Color(0x6f8cff)  // periwinkle
+    ];
+
+    for (let i = 0; i < COUNT; i++) {
+      const x = (Math.random() - 0.5) * 2 * SPREAD_X;
+      const y = (Math.random() - 0.5) * 2 * SPREAD_Y;
+      const z = (Math.random() - 0.5) * 2 * SPREAD_Z;
+      positions[i*3] = basePositions[i*3] = x;
+      positions[i*3+1] = basePositions[i*3+1] = y;
+      positions[i*3+2] = basePositions[i*3+2] = z;
+      velocities[i*3] = velocities[i*3+1] = velocities[i*3+2] = 0;
+      sizes[i] = 6 + Math.random() * 22;
+      seeds[i] = Math.random() * 100;
+      // bias toward blue/violet, occasional neon pop
+      const c = Math.random() < 0.22
+        ? palette[3 + Math.floor(Math.random()*2) % 2]   // neon
+        : palette[Math.floor(Math.random()*3)];          // blue/violet/magenta
+      colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
+    }
+
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    pGeo.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
+    pGeo.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
+
+    const pMat = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: {},
+      vertexShader: `
+        attribute float aSize;
+        attribute vec3 aColor;
+        varying vec3 vColor;
+        void main() {
+          vColor = aColor;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = aSize * (300.0 / -mv.z);
+          gl_Position = projectionMatrix * mv;
+        }
+      `,
+      fragmentShader: `
+        precision highp float;
+        varying vec3 vColor;
+        void main() {
+          vec2 uv = gl_PointCoord - 0.5;
+          float d = length(uv);
+          // soft glowing core with falloff halo
+          float core = smoothstep(0.5, 0.0, d);
+          float halo = smoothstep(0.5, 0.15, d);
+          float a = core * 0.85 + halo * 0.35;
+          if (a < 0.01) discard;
+          vec3 col = vColor * (0.6 + core * 0.8);
+          gl_FragColor = vec4(col, a);
+        }
+      `
+    });
+
+    const points = new THREE.Points(pGeo, pMat);
+    particleScene.add(points);
+
+    // ---------- Glass orb ----------
+    const orbGeo = new THREE.SphereGeometry(8.2, 96, 96);
+    const orbMat = new THREE.ShaderMaterial({
+      uniforms: {
+        tBg:          { value: bgTarget.texture },
+        uResolution:  { value: new THREE.Vector2(window.innerWidth * DPR, window.innerHeight * DPR) },
+        uTime:        { value: 0 },
+        uRefraction:  { value: 0.16 },   // screen-space distortion strength
+        uFrost:       { value: 1.0 },    // blur radius multiplier
+        uColorA:      { value: new THREE.Color(0x3a6bff) }, // deep blue
+        uColorB:      { value: new THREE.Color(0xb15cff) }, // violet
+        uColorC:      { value: new THREE.Color(0xff5fd2) }, // magenta
+        uNeon:        { value: new THREE.Color(0x6ff6ff) }  // cyan rim accent
+      },
+      vertexShader: `
+        precision highp float;
+        varying vec3 vViewNormal;
+        varying vec3 vViewPos;
+        varying vec3 vObjPos;
+        void main() {
+          vObjPos = position;
+          vViewNormal = normalize(normalMatrix * normal);
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          vViewPos = mv.xyz;
+          gl_Position = projectionMatrix * mv;
+        }
+      `,
+      fragmentShader: `
+        precision highp float;
+        uniform sampler2D tBg;
+        uniform vec2  uResolution;
+        uniform float uTime;
+        uniform float uRefraction;
+        uniform float uFrost;
+        uniform vec3  uColorA;
+        uniform vec3  uColorB;
+        uniform vec3  uColorC;
+        uniform vec3  uNeon;
+        varying vec3 vViewNormal;
+        varying vec3 vViewPos;
+        varying vec3 vObjPos;
+
+        // small hash for jittered frosted taps
+        float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
+
+        void main() {
+          vec3 N = normalize(vViewNormal);
+          vec3 V = normalize(-vViewPos);
+          float ndv = max(dot(N, V), 0.0);
+
+          // Fresnel — sharp white specular rim
+          float fres = pow(1.0 - ndv, 3.0);
+          float rim  = pow(1.0 - ndv, 6.0);
+
+          vec2 screenUV = gl_FragCoord.xy / uResolution;
+
+          // refraction offset driven by surface normal (chromatic split)
+          vec2 dir = N.xy * uRefraction;
+          float chroma = 0.012 + fres * 0.02;
+
+          // Frosted blur: average several jittered taps of the background
+          vec3 acc = vec3(0.0);
+          float total = 0.0;
+          float blur = (0.006 + fres * 0.010) * uFrost;
+          for (int i = 0; i < 12; i++) {
+            float fi = float(i);
+            float ang = fi * 2.39996 + uTime * 0.2;
+            float rad = blur * (0.4 + hash(gl_FragCoord.xy + fi));
+            vec2 off = vec2(cos(ang), sin(ang)) * rad;
+            vec2 uv = screenUV - dir + off;
+            // chromatic aberration on the refracted background
+            float r = texture2D(tBg, uv + dir * chroma).r;
+            float g = texture2D(tBg, uv).g;
+            float b = texture2D(tBg, uv - dir * chroma).b;
+            acc += vec3(r, g, b);
+            total += 1.0;
+          }
+          vec3 refr = acc / total;
+
+          // Accent gradient bleeding through the glass body
+          float gx = vObjPos.x * 0.06 + 0.5;
+          float gy = vObjPos.y * 0.06 + 0.5;
+          vec3 grad = mix(uColorA, uColorB, clamp(gy, 0.0, 1.0));
+          grad = mix(grad, uColorC, clamp(fres * 0.9 + gx * 0.15, 0.0, 1.0));
+
+          // Compose: refracted bg + tinted glass body + fresnel neon rim + white specular
+          vec3 col = refr * 1.05;                    // see-through frosted background
+          col = mix(col, col * grad * 1.6 + grad * 0.18, 0.55); // colored glass tint
+          col += uNeon * fres * 0.9;                 // neon fresnel glow
+          col += vec3(1.0) * rim * 0.9;              // sharp white rim light
+
+          // gentle inner luminance so the orb reads as a solid object
+          col += grad * 0.05;
+
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `
+    });
+
+    const orb = new THREE.Mesh(orbGeo, orbMat);
+    glassScene.add(orb);
+
+    // A faint radial-gradient halo behind the orb for premium glow
+    function makeGlowTexture() {
+      const c = document.createElement("canvas");
+      c.width = c.height = 256;
+      const ctx = c.getContext("2d");
+      const g = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+      g.addColorStop(0.0, "rgba(150,170,255,1)");
+      g.addColorStop(0.35, "rgba(120,110,255,0.45)");
+      g.addColorStop(1.0, "rgba(0,0,0,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 256, 256);
+      const tex = new THREE.CanvasTexture(c);
+      return tex;
+    }
+    const haloMat = new THREE.SpriteMaterial({
+      map: makeGlowTexture(), color: 0x6a7bff, transparent: true, opacity: 0.5,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    const halo = new THREE.Sprite(haloMat);
+    halo.scale.set(34, 34, 1);
+    halo.position.z = -6;
+    particleScene.add(halo);
+
+    // ---------- Interaction ----------
+    const mouse = new THREE.Vector2(0, 0);     // NDC -1..1
+    const target = new THREE.Vector2(0, 0);    // eased
+    const mouseWorld = new THREE.Vector3();
+    const raycastPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    const ray = new THREE.Raycaster();
+
+    function updateMouseWorld() {
+      ray.setFromCamera(mouse, camera);
+      ray.ray.intersectPlane(raycastPlane, mouseWorld);
+    }
+
+    window.addEventListener("pointermove", (e) => {
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -((e.clientY / window.innerHeight) * 2 - 1);
+    });
+    window.addEventListener("pointerleave", () => { mouse.set(0, 0); });
+
+    // ---------- Resize ----------
+    function onResize() {
+      const w = window.innerWidth, h = window.innerHeight;
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      bgTarget.setSize(Math.floor(w * DPR), Math.floor(h * DPR));
+      orbMat.uniforms.tBg.value = bgTarget.texture;
+      orbMat.uniforms.uResolution.value.set(w * DPR, h * DPR);
+    }
+    window.addEventListener("resize", onResize);
+
+    // ---------- Animation ----------
+    const REPEL_RADIUS = 11;
+    const REPEL_STRENGTH = 26;
+    const clock = new THREE.Clock();
+    const posAttr = pGeo.attributes.position;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const t = clock.elapsedTime;
+
+      // ease mouse for parallax
+      target.x += (mouse.x - target.x) * 0.06;
+      target.y += (mouse.y - target.y) * 0.06;
+      updateMouseWorld();
+
+      // particle drift + mouse repulsion (eased back to base)
+      for (let i = 0; i < COUNT; i++) {
+        const ix = i*3, iy = ix+1, iz = ix+2;
+        const s = seeds[i];
+
+        // slow organic drift around the base position
+        const driftX = Math.sin(t * 0.18 + s) * 1.4;
+        const driftY = Math.cos(t * 0.15 + s * 1.3) * 1.4;
+        const driftZ = Math.sin(t * 0.12 + s * 0.7) * 1.0;
+        let tx = basePositions[ix] + driftX;
+        let ty = basePositions[iy] + driftY;
+        let tz = basePositions[iz] + driftZ;
+
+        // repulsion from cursor in XY
+        const dx = positions[ix] - mouseWorld.x;
+        const dy = positions[iy] - mouseWorld.y;
+        const d2 = dx*dx + dy*dy;
+        if (d2 < REPEL_RADIUS * REPEL_RADIUS) {
+          const d = Math.sqrt(d2) + 0.0001;
+          const f = (1 - d / REPEL_RADIUS);
+          velocities[ix] += (dx / d) * f * REPEL_STRENGTH * dt;
+          velocities[iy] += (dy / d) * f * REPEL_STRENGTH * dt;
+        }
+
+        // integrate velocity, damping, pull toward drift target
+        velocities[ix] += (tx - positions[ix]) * 2.2 * dt;
+        velocities[iy] += (ty - positions[iy]) * 2.2 * dt;
+        velocities[iz] += (tz - positions[iz]) * 2.2 * dt;
+        velocities[ix] *= 0.90; velocities[iy] *= 0.90; velocities[iz] *= 0.90;
+        positions[ix] += velocities[ix] * dt;
+        positions[iy] += velocities[iy] * dt;
+        positions[iz] += velocities[iz] * dt;
+      }
+      posAttr.needsUpdate = true;
+
+      // parallax: drift whole particle field slightly opposite the cursor
+      points.rotation.y = target.x * 0.12;
+      points.rotation.x = -target.y * 0.10;
+
+      // orb parallax tilt toward cursor + slow idle spin
+      orb.rotation.y += dt * 0.12;
+      orb.rotation.x += (target.y * 0.5 - orb.rotation.x) * 0.05;
+      orb.rotation.z += ((-target.x * 0.35) - orb.rotation.z) * 0.05;
+      orb.position.x += (target.x * 3.0 - orb.position.x) * 0.05;
+      orb.position.y += (target.y * 2.2 - orb.position.y) * 0.05;
+      halo.position.x = orb.position.x;
+      halo.position.y = orb.position.y;
+
+      orbMat.uniforms.uTime.value = t;
+
+      // --- Render passes ---
+      // 1) particle field -> render target (for refraction)
+      renderer.setRenderTarget(bgTarget);
+      renderer.clear();
+      renderer.render(particleScene, camera);
+
+      // 2) particle field -> screen (background)
+      renderer.setRenderTarget(null);
+      renderer.clear();
+      renderer.render(particleScene, camera);
+
+      // 3) glass orb -> screen (samples the target)
+      renderer.clearDepth();
+      renderer.render(glassScene, camera);
+    }
+
+    // fade out loader, start
+    requestAnimationFrame(() => {
+      animate();
+      loader.style.opacity = "0";
+      setTimeout(() => loader.remove(), 700);
+    });
+
+  })();
+  </script>
+</body>
+</html>
