@@ -30,14 +30,66 @@
   .ui {
     position: fixed; left: 28px; bottom: 24px; pointer-events: none;
     color: #cdd6ff; user-select: none;
+    max-width: 460px;
+    padding: 18px 24px;
+    border-radius: 16px;
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid rgba(120,180,255,0.30);
+    box-shadow: 0 12px 40px rgba(0,20,60,0.55), inset 0 1px 0 rgba(180,220,255,0.25);
+    /* base blue water body */
+    background:
+      linear-gradient(135deg, rgba(8,38,86,0.72) 0%, rgba(14,64,128,0.66) 55%, rgba(10,46,104,0.72) 100%);
+    backdrop-filter: blur(8px) saturate(1.2);
+    -webkit-backdrop-filter: blur(8px) saturate(1.2);
+  }
+  /* animated caustic "water" shimmer */
+  .ui::before {
+    content: ""; position: absolute; inset: -60%; z-index: -1;
+    background:
+      radial-gradient(40% 32% at 25% 30%, rgba(120,200,255,0.45), transparent 60%),
+      radial-gradient(35% 30% at 75% 25%, rgba(90,160,255,0.40), transparent 60%),
+      radial-gradient(45% 38% at 60% 75%, rgba(70,210,235,0.38), transparent 62%),
+      radial-gradient(38% 34% at 20% 80%, rgba(140,180,255,0.32), transparent 60%);
+    background-size: 180% 180%;
+    filter: blur(8px);
+    mix-blend-mode: screen;
+    opacity: 0.85;
+    animation: waterFlow 14s ease-in-out infinite;
+  }
+  /* second layer drifting the other way for depth */
+  .ui::after {
+    content: ""; position: absolute; inset: -60%; z-index: -1;
+    background:
+      radial-gradient(30% 26% at 50% 40%, rgba(180,235,255,0.35), transparent 60%),
+      radial-gradient(28% 24% at 30% 60%, rgba(60,150,230,0.30), transparent 60%);
+    background-size: 160% 160%;
+    filter: blur(10px);
+    mix-blend-mode: screen;
+    opacity: 0.6;
+    animation: waterFlow2 20s ease-in-out infinite;
+  }
+  @keyframes waterFlow {
+    0%   { background-position: 0% 0%,   100% 0%,  50% 100%, 0% 100%;  transform: scale(1) rotate(0deg); }
+    50%  { background-position: 30% 40%, 60% 30%,  40% 60%,  30% 70%;  transform: scale(1.08) rotate(1.5deg); }
+    100% { background-position: 0% 0%,   100% 0%,  50% 100%, 0% 100%;  transform: scale(1) rotate(0deg); }
+  }
+  @keyframes waterFlow2 {
+    0%   { background-position: 100% 100%, 0% 0%;   transform: scale(1.05) rotate(0deg); }
+    50%  { background-position: 40% 60%,   60% 40%; transform: scale(1) rotate(-2deg); }
+    100% { background-position: 100% 100%, 0% 0%;   transform: scale(1.05) rotate(0deg); }
   }
   .ui h1 {
-    margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.18em;
+    margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.18em;
     text-transform: uppercase;
-    background: linear-gradient(90deg, #7af7ff, #b69bff 45%, #ff7ae0);
+    background: linear-gradient(90deg, #d8f6ff, #aef0ff 45%, #ffffff);
     -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 1px 10px rgba(0,30,80,0.6);
   }
-  .ui p { margin: 6px 0 0; font-size: 12px; color: #6f7aa8; letter-spacing: 0.04em; }
+  .ui p {
+    margin: 8px 0 0; font-size: 16px; color: #eaf4ff; letter-spacing: 0.04em;
+    text-shadow: 0 1px 6px rgba(0,25,70,0.85);
+  }
 
   #loader {
     position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -52,7 +104,7 @@
   <div id="loader">Initializing scene…</div>
   <div class="ui">
     <h1>Aurora Glass</h1>
-    <p>Move your cursor — particles scatter, the orb tilts and bends the light.</p>
+    <p>Welcome to the land of Oz. Move your cursor — particles scatter, the orb tilts and bends the light.</p>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -380,10 +432,10 @@
 
       // orb parallax tilt toward cursor + slow idle spin
       orb.rotation.y += dt * 0.12;
-      orb.rotation.x += (target.y * 0.5 - orb.rotation.x) * 0.05;
-      orb.rotation.z += ((-target.x * 0.35) - orb.rotation.z) * 0.05;
-      orb.position.x += (target.x * 3.0 - orb.position.x) * 0.05;
-      orb.position.y += (target.y * 2.2 - orb.position.y) * 0.05;
+      orb.rotation.x += (target.y * 1.0 - orb.rotation.x) * 0.05;
+      orb.rotation.z += ((-target.x * 0.7) - orb.rotation.z) * 0.05;
+      orb.position.x += (target.x * 6.0 - orb.position.x) * 0.05;
+      orb.position.y += (target.y * 4.4 - orb.position.y) * 0.05;
       halo.position.x = orb.position.x;
       halo.position.y = orb.position.y;
 
