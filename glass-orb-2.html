@@ -166,6 +166,10 @@
       <button data-m="1">Iridescent</button>
       <button data-m="2">Gold</button>
     </div>
+    <div class="seg" id="zStyleSel">
+      <button data-z="block" class="active">Z: Block</button>
+      <button data-z="font">Z: Font</button>
+    </div>
     <label class="sliderwrap">
       <span class="lbl">Transparency <span class="val" id="opacityVal">0%</span></span>
       <input id="opacity" type="range" min="0" max="100" value="0" />
@@ -194,6 +198,9 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Optional extras for the typographic "Z" (block Z works without these) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/TextGeometry.js"></script>
   <script>
   (function () {
     "use strict";
@@ -466,6 +473,70 @@
     halo.position.z = -6;
     particleScene.add(halo);
 
+    // ---------- Letter "Z" (makes the orb read as "Oz") ----------
+    // Both variants reuse orbMat, so metal style + transparency + animation
+    // apply to the Z automatically. A toggle switches between them.
+    let zStyle = "block";        // "block" | "font"
+    let zFontMesh = null;        // created async once the font loads
+
+    // Block Z: hand-built outline -> ExtrudeGeometry (no external font needed).
+    // Outline centered at origin, ~11 wide x 15 tall to roughly match the orb.
+    const zShape = new THREE.Shape();
+    const zPts = [
+      [-5.5, 7.5], [5.5, 7.5], [5.5, 3.7], [-1.5, -3.7], [5.5, -3.7],
+      [5.5, -7.5], [-5.5, -7.5], [-5.5, -3.7], [1.5, 3.7], [-5.5, 3.7]
+    ];
+    zShape.moveTo(zPts[0][0], zPts[0][1]);
+    for (let i = 1; i < zPts.length; i++) zShape.lineTo(zPts[i][0], zPts[i][1]);
+    zShape.closePath();
+    const zBlockGeo = new THREE.ExtrudeGeometry(zShape, {
+      depth: 4.2, bevelEnabled: true, bevelThickness: 0.6, bevelSize: 0.5,
+      bevelSegments: 3, curveSegments: 4
+    });
+    zBlockGeo.center();
+    const zBlockMesh = new THREE.Mesh(zBlockGeo, orbMat);
+    glassScene.add(zBlockMesh);
+
+    // Halo glow behind the Z (mirrors the orb's halo)
+    const zHaloMat = new THREE.SpriteMaterial({
+      map: makeGlowTexture(), color: 0x6a7bff, transparent: true, opacity: 0.42,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    const zHalo = new THREE.Sprite(zHaloMat);
+    zHalo.scale.set(28, 28, 1);
+    particleScene.add(zHalo);
+
+    // Font Z (typographic) — loaded lazily; falls back to block if it fails.
+    if (typeof THREE.FontLoader === "function" && typeof THREE.TextGeometry === "function") {
+      try {
+        new THREE.FontLoader().load(
+          "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/helvetiker_bold.typeface.json",
+          (font) => {
+            const tg = new THREE.TextGeometry("Z", {
+              font, size: 14, height: 4.2, curveSegments: 8,
+              bevelEnabled: true, bevelThickness: 0.5, bevelSize: 0.4, bevelSegments: 2
+            });
+            tg.center();
+            zFontMesh = new THREE.Mesh(tg, orbMat);
+            zFontMesh.visible = (zStyle === "font");
+            glassScene.add(zFontMesh);
+            applyScale();
+          },
+          undefined,
+          () => { /* font failed: silently keep block Z */ }
+        );
+      } catch (e) { /* keep block Z */ }
+    }
+
+    function activeZMesh() {
+      return (zStyle === "font" && zFontMesh) ? zFontMesh : zBlockMesh;
+    }
+    function updateZVisibility() {
+      const useFont = (zStyle === "font" && zFontMesh);
+      zBlockMesh.visible = !useFont;
+      if (zFontMesh) zFontMesh.visible = !!useFont;
+    }
+
     // ---------- Interaction ----------
     const mouse = new THREE.Vector2(0, 0);     // NDC -1..1
     const target = new THREE.Vector2(0, 0);    // eased
@@ -512,6 +583,9 @@
       const s = orbScale * sizeMul;
       orb.scale.setScalar(s);
       halo.scale.set(34 * s, 34 * s, 1);
+      zBlockMesh.scale.setScalar(s);
+      if (zFontMesh) zFontMesh.scale.setScalar(s);
+      zHalo.scale.set(28 * s, 28 * s, 1);
     }
 
     function onResize() {
@@ -597,14 +671,35 @@
       orb.rotation.y += dt * 0.12;
       orb.rotation.x += (target.y * 1.0 - orb.rotation.x) * 0.05;
       orb.rotation.z += ((-target.x * 0.7) - orb.rotation.z) * 0.05;
-      // X/Y travel: cursor-driven, reach set by Travel X / Travel Y sliders.
-      // Z travel: scroll-wheel target, reach capped by Travel Z slider.
-      orb.position.x += (target.x * ampX * orbScale - orb.position.x) * 0.05;
-      orb.position.y += (target.y * ampY * orbScale - orb.position.y) * 0.05;
-      orb.position.z += (targetZ * orbScale - orb.position.z) * 0.08;
-      halo.position.x = orb.position.x;
-      halo.position.y = orb.position.y;
-      halo.position.z = orb.position.z - 6;
+
+      // shared cursor/scroll parallax (X/Y reach = Travel sliders, Z = scroll)
+      const eff = orbScale * sizeMul;
+      const halfGap = 8.0 * eff;          // half the "Oz" letter spacing
+      const px = target.x * ampX * orbScale;
+      const py = target.y * ampY * orbScale;
+      const pz = targetZ * orbScale;
+
+      // O sits left of center, Z sits right of center -> reads as "Oz"
+      orb.position.x += ((-halfGap + px) - orb.position.x) * 0.05;
+      orb.position.y += (py - orb.position.y) * 0.05;
+      orb.position.z += (pz - orb.position.z) * 0.08;
+      halo.position.set(orb.position.x, orb.position.y, orb.position.z - 6);
+
+      // Z: moves with the pair; gentle readable tilt (no full spin).
+      // Ease both variants so toggling between them is seamless.
+      const placeZ = (m) => {
+        if (!m) return;
+        m.position.x += ((halfGap + px) - m.position.x) * 0.05;
+        m.position.y += (py - m.position.y) * 0.05;
+        m.position.z += (pz - m.position.z) * 0.08;
+        m.rotation.x += (target.y * 0.35 - m.rotation.x) * 0.05;
+        m.rotation.y += (target.x * 0.40 - m.rotation.y) * 0.05;
+      };
+      placeZ(zBlockMesh);
+      placeZ(zFontMesh);
+      updateZVisibility();
+      const zv = activeZMesh();
+      zHalo.position.set(zv.position.x, zv.position.y, zv.position.z - 6);
 
       orbMat.uniforms.uTime.value = t;
 
@@ -632,6 +727,17 @@
       metalSel.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       orbMat.uniforms.uMetal.value = parseFloat(btn.dataset.m);
+    });
+
+    // Z style toggle (block <-> font)
+    const zStyleSel = document.getElementById("zStyleSel");
+    zStyleSel.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-z]");
+      if (!btn) return;
+      zStyleSel.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      zStyle = btn.dataset.z;
+      updateZVisibility();
     });
 
     const opacitySlider = document.getElementById("opacity");
