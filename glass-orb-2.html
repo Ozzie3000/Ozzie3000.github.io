@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta property="og:title" content="Oz has a Glass Orb">
+<meta property="og:description" content="Oz works on Web Dev mini projects by Oz. Using HTML, Javascript, CSS">
+<meta property="og:image" content="https://ozzie3000.github.io/images/glass-orb.jpg">
+<meta property="og:url" content="https://ozzie3000.github.io/glass-orb.html">
+<meta property="og:type" content="website">
+<meta name="author" content="Oz">
+<!-- Twitter/X specifically uses these -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://ozzie3000.github.io/images/glass-orb.jpg">
+<meta name="author" content="Oz">
+<title>Oz asks you to look into the Glass Orb — Refractive Particle Field</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body {
+    margin: 0; padding: 0; height: 100%; overflow: hidden;
+    background: #05060f;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; }
+
+  /* Vignette + ambient grain over the canvas */
+  #vignette {
+    position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 120% at 50% 40%, transparent 45%, rgba(0,0,0,0.55) 100%);
+    mix-blend-mode: multiply;
+  }
+
+  .ui {
+    position: fixed; left: 28px; bottom: 24px; pointer-events: none;
+    color: #cdd6ff; user-select: none;
+    max-width: 460px;
+    padding: 18px 24px;
+    border-radius: 16px;
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid rgba(120,180,255,0.30);
+    box-shadow: 0 12px 40px rgba(0,20,60,0.55), inset 0 1px 0 rgba(180,220,255,0.25);
+    /* base blue water body */
+    background:
+      linear-gradient(135deg, rgba(8,38,86,0.72) 0%, rgba(14,64,128,0.66) 55%, rgba(10,46,104,0.72) 100%);
+    backdrop-filter: blur(8px) saturate(1.2);
+    -webkit-backdrop-filter: blur(8px) saturate(1.2);
+  }
+  /* animated caustic "water" shimmer */
+  .ui::before {
+    content: ""; position: absolute; inset: -60%; z-index: -1;
+    background:
+      radial-gradient(40% 32% at 25% 30%, rgba(120,200,255,0.45), transparent 60%),
+      radial-gradient(35% 30% at 75% 25%, rgba(90,160,255,0.40), transparent 60%),
+      radial-gradient(45% 38% at 60% 75%, rgba(70,210,235,0.38), transparent 62%),
+      radial-gradient(38% 34% at 20% 80%, rgba(140,180,255,0.32), transparent 60%);
+    background-size: 180% 180%;
+    filter: blur(8px);
+    mix-blend-mode: screen;
+    opacity: 0.85;
+    animation: waterFlow 14s ease-in-out infinite;
+  }
+  /* second layer drifting the other way for depth */
+  .ui::after {
+    content: ""; position: absolute; inset: -60%; z-index: -1;
+    background:
+      radial-gradient(30% 26% at 50% 40%, rgba(180,235,255,0.35), transparent 60%),
+      radial-gradient(28% 24% at 30% 60%, rgba(60,150,230,0.30), transparent 60%);
+    background-size: 160% 160%;
+    filter: blur(10px);
+    mix-blend-mode: screen;
+    opacity: 0.6;
+    animation: waterFlow2 20s ease-in-out infinite;
+  }
+  @keyframes waterFlow {
+    0%   { background-position: 0% 0%,   100% 0%,  50% 100%, 0% 100%;  transform: scale(1) rotate(0deg); }
+    50%  { background-position: 30% 40%, 60% 30%,  40% 60%,  30% 70%;  transform: scale(1.08) rotate(1.5deg); }
+    100% { background-position: 0% 0%,   100% 0%,  50% 100%, 0% 100%;  transform: scale(1) rotate(0deg); }
+  }
+  @keyframes waterFlow2 {
+    0%   { background-position: 100% 100%, 0% 0%;   transform: scale(1.05) rotate(0deg); }
+    50%  { background-position: 40% 60%,   60% 40%; transform: scale(1) rotate(-2deg); }
+    100% { background-position: 100% 100%, 0% 0%;   transform: scale(1.05) rotate(0deg); }
+  }
+  .ui h1 {
+    margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.18em;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #d8f6ff, #aef0ff 45%, #ffffff);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 1px 10px rgba(0,30,80,0.6);
+  }
+  .ui p {
+    margin: 8px 0 0; font-size: 16px; color: #eaf4ff; letter-spacing: 0.04em;
+    text-shadow: 0 1px 6px rgba(0,25,70,0.85);
+  }
+
+  #loader {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #8b95c9; font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase;
+    transition: opacity 0.6s ease; z-index: 5;
+  }
+
+  /* ---------- Top control bar ---------- */
+  .controls {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    z-index: 6; display: flex; align-items: center; gap: 16px 20px; flex-wrap: wrap;
+    justify-content: center; max-width: min(94vw, 920px);
+    padding: 12px 18px; border-radius: 16px;
+    color: #dce6ff; user-select: none;
+    border: 1px solid rgba(150,180,220,0.28);
+    background: linear-gradient(135deg, rgba(20,26,40,0.62) 0%, rgba(30,38,58,0.55) 100%);
+    backdrop-filter: blur(12px) saturate(1.15);
+    -webkit-backdrop-filter: blur(12px) saturate(1.15);
+    box-shadow: 0 10px 36px rgba(0,10,30,0.5), inset 0 1px 0 rgba(200,220,255,0.18);
+  }
+  .seg { display: inline-flex; border-radius: 11px; overflow: hidden;
+    border: 1px solid rgba(160,180,210,0.25); }
+  .seg button {
+    appearance: none; border: 0; cursor: pointer;
+    padding: 8px 14px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 600; color: #aeb8d8; background: transparent;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .seg button + button { border-left: 1px solid rgba(160,180,210,0.18); }
+  .seg button:hover { color: #eaf1ff; background: rgba(150,180,230,0.12); }
+  .seg button.active {
+    color: #ffffff;
+    background: linear-gradient(135deg, rgba(120,150,220,0.55), rgba(150,120,220,0.5));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
+  }
+  .sliderwrap { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 5px;
+    font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: #b9c4e6; }
+  .sliderwrap .lbl { display: flex; justify-content: space-between; width: 124px; }
+  .sliderwrap .val { color: #eef3ff; font-weight: 600; letter-spacing: 0.02em; }
+  .sliderwrap input[type="range"] {
+    -webkit-appearance: none; appearance: none; width: 124px; height: 5px;
+    border-radius: 999px; outline: none; cursor: pointer;
+    background: linear-gradient(90deg, rgba(120,150,220,0.85), rgba(170,130,230,0.85));
+  }
+  .sliderwrap input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; background: #eef3ff; cursor: pointer;
+    border: 2px solid rgba(140,160,220,0.9);
+    box-shadow: 0 2px 8px rgba(0,10,40,0.5);
+  }
+  .sliderwrap input[type="range"]::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%; background: #eef3ff; cursor: pointer;
+    border: 2px solid rgba(140,160,220,0.9); box-shadow: 0 2px 8px rgba(0,10,40,0.5);
+  }
+  @media (max-width: 560px) {
+    .controls { gap: 10px 14px; padding: 10px 12px; }
+    .seg button { padding: 7px 10px; font-size: 11px; }
+    .sliderwrap input[type="range"], .sliderwrap .lbl { width: 104px; }
+  }
+</style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="vignette"></div>
+  <div id="loader">Initializing scene…</div>
+
+  <div class="controls">
+    <div class="seg" id="metalSel">
+      <button data-m="0" class="active">Chrome</button>
+      <button data-m="1">Iridescent</button>
+      <button data-m="2">Gold</button>
+    </div>
+    <label class="sliderwrap">
+      <span class="lbl">Transparency <span class="val" id="opacityVal">0%</span></span>
+      <input id="opacity" type="range" min="0" max="100" value="0" />
+    </label>
+    <label class="sliderwrap">
+      <span class="lbl">Size <span class="val" id="sizeVal">1.0&times;</span></span>
+      <input id="size" type="range" min="0.3" max="2" step="0.05" value="1" />
+    </label>
+    <label class="sliderwrap">
+      <span class="lbl">Travel X <span class="val" id="travelXVal">6</span></span>
+      <input id="travelX" type="range" min="0" max="20" step="0.5" value="6" />
+    </label>
+    <label class="sliderwrap">
+      <span class="lbl">Travel Y <span class="val" id="travelYVal">4.4</span></span>
+      <input id="travelY" type="range" min="0" max="20" step="0.5" value="4.4" />
+    </label>
+    <label class="sliderwrap">
+      <span class="lbl">Travel Z <span class="val" id="travelZVal">12</span></span>
+      <input id="travelZ" type="range" min="0" max="24" step="0.5" value="12" />
+    </label>
+  </div>
+
+  <div class="ui">
+    <h1>Aurora Glass</h1>
+    <p>Welcome to the land of Oz. Move your cursor — particles scatter, the orb tilts and bends the light.</p>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+  (function () {
+    "use strict";
+
+    const container = document.getElementById("app");
+    const loader = document.getElementById("loader");
+
+    // ---------- Renderer ----------
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    renderer.setPixelRatio(DPR);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x05060f, 1);
+    renderer.autoClear = false;
+    container.appendChild(renderer.domElement);
+
+    // ---------- Cameras / scenes ----------
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(0, 0, 34);
+
+    const particleScene = new THREE.Scene();
+    const glassScene = new THREE.Scene();
+
+    // Render target that captures the particle field for refraction sampling
+    function makeTarget() {
+      const t = new THREE.WebGLRenderTarget(
+        Math.floor(window.innerWidth * DPR),
+        Math.floor(window.innerHeight * DPR),
+        { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat }
+      );
+      return t;
+    }
+    let bgTarget = makeTarget();
+
+    // ---------- Particle field ----------
+    const COUNT = 650;
+    const SPREAD_X = 46, SPREAD_Y = 30, SPREAD_Z = 26;
+
+    const positions = new Float32Array(COUNT * 3);
+    const basePositions = new Float32Array(COUNT * 3);
+    const velocities = new Float32Array(COUNT * 3);
+    const sizes = new Float32Array(COUNT);
+    const seeds = new Float32Array(COUNT);
+    const colors = new Float32Array(COUNT * 3);
+
+    // Mixed gradient palette: deep blues/purples + neon cyan/magenta highlights
+    const palette = [
+      new THREE.Color(0x4d6bff), // indigo
+      new THREE.Color(0x9b6bff), // violet
+      new THREE.Color(0xff5fc8), // magenta
+      new THREE.Color(0x46f0ff), // neon cyan
+      new THREE.Color(0x6f8cff)  // periwinkle
+    ];
+
+    for (let i = 0; i < COUNT; i++) {
+      const x = (Math.random() - 0.5) * 2 * SPREAD_X;
+      const y = (Math.random() - 0.5) * 2 * SPREAD_Y;
+      const z = (Math.random() - 0.5) * 2 * SPREAD_Z;
+      positions[i*3] = basePositions[i*3] = x;
+      positions[i*3+1] = basePositions[i*3+1] = y;
+      positions[i*3+2] = basePositions[i*3+2] = z;
+      velocities[i*3] = velocities[i*3+1] = velocities[i*3+2] = 0;
+      sizes[i] = 6 + Math.random() * 22;
+      seeds[i] = Math.random() * 100;
+      // bias toward blue/violet, occasional neon pop
+      const c = Math.random() < 0.22
+        ? palette[3 + Math.floor(Math.random()*2) % 2]   // neon
+        : palette[Math.floor(Math.random()*3)];          // blue/violet/magenta
+      colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
+    }
+
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    pGeo.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
+    pGeo.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
+
+    const pMat = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: {},
+      vertexShader: `
+        attribute float aSize;
+        attribute vec3 aColor;
+        varying vec3 vColor;
+        void main() {
+          vColor = aColor;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = aSize * (300.0 / -mv.z);
+          gl_Position = projectionMatrix * mv;
+        }
+      `,
+      fragmentShader: `
+        precision highp float;
+        varying vec3 vColor;
+        void main() {
+          vec2 uv = gl_PointCoord - 0.5;
+          float d = length(uv);
+          // soft glowing core with falloff halo
+          float core = smoothstep(0.5, 0.0, d);
+          float halo = smoothstep(0.5, 0.15, d);
+          float a = core * 0.85 + halo * 0.35;
+          if (a < 0.01) discard;
+          vec3 col = vColor * (0.6 + core * 0.8);
+          gl_FragColor = vec4(col, a);
+        }
+      `
+    });
+
+    const points = new THREE.Points(pGeo, pMat);
+    particleScene.add(points);
+
+    // ---------- Glass orb ----------
+    const orbGeo = new THREE.SphereGeometry(8.2, 96, 96);
+    const orbMat = new THREE.ShaderMaterial({
+      uniforms: {
+        tBg:          { value: bgTarget.texture },
+        uResolution:  { value: new THREE.Vector2(window.innerWidth * DPR, window.innerHeight * DPR) },
+        uTime:        { value: 0 },
+        uRefraction:  { value: 0.16 },   // screen-space distortion strength
+        uMetal:       { value: 0.0 },    // 0 chrome, 1 iridescent, 2 gold
+        uOpacity:     { value: 1.0 },    // 1 solid metal -> 0 see-through
+        uColorA:      { value: new THREE.Color(0x3a6bff) }, // deep blue
+        uColorB:      { value: new THREE.Color(0xb15cff) }, // violet
+        uColorC:      { value: new THREE.Color(0xff5fd2) }, // magenta
+        uNeon:        { value: new THREE.Color(0x6ff6ff) }  // cyan rim accent
+      },
+      vertexShader: `
+        precision highp float;
+        varying vec3 vViewNormal;
+        varying vec3 vViewPos;
+        varying vec3 vObjPos;
+        void main() {
+          vObjPos = position;
+          vViewNormal = normalize(normalMatrix * normal);
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          vViewPos = mv.xyz;
+          gl_Position = projectionMatrix * mv;
+        }
+      `,
+      fragmentShader: `
+        precision highp float;
+        uniform sampler2D tBg;
+        uniform vec2  uResolution;
+        uniform float uTime;
+        uniform float uRefraction;
+        uniform float uMetal;
+        uniform float uOpacity;
+        uniform vec3  uColorA;
+        uniform vec3  uColorB;
+        uniform vec3  uColorC;
+        uniform vec3  uNeon;
+        varying vec3 vViewNormal;
+        varying vec3 vViewPos;
+        varying vec3 vObjPos;
+
+        // Procedural "studio" environment sampled by a reflection vector,
+        // so the metal has something bright to reflect (poor-man's env map).
+        vec3 envSample(vec3 R) {
+          float y = R.y * 0.5 + 0.5;               // vertical gradient
+          vec3 ground = vec3(0.03, 0.035, 0.05);
+          vec3 horizon = vec3(0.30, 0.34, 0.45);
+          vec3 sky     = vec3(0.65, 0.72, 0.95);
+          vec3 base = mix(ground, horizon, smoothstep(0.0, 0.5, y));
+          base = mix(base, sky, smoothstep(0.5, 1.0, y));
+          // two rotating soft area lights for moving hotspots
+          vec3 L1 = normalize(vec3(sin(uTime*0.30), 0.55, cos(uTime*0.30)));
+          vec3 L2 = normalize(vec3(cos(uTime*0.21+2.0), -0.35, sin(uTime*0.21+2.0)));
+          float h1 = pow(max(dot(R, L1), 0.0), 80.0);
+          float h2 = pow(max(dot(R, L2), 0.0), 28.0);
+          base += vec3(1.0) * (h1 * 1.6 + h2 * 0.6);
+          return base;
+        }
+
+        void main() {
+          vec3 N = normalize(vViewNormal);
+          vec3 V = normalize(-vViewPos);
+
+          // --- Liquid wobble: perturb the normal with flowing sine bands ---
+          vec3 Np = N;
+          Np.x += 0.07 * sin(vObjPos.y * 1.3 + uTime * 1.15)
+                + 0.04 * sin(vObjPos.z * 0.9 - uTime * 0.8);
+          Np.y += 0.07 * cos(vObjPos.x * 1.3 - uTime * 1.30)
+                + 0.04 * cos(vObjPos.z * 1.0 + uTime * 0.9);
+          Np = normalize(Np);
+
+          float ndv = max(dot(Np, V), 0.0);
+          float fres = pow(1.0 - ndv, 3.0);
+          float rim  = pow(1.0 - ndv, 6.0);
+
+          // reflected environment (the heart of the metal look)
+          vec3 R = reflect(-V, Np);
+          vec3 env = envSample(R);
+
+          // --- Per-style tinting ---
+          vec3 tint;
+          vec3 metal;
+          if (uMetal < 0.5) {
+            // Chrome / mercury — neutral, very reflective
+            tint  = vec3(0.92, 0.95, 1.00);
+            metal = env * tint;
+            metal = mix(metal, metal * 1.05, 0.5);
+          } else if (uMetal < 1.5) {
+            // Iridescent — oil-slick hue shift driven by view angle + fresnel
+            vec3 irid = 0.5 + 0.5 * cos(6.2831 * (vec3(0.0, 0.33, 0.67)
+                          + ndv * 1.4 + fres * 1.2 + uTime * 0.05));
+            vec3 pal = mix(uColorA, uColorB, irid.r);
+            pal = mix(pal, uColorC, irid.b);
+            tint = normalize(pal + 0.001) * 1.2;
+            metal = env * (0.55 + 0.9 * irid) * mix(vec3(1.0), pal * 1.6, 0.6);
+          } else {
+            // Molten gold / copper
+            vec3 lo = vec3(0.30, 0.16, 0.04);
+            vec3 hi = vec3(1.00, 0.80, 0.40);
+            tint = vec3(1.00, 0.76, 0.34);
+            metal = env * mix(lo * 4.0, hi, env);   // warm-biased reflection
+            metal *= tint;
+          }
+
+          // shared metallic shaping: hot fresnel sheen + sharp white rim
+          metal += tint * fres * 0.55;
+          metal += vec3(1.0) * rim * 0.85;
+
+          // --- See-through component (refracted particle field behind) ---
+          vec2 screenUV = gl_FragCoord.xy / uResolution;
+          vec2 dir = Np.xy * uRefraction;
+          float chroma = 0.010 + fres * 0.018;
+          vec3 refr;
+          refr.r = texture2D(tBg, screenUV - dir + dir * chroma).r;
+          refr.g = texture2D(tBg, screenUV - dir).g;
+          refr.b = texture2D(tBg, screenUV - dir - dir * chroma).b;
+          refr *= 1.05;
+
+          // Blend metal over the refracted field by opacity.
+          // uOpacity = 1 -> solid metal, 0 -> mostly see-through.
+          vec3 col = mix(refr, metal, clamp(uOpacity, 0.0, 1.0));
+
+          // Always-on glassy edge so the orb keeps its silhouette even when see-through
+          float edge = rim * 0.7 + fres * 0.30 * max(uOpacity, 0.30);
+          col += vec3(1.0) * edge;
+
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `
+    });
+
+    const orb = new THREE.Mesh(orbGeo, orbMat);
+    glassScene.add(orb);
+
+    // A faint radial-gradient halo behind the orb for premium glow
+    function makeGlowTexture() {
+      const c = document.createElement("canvas");
+      c.width = c.height = 256;
+      const ctx = c.getContext("2d");
+      const g = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+      g.addColorStop(0.0, "rgba(150,170,255,1)");
+      g.addColorStop(0.35, "rgba(120,110,255,0.45)");
+      g.addColorStop(1.0, "rgba(0,0,0,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 256, 256);
+      const tex = new THREE.CanvasTexture(c);
+      return tex;
+    }
+    const haloMat = new THREE.SpriteMaterial({
+      map: makeGlowTexture(), color: 0x6a7bff, transparent: true, opacity: 0.5,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    const halo = new THREE.Sprite(haloMat);
+    halo.scale.set(34, 34, 1);
+    halo.position.z = -6;
+    particleScene.add(halo);
+
+    // ---------- Interaction ----------
+    const mouse = new THREE.Vector2(0, 0);     // NDC -1..1
+    const target = new THREE.Vector2(0, 0);    // eased
+    const mouseWorld = new THREE.Vector3();
+    const raycastPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    const ray = new THREE.Raycaster();
+
+    function updateMouseWorld() {
+      ray.setFromCamera(mouse, camera);
+      ray.ray.intersectPlane(raycastPlane, mouseWorld);
+    }
+
+    window.addEventListener("pointermove", (e) => {
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -((e.clientY / window.innerHeight) * 2 - 1);
+    });
+    window.addEventListener("pointerleave", () => { mouse.set(0, 0); });
+
+    // ---------- Travel amplitudes (slider-controlled) ----------
+    let ampX = 6.0;    // cursor-driven X reach
+    let ampY = 4.4;    // cursor-driven Y reach
+    let ampZ = 12.0;   // max Z reach for scroll wheel
+    let targetZ = 0;   // scroll-driven depth target (eased in animate)
+
+    // Mouse scroll wheel drives the orb in/out along Z, clamped to ±ampZ.
+    window.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      targetZ += -e.deltaY * 0.02;   // scroll up = toward camera (+Z)
+      targetZ = Math.max(-ampZ, Math.min(ampZ, targetZ));
+    }, { passive: false });
+
+    // ---------- Resize + responsive scaling ----------
+    // Orb keeps a roughly constant fraction of the smaller viewport dimension,
+    // clamped so it never gets tiny or overflows the screen.
+    // Final size = responsive scale (orbScale) * user size slider (sizeMul).
+    let orbScale = 1;
+    let sizeMul = 1;
+    function computeScale(w, h) {
+      const REF = 820;                     // px baseline where scale = 1
+      let s = Math.min(w, h) / REF;
+      return Math.max(0.45, Math.min(1.7, s)); // clamp
+    }
+    function applyScale() {
+      const s = orbScale * sizeMul;
+      orb.scale.setScalar(s);
+      halo.scale.set(34 * s, 34 * s, 1);
+    }
+
+    function onResize() {
+      const w = window.innerWidth, h = window.innerHeight;
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      bgTarget.setSize(Math.floor(w * DPR), Math.floor(h * DPR));
+      orbMat.uniforms.tBg.value = bgTarget.texture;
+      orbMat.uniforms.uResolution.value.set(w * DPR, h * DPR);
+
+      orbScale = computeScale(w, h);
+      applyScale();
+    }
+
+    // Listen to every signal that the drawable area changed — not just resize.
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", onResize);
+    }
+    if ("ResizeObserver" in window) {
+      new ResizeObserver(onResize).observe(container);
+    }
+    onResize(); // set initial scale
+
+    // ---------- Animation ----------
+    const REPEL_RADIUS = 11;
+    const REPEL_STRENGTH = 26;
+    const clock = new THREE.Clock();
+    const posAttr = pGeo.attributes.position;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const t = clock.elapsedTime;
+
+      // ease mouse for parallax
+      target.x += (mouse.x - target.x) * 0.06;
+      target.y += (mouse.y - target.y) * 0.06;
+      updateMouseWorld();
+
+      // particle drift + mouse repulsion (eased back to base)
+      for (let i = 0; i < COUNT; i++) {
+        const ix = i*3, iy = ix+1, iz = ix+2;
+        const s = seeds[i];
+
+        // slow organic drift around the base position
+        const driftX = Math.sin(t * 0.18 + s) * 1.4;
+        const driftY = Math.cos(t * 0.15 + s * 1.3) * 1.4;
+        const driftZ = Math.sin(t * 0.12 + s * 0.7) * 1.0;
+        let tx = basePositions[ix] + driftX;
+        let ty = basePositions[iy] + driftY;
+        let tz = basePositions[iz] + driftZ;
+
+        // repulsion from cursor in XY
+        const dx = positions[ix] - mouseWorld.x;
+        const dy = positions[iy] - mouseWorld.y;
+        const d2 = dx*dx + dy*dy;
+        if (d2 < REPEL_RADIUS * REPEL_RADIUS) {
+          const d = Math.sqrt(d2) + 0.0001;
+          const f = (1 - d / REPEL_RADIUS);
+          velocities[ix] += (dx / d) * f * REPEL_STRENGTH * dt;
+          velocities[iy] += (dy / d) * f * REPEL_STRENGTH * dt;
+        }
+
+        // integrate velocity, damping, pull toward drift target
+        velocities[ix] += (tx - positions[ix]) * 2.2 * dt;
+        velocities[iy] += (ty - positions[iy]) * 2.2 * dt;
+        velocities[iz] += (tz - positions[iz]) * 2.2 * dt;
+        velocities[ix] *= 0.90; velocities[iy] *= 0.90; velocities[iz] *= 0.90;
+        positions[ix] += velocities[ix] * dt;
+        positions[iy] += velocities[iy] * dt;
+        positions[iz] += velocities[iz] * dt;
+      }
+      posAttr.needsUpdate = true;
+
+      // parallax: drift whole particle field slightly opposite the cursor
+      points.rotation.y = target.x * 0.12;
+      points.rotation.x = -target.y * 0.10;
+
+      // orb parallax tilt toward cursor + slow idle spin
+      orb.rotation.y += dt * 0.12;
+      orb.rotation.x += (target.y * 1.0 - orb.rotation.x) * 0.05;
+      orb.rotation.z += ((-target.x * 0.7) - orb.rotation.z) * 0.05;
+      // X/Y travel: cursor-driven, reach set by Travel X / Travel Y sliders.
+      // Z travel: scroll-wheel target, reach capped by Travel Z slider.
+      orb.position.x += (target.x * ampX * orbScale - orb.position.x) * 0.05;
+      orb.position.y += (target.y * ampY * orbScale - orb.position.y) * 0.05;
+      orb.position.z += (targetZ * orbScale - orb.position.z) * 0.08;
+      halo.position.x = orb.position.x;
+      halo.position.y = orb.position.y;
+      halo.position.z = orb.position.z - 6;
+
+      orbMat.uniforms.uTime.value = t;
+
+      // --- Render passes ---
+      // 1) particle field -> render target (for refraction)
+      renderer.setRenderTarget(bgTarget);
+      renderer.clear();
+      renderer.render(particleScene, camera);
+
+      // 2) particle field -> screen (background)
+      renderer.setRenderTarget(null);
+      renderer.clear();
+      renderer.render(particleScene, camera);
+
+      // 3) glass orb -> screen (samples the target)
+      renderer.clearDepth();
+      renderer.render(glassScene, camera);
+    }
+
+    // ---------- Controls wiring ----------
+    const metalSel = document.getElementById("metalSel");
+    metalSel.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-m]");
+      if (!btn) return;
+      metalSel.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      orbMat.uniforms.uMetal.value = parseFloat(btn.dataset.m);
+    });
+
+    const opacitySlider = document.getElementById("opacity");
+    const opacityVal = document.getElementById("opacityVal");
+    function applyOpacity() {
+      // slider right = more transparent -> lower uOpacity
+      const pct = parseFloat(opacitySlider.value);
+      orbMat.uniforms.uOpacity.value = 1 - (pct / 100);
+      opacityVal.textContent = Math.round(pct) + "%";
+    }
+    opacitySlider.addEventListener("input", applyOpacity);
+    applyOpacity();
+
+    // Size slider -> sizeMul (combined with responsive orbScale)
+    const sizeSlider = document.getElementById("size");
+    const sizeVal = document.getElementById("sizeVal");
+    function applySize() {
+      sizeMul = parseFloat(sizeSlider.value);
+      sizeVal.innerHTML = sizeMul.toFixed(1) + "&times;";
+      applyScale();
+    }
+    sizeSlider.addEventListener("input", applySize);
+    applySize();
+
+    // Travel sliders: X / Y reach + Z (scroll) reach
+    const travelXSlider = document.getElementById("travelX");
+    const travelYSlider = document.getElementById("travelY");
+    const travelZSlider = document.getElementById("travelZ");
+    const travelXVal = document.getElementById("travelXVal");
+    const travelYVal = document.getElementById("travelYVal");
+    const travelZVal = document.getElementById("travelZVal");
+    function applyTravel() {
+      ampX = parseFloat(travelXSlider.value);
+      ampY = parseFloat(travelYSlider.value);
+      ampZ = parseFloat(travelZSlider.value);
+      travelXVal.textContent = ampX;
+      travelYVal.textContent = ampY;
+      travelZVal.textContent = ampZ;
+      // re-clamp current scroll target if the Z reach shrank
+      targetZ = Math.max(-ampZ, Math.min(ampZ, targetZ));
+    }
+    travelXSlider.addEventListener("input", applyTravel);
+    travelYSlider.addEventListener("input", applyTravel);
+    travelZSlider.addEventListener("input", applyTravel);
+    applyTravel();
+
+    // fade out loader, start
+    requestAnimationFrame(() => {
+      animate();
+      loader.style.opacity = "0";
+      setTimeout(() => loader.remove(), 700);
+    });
+
+  })();
+  </script>
+</body>
+</html>
