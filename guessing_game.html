@@ -193,7 +193,7 @@
       <div class="stat wins"><div class="num" id="wins">0</div><div class="lab">Wins</div></div>
       <div class="stat losses"><div class="num" id="losses">0</div><div class="lab">Losses</div></div>
       <div class="stat timer" id="timerBox">
-        <div class="num" id="timer">1:00</div>
+        <div class="num" id="timer">2:00</div>
         <div class="lab"><span class="turnlabel" id="turnLabel">Ready</span>time left</div>
       </div>
     </div>
@@ -253,6 +253,7 @@
 <script>
 (function(){
   var TURN_SECONDS = 60;
+  var CEILING_SECONDS = 120;
   var STORAGE_KEY = "oz_guessing_game_stats";
 
   var ceiling = null;
@@ -316,8 +317,9 @@
     stopTimer();
     currentPhase = phase;
     turnLabel.textContent = labelText;
-    deadline = Date.now() + TURN_SECONDS * 1000;
-    paintTimer(TURN_SECONDS);
+    var secs = (phase === "ceiling") ? CEILING_SECONDS : TURN_SECONDS;
+    deadline = Date.now() + secs * 1000;
+    paintTimer(secs);
     timerId = setInterval(function(){
       var remaining = Math.round((deadline - Date.now()) / 1000);
       if(remaining <= 0){
