@@ -11,7 +11,6 @@
 <!-- Twitter/X specifically uses these -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://ozzie3000.github.io/images/oz.png">
-<meta name="author" content="Oz">
 <title>Guessing game brought to you by Oz</title>
 <style type="text/css">
 h1{
@@ -67,19 +66,33 @@ body{
 		alert(randoNum + " was the real number.");
 	}
 */
+	var ceiling;
+	var randoNum;
+
 	function picker(){
-		var ceiling = prompt("Pick the highest possible number it could be. Only use whole numbers");
-		this.ceiling = parseInt(ceiling);
+		ceiling = parseInt(prompt("Pick the highest possible number it could be. Only use whole numbers"));
 	}
-	
+
 	function numberz(){
-		var rando = Math.round(Math.random()*ceiling);
-		this.randoNum = rando;
-		for (i=0; i<3; i++){
-			var guessA = prompt("Guess a number 0 - "+ceiling);
-			this.guessA = parseInt(guessA);
-			if(guessA == null){
+		if(isNaN(ceiling)){
+			document.getElementById("here0").innerHTML = "Pick the end range first (button 1).";
+			return;
+		}
+		randoNum = Math.floor(Math.random()*(ceiling+1));
+		// clear any messages from a previous round
+		document.getElementById("here0").innerHTML = "&nbsp;";
+		document.getElementById("here1").innerHTML = "&nbsp;";
+		document.getElementById("here2").innerHTML = "&nbsp;";
+		document.getElementById("here3").innerHTML = "&nbsp;";
+		for (var i=0; i<3; i++){
+			var guessA = parseInt(prompt("Guess a number 0 - "+ceiling));
+			// clear previous guess's hints
+			document.getElementById("here2").innerHTML = "&nbsp;";
+			document.getElementById("here3").innerHTML = "&nbsp;";
+			if(isNaN(guessA)){
 				document.getElementById("here1").innerHTML = "Please pick a number";
+				i--; // don't count an invalid/cancelled entry as a guess
+				continue;
 			}
 			if(guessA > randoNum){
 				document.getElementById("here3").innerHTML = "Nope: "+guessA+" is too high. Go lower.";
@@ -89,7 +102,7 @@ body{
 			}
 			if(guessA == randoNum){
 				document.getElementById("here1").innerHTML = "Dude you are the man! "+randoNum+" was correct";
-				i = 4;
+				break;
 			}
 		}
 	//	alert(randoNum + " was the real number.");
@@ -109,7 +122,7 @@ body{
 		<li>If you don't get it in 3 guesses try again.</li>
 	</ol>
 
-	<p id="re_btn">a refresh button because i'm lazy.... ha ha</p id="re_btn">
+	<p id="re_btn">a refresh button because i'm lazy.... ha ha</p>
 	<input type="button" value="refresh the page" onclick="location.reload()" id="rere" />
 	<hr>
 	<br />
