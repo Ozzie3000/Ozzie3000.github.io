@@ -1,148 +1,356 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8"></meta>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta property="og:title" content="Guessing game brought to you by Oz">
 <meta property="og:description" content="Oz works on Web Dev mini projects by Oz. Using HTML, Javascript, CSS">
 <meta property="og:image" content="https://ozzie3000.github.io/images/oz.png">
-<meta property="og:url" content="https://ozzie3000.github.io/glass-orb.html">
+<meta property="og:url" content="https://ozzie3000.github.io/guessing_game.html">
 <meta property="og:type" content="website">
 <meta name="author" content="Oz">
 <!-- Twitter/X specifically uses these -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://ozzie3000.github.io/images/oz.png">
 <title>Guessing game brought to you by Oz</title>
-<style type="text/css">
-h1{
-	font-size: 26px;
-}
-h3{
-	font-size: 20px;
-}
-body{
-	font-size: 20px;
-}
-#re_btn{ display: inline-block;}
-
-#rere{
-	border-radius: 15px;
-	padding: 10px;
-	color: blue;
-	font-family: sans-serif;
-}
-#special{
-	font-size: 24px;
-	color: red;
-	font-family: Georgia;
-}
-#b1{ margin-left: 20px;}
-#b1, #b2, #b3{float: left; display: inline-block; padding: 20px; }
-#b1, #b2{margin-right: 45px;}
-.btn{
-  -webkit-border-radius: 20px;
-  -moz-border-radius: 20px;
-  border-radius: 20px;
-  font-size: 22px;
-}
+<style>
+  :root{
+    --bg1:#1e1b4b;
+    --bg2:#4c1d95;
+    --card:#ffffff;
+    --ink:#1f2937;
+    --muted:#6b7280;
+    --accent:#6d28d9;
+    --accent-dark:#5b21b6;
+    --ok:#059669;
+    --err:#dc2626;
+    --warn:#d97706;
+    --line:#e5e7eb;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(135deg,var(--bg1),var(--bg2));
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:40px 16px;
+  }
+  .card{
+    background:var(--card);
+    width:100%;
+    max-width:560px;
+    border-radius:20px;
+    box-shadow:0 25px 60px rgba(0,0,0,.35);
+    padding:32px 32px 28px;
+  }
+  h1{
+    margin:0 0 4px;
+    font-size:30px;
+    letter-spacing:-.5px;
+  }
+  .sub{
+    margin:0 0 20px;
+    color:var(--muted);
+    font-size:15px;
+  }
+  .instructions{
+    background:#f5f3ff;
+    border:1px solid #ede9fe;
+    border-radius:12px;
+    padding:12px 16px 12px 32px;
+    margin:0 0 24px;
+    font-size:14px;
+    color:#4b3f72;
+  }
+  .instructions li{margin:3px 0;}
+  .row{
+    margin-bottom:18px;
+    opacity:1;
+    transition:opacity .25s ease;
+  }
+  .row.locked{opacity:.45;}
+  .row label{
+    display:block;
+    font-weight:600;
+    font-size:14px;
+    margin-bottom:6px;
+  }
+  .controls{display:flex;gap:10px;}
+  input[type="number"]{
+    flex:1;
+    font-size:18px;
+    padding:11px 14px;
+    border:2px solid var(--line);
+    border-radius:12px;
+    outline:none;
+    transition:border-color .15s ease;
+    width:100%;
+    -moz-appearance:textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  input[type="number"]:focus{border-color:var(--accent);}
+  input[type="number"]:disabled{background:#f9fafb;color:#9ca3af;}
+  button{
+    font-size:16px;
+    font-weight:600;
+    border:none;
+    border-radius:12px;
+    padding:11px 18px;
+    cursor:pointer;
+    color:#fff;
+    background:var(--accent);
+    transition:background .15s ease,transform .05s ease;
+    white-space:nowrap;
+  }
+  button:hover:not(:disabled){background:var(--accent-dark);}
+  button:active:not(:disabled){transform:translateY(1px);}
+  button:disabled{background:#c4b5fd;cursor:not-allowed;}
+  .feedback{
+    min-height:18px;
+    margin-top:7px;
+    font-size:14px;
+    font-weight:600;
+  }
+  .feedback.err{color:var(--err);}
+  .feedback.low,.feedback.high{color:var(--warn);}
+  .feedback.ok{color:var(--ok);}
+  .banner{
+    margin-top:8px;
+    padding:16px;
+    border-radius:14px;
+    text-align:center;
+    font-size:18px;
+    font-weight:700;
+    display:none;
+  }
+  .banner.win{background:#ecfdf5;color:var(--ok);border:1px solid #a7f3d0;display:block;}
+  .banner.lose{background:#fef2f2;color:var(--err);border:1px solid #fecaca;display:block;}
+  .footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:22px;
+    padding-top:16px;
+    border-top:1px solid var(--line);
+  }
+  .ghost{
+    background:transparent;
+    color:var(--accent);
+    border:2px solid var(--accent);
+    padding:9px 16px;
+  }
+  .ghost:hover:not(:disabled){background:#f5f3ff;}
+  #playAgain{display:none;}
+  .hidden{display:none !important;}
 </style>
-<script type="text/javascript">
-/*	function numberz(){
-		var rando = Math.round(Math.random()*3);
-		this.randoNum = rando;
-		for (i=0; i<3; i++){
-			var guessA = prompt("Guess a number 0-500");
-			if(guessA == randoNum){
-				document.getElementById("here1").innerHTML = "Dude you are the man! "+randoNum+" was correct";
-				break;
-			}else{
-				if(guessA > randoNum){
-					document.getElementById("here2").innerHTML = "Nope: "+guessA+" is lower";
-				}
-				if(guessA < randoNum){
-					document.getElementById("here2").innerHTML = "Nope: "+guessA+" is higher";
-				}
-			}
-		}
-		alert(randoNum + " was the real number.");
-	}
-*/
-	var ceiling;
-	var randoNum;
-
-	function picker(){
-		ceiling = parseInt(prompt("Pick the highest possible number it could be. Only use whole numbers"));
-	}
-
-	function numberz(){
-		if(isNaN(ceiling)){
-			document.getElementById("here0").innerHTML = "Pick the end range first (button 1).";
-			return;
-		}
-		randoNum = Math.floor(Math.random()*(ceiling+1));
-		// clear any messages from a previous round
-		document.getElementById("here0").innerHTML = "&nbsp;";
-		document.getElementById("here1").innerHTML = "&nbsp;";
-		document.getElementById("here2").innerHTML = "&nbsp;";
-		document.getElementById("here3").innerHTML = "&nbsp;";
-		for (var i=0; i<3; i++){
-			var guessA = parseInt(prompt("Guess a number 0 - "+ceiling));
-			// clear previous guess's hints
-			document.getElementById("here2").innerHTML = "&nbsp;";
-			document.getElementById("here3").innerHTML = "&nbsp;";
-			if(isNaN(guessA)){
-				document.getElementById("here1").innerHTML = "Please pick a number";
-				i--; // don't count an invalid/cancelled entry as a guess
-				continue;
-			}
-			if(guessA > randoNum){
-				document.getElementById("here3").innerHTML = "Nope: "+guessA+" is too high. Go lower.";
-			}
-			if(guessA < randoNum){
-				document.getElementById("here2").innerHTML = "Nope: "+guessA+" is too low. Go higher.";
-			}
-			if(guessA == randoNum){
-				document.getElementById("here1").innerHTML = "Dude you are the man! "+randoNum+" was correct";
-				break;
-			}
-		}
-	//	alert(randoNum + " was the real number.");
-	}
-
-	function realNo(){
-		alert(randoNum + " was the real number.");
-	}
-</script>
 </head>
 <body>
-	<h1>The guessing game.</h1>
-	<p>Instructions:</p>
-	<ol>
-		<li>You will guess a number between 0 and X; you pick x.</li>
-		<li>You will get 3 guesses</li>
-		<li>If you don't get it in 3 guesses try again.</li>
-	</ol>
+  <div class="card">
+    <h1>The Guessing Game</h1>
+    <p class="sub">Pick a range, then crack the secret number in 3 guesses.</p>
 
-	<p id="re_btn">a refresh button because i'm lazy.... ha ha</p>
-	<input type="button" value="refresh the page" onclick="location.reload()" id="rere" />
-	<hr>
-	<br />
+    <ol class="instructions">
+      <li>Set the top of the range (you pick the ceiling).</li>
+      <li>You get 3 guesses between 1 and your ceiling.</li>
+      <li>Each guess tells you too high or too low. Good luck!</li>
+    </ol>
 
-	<input type="button" value="1) pick the end range" onclick="picker();" id="b1" class="btn" />
-	<input type="button" value="2) Start!" onclick="numberz();" id="b2" class="btn"/>
-	<input type="button" value="3) what is the rando number" onclick="realNo();" id="b3" class="btn" />
-	
-	
-	<div id="special">
-		<br />
-		<section id="here0">&nbsp;</section>
-		<br />
-		<section id="here1">&nbsp;</section>
-		<br />
-		<section id="here2">&nbsp;</section>
-		<br />
-		<section id="here3">&nbsp;</section>
-	</div>
-	
+    <!-- Ceiling -->
+    <div class="row" id="row-ceiling">
+      <label for="ceiling">Step 1 &mdash; Pick the highest possible number</label>
+      <div class="controls">
+        <input type="number" id="ceiling" placeholder="e.g. 100" min="1" step="1">
+        <button id="setRange">Set range</button>
+      </div>
+      <div class="feedback" id="fb-ceiling"></div>
+    </div>
 
+    <!-- Guesses (revealed one at a time) -->
+    <div class="row locked hidden" id="row-g1">
+      <label for="g1">Guess 1</label>
+      <div class="controls">
+        <input type="number" id="g1" min="1" step="1" disabled>
+        <button id="btn-g1" disabled>Guess</button>
+      </div>
+      <div class="feedback" id="fb-g1"></div>
+    </div>
+
+    <div class="row locked hidden" id="row-g2">
+      <label for="g2">Guess 2</label>
+      <div class="controls">
+        <input type="number" id="g2" min="1" step="1" disabled>
+        <button id="btn-g2" disabled>Guess</button>
+      </div>
+      <div class="feedback" id="fb-g2"></div>
+    </div>
+
+    <div class="row locked hidden" id="row-g3">
+      <label for="g3">Guess 3</label>
+      <div class="controls">
+        <input type="number" id="g3" min="1" step="1" disabled>
+        <button id="btn-g3" disabled>Guess</button>
+      </div>
+      <div class="feedback" id="fb-g3"></div>
+    </div>
+
+    <div class="banner" id="banner"></div>
+
+    <div class="footer">
+      <button class="ghost" id="playAgain">Play again</button>
+      <button class="ghost" onclick="location.reload()">Refresh page</button>
+    </div>
+  </div>
+
+<script>
+(function(){
+  var ceiling = null;
+  var secret = null;
+  var solved = false;
+
+  var ceilingInput = document.getElementById("ceiling");
+  var setRangeBtn  = document.getElementById("setRange");
+  var fbCeiling    = document.getElementById("fb-ceiling");
+  var playAgainBtn = document.getElementById("playAgain");
+  var banner       = document.getElementById("banner");
+
+  // raw string -> positive whole integer, or null if invalid
+  function parseWholePositive(raw){
+    if(raw === null) return null;
+    raw = String(raw).trim();
+    if(!/^\d+$/.test(raw)) return null;   // digits only: no decimals, signs, spaces, letters
+    var n = parseInt(raw, 10);
+    if(n <= 0) return null;
+    return n;
+  }
+
+  function setFeedback(el, msg, cls){
+    el.textContent = msg;
+    el.className = "feedback" + (cls ? " " + cls : "");
+  }
+
+  // ---- Step 1: ceiling ----
+  function setRange(){
+    var n = parseWholePositive(ceilingInput.value);
+    if(n === null){
+      setFeedback(fbCeiling, "Enter a whole number greater than 0.", "err");
+      return;
+    }
+    if(n < 2){
+      setFeedback(fbCeiling, "Pick at least 2 so there's something to guess.", "err");
+      return;
+    }
+    ceiling = n;
+    secret = Math.floor(Math.random() * ceiling) + 1; // 1..ceiling inclusive
+    setFeedback(fbCeiling, "Range set: 1 to " + ceiling + ". Start guessing!", "ok");
+    ceilingInput.disabled = true;
+    setRangeBtn.disabled = true;
+    revealGuess(1);
+  }
+
+  // ---- Guess rows ----
+  function revealGuess(i){
+    var row = document.getElementById("row-g" + i);
+    var input = document.getElementById("g" + i);
+    var btn = document.getElementById("btn-g" + i);
+    row.classList.remove("hidden", "locked");
+    input.disabled = false;
+    btn.disabled = false;
+    input.focus();
+  }
+
+  function lockGuess(i){
+    document.getElementById("g" + i).disabled = true;
+    document.getElementById("btn-g" + i).disabled = true;
+  }
+
+  function endGame(win){
+    solved = win;
+    for(var i = 1; i <= 3; i++) lockGuess(i);
+    banner.className = "banner " + (win ? "win" : "lose");
+    banner.textContent = win
+      ? "You got it! The number was " + secret + "."
+      : "Out of guesses. The number was " + secret + ".";
+    playAgainBtn.style.display = "inline-block";
+  }
+
+  function handleGuess(i){
+    var input = document.getElementById("g" + i);
+    var fb = document.getElementById("fb-g" + i);
+    var n = parseWholePositive(input.value);
+
+    if(n === null){
+      setFeedback(fb, "Enter a whole number greater than 0.", "err");
+      return;
+    }
+    if(n > ceiling){
+      setFeedback(fb, "Must be " + ceiling + " or less.", "err");
+      return;
+    }
+
+    // valid guess -> lock this box, give feedback
+    lockGuess(i);
+
+    if(n === secret){
+      setFeedback(fb, "Correct — " + n + " is the number!", "ok");
+      endGame(true);
+      return;
+    }
+
+    if(n < secret){
+      setFeedback(fb, n + " is too low. Go higher.", "low");
+    } else {
+      setFeedback(fb, n + " is too high. Go lower.", "high");
+    }
+
+    if(i < 3){
+      revealGuess(i + 1);
+    } else {
+      endGame(false);
+    }
+  }
+
+  // ---- reset ----
+  function reset(){
+    ceiling = null; secret = null; solved = false;
+    ceilingInput.disabled = false;
+    ceilingInput.value = "";
+    setRangeBtn.disabled = false;
+    setFeedback(fbCeiling, "", "");
+    for(var i = 1; i <= 3; i++){
+      var row = document.getElementById("row-g" + i);
+      var input = document.getElementById("g" + i);
+      input.value = "";
+      input.disabled = true;
+      document.getElementById("btn-g" + i).disabled = true;
+      setFeedback(document.getElementById("fb-g" + i), "", "");
+      row.classList.add("locked", "hidden");
+    }
+    banner.className = "banner";
+    banner.textContent = "";
+    playAgainBtn.style.display = "none";
+    ceilingInput.focus();
+  }
+
+  // ---- wire up ----
+  setRangeBtn.addEventListener("click", setRange);
+  ceilingInput.addEventListener("keydown", function(e){ if(e.key === "Enter") setRange(); });
+
+  for(var i = 1; i <= 3; i++){
+    (function(idx){
+      document.getElementById("btn-g" + idx).addEventListener("click", function(){ handleGuess(idx); });
+      document.getElementById("g" + idx).addEventListener("keydown", function(e){
+        if(e.key === "Enter" && !this.disabled) handleGuess(idx);
+      });
+    })(i);
+  }
+
+  playAgainBtn.addEventListener("click", reset);
+})();
+</script>
 </body>
 </html>
