@@ -53,10 +53,45 @@
     letter-spacing:-.5px;
   }
   .sub{
-    margin:0 0 20px;
+    margin:0 0 18px;
     color:var(--muted);
     font-size:15px;
   }
+  .hud{
+    display:flex;
+    gap:12px;
+    margin-bottom:20px;
+  }
+  .stat{
+    flex:1;
+    background:#f5f3ff;
+    border:1px solid #ede9fe;
+    border-radius:14px;
+    padding:10px 12px;
+    text-align:center;
+  }
+  .stat .num{
+    font-size:24px;
+    font-weight:800;
+    line-height:1.1;
+  }
+  .stat .lab{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  .stat.wins .num{color:var(--ok);}
+  .stat.losses .num{color:var(--err);}
+  .stat.timer{background:#eef2ff;border-color:#e0e7ff;}
+  .stat.timer .num{color:var(--accent);font-variant-numeric:tabular-nums;}
+  .stat.timer.warn{background:#fffbeb;border-color:#fde68a;}
+  .stat.timer.warn .num{color:var(--warn);}
+  .stat.timer.danger{background:#fef2f2;border-color:#fecaca;}
+  .stat.timer.danger .num{color:var(--err);animation:pulse .6s ease-in-out infinite;}
+  .stat.timer .lab .turnlabel{display:block;color:var(--accent);font-weight:700;}
+  @keyframes pulse{50%{opacity:.45;}}
   .instructions{
     background:#f5f3ff;
     border:1px solid #ede9fe;
@@ -152,7 +187,16 @@
 <body>
   <div class="card">
     <h1>The Guessing Game</h1>
-    <p class="sub">Pick a range, then crack the secret number in 3 guesses.</p>
+    <p class="sub">Pick a range, then crack the secret number in 3 guesses &mdash; 60 seconds per turn.</p>
+
+    <div class="hud">
+      <div class="stat wins"><div class="num" id="wins">0</div><div class="lab">Wins</div></div>
+      <div class="stat losses"><div class="num" id="losses">0</div><div class="lab">Losses</div></div>
+      <div class="stat timer" id="timerBox">
+        <div class="num" id="timer">1:00</div>
+        <div class="lab"><span class="turnlabel" id="turnLabel">Ready</span>time left</div>
+      </div>
+    </div>
 
     <ol class="instructions">
       <li>Set the top of the range (you pick the ceiling).</li>
@@ -202,21 +246,115 @@
 
     <div class="footer">
       <button class="ghost" id="playAgain">Play again</button>
-      <button class="ghost" onclick="location.reload()">Refresh page</button>
+      <button class="ghost" id="resetStats">Reset stats</button>
     </div>
   </div>
 
 <script>
 (function(){
+  var TURN_SECONDS = 60;
+  var STORAGE_KEY = "oz_guessing_game_stats";
+
   var ceiling = null;
   var secret = null;
-  var solved = false;
+  var gameOver = false;
+
+  // timer state
+  var timerId = null;
+  var deadline = 0;
+  var currentPhase = null; // "ceiling" | 1 | 2 | 3
 
   var ceilingInput = document.getElementById("ceiling");
   var setRangeBtn  = document.getElementById("setRange");
   var fbCeiling    = document.getElementById("fb-ceiling");
   var playAgainBtn = document.getElementById("playAgain");
+  var resetStatsBtn= document.getElementById("resetStats");
   var banner       = document.getElementById("banner");
+
+  var winsEl   = document.getElementById("wins");
+  var lossesEl = document.getElementById("losses");
+  var timerEl  = document.getElementById("timer");
+  var timerBox = document.getElementById("timerBox");
+  var turnLabel= document.getElementById("turnLabel");
+
+  // ---- scoreboard (persisted) ----
+  var stats = {wins:0, losses:0};
+  function loadStats(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        var p = JSON.parse(raw);
+        if(p && typeof p.wins === "number" && typeof p.losses === "number") stats = p;
+      }
+    }catch(e){ /* storage unavailable; keep in-memory */ }
+    renderStats();
+  }
+  function saveStats(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(stats)); }catch(e){}
+  }
+  function renderStats(){
+    winsEl.textContent = stats.wins;
+    lossesEl.textContent = stats.losses;
+  }
+
+  // ---- timer ----
+  function fmt(sec){
+    var m = Math.floor(sec/60);
+    var s = sec % 60;
+    return m + ":" + (s < 10 ? "0" + s : s);
+  }
+  function paintTimer(remaining){
+    timerEl.textContent = fmt(remaining);
+    timerBox.classList.remove("warn","danger");
+    if(remaining <= 5) timerBox.classList.add("danger");
+    else if(remaining <= 15) timerBox.classList.add("warn");
+  }
+  function stopTimer(){
+    if(timerId){ clearInterval(timerId); timerId = null; }
+  }
+  function startTimer(phase, labelText){
+    stopTimer();
+    currentPhase = phase;
+    turnLabel.textContent = labelText;
+    deadline = Date.now() + TURN_SECONDS * 1000;
+    paintTimer(TURN_SECONDS);
+    timerId = setInterval(function(){
+      var remaining = Math.round((deadline - Date.now()) / 1000);
+      if(remaining <= 0){
+        paintTimer(0);
+        stopTimer();
+        handleTimeout(phase);
+        return;
+      }
+      paintTimer(remaining);
+    }, 200);
+  }
+  function freezeTimerDisplay(text){
+    stopTimer();
+    timerBox.classList.remove("warn","danger");
+    timerEl.textContent = text;
+    turnLabel.textContent = "—";
+  }
+  function handleTimeout(phase){
+    if(gameOver) return;
+    if(phase === "ceiling"){
+      setFeedback(fbCeiling, "Time's up — you didn't set a range.", "err");
+      ceilingInput.disabled = true;
+      setRangeBtn.disabled = true;
+      endGame(false);
+      return;
+    }
+    // a guess turn ran out -> forfeit that guess
+    var fb = document.getElementById("fb-g" + phase);
+    lockGuess(phase);
+    setFeedback(fb, "Time's up — guess forfeited.", "err");
+    if(phase < 3){
+      revealGuess(phase + 1);
+      startTimer(phase + 1, "Guess " + (phase + 1));
+    } else {
+      endGame(false);
+    }
+  }
 
   // raw string -> positive whole integer, or null if invalid
   function parseWholePositive(raw){
@@ -250,6 +388,7 @@
     ceilingInput.disabled = true;
     setRangeBtn.disabled = true;
     revealGuess(1);
+    startTimer(1, "Guess 1");
   }
 
   // ---- Guess rows ----
@@ -269,8 +408,14 @@
   }
 
   function endGame(win){
-    solved = win;
+    if(gameOver) return;
+    gameOver = true;
+    stopTimer();
+    freezeTimerDisplay(win ? "Win!" : "—");
     for(var i = 1; i <= 3; i++) lockGuess(i);
+    if(win){ stats.wins++; } else { stats.losses++; }
+    saveStats();
+    renderStats();
     banner.className = "banner " + (win ? "win" : "lose");
     banner.textContent = win
       ? "You got it! The number was " + secret + "."
@@ -309,14 +454,16 @@
 
     if(i < 3){
       revealGuess(i + 1);
+      startTimer(i + 1, "Guess " + (i + 1));
     } else {
       endGame(false);
     }
   }
 
-  // ---- reset ----
+  // ---- reset (new round; keeps scoreboard) ----
   function reset(){
-    ceiling = null; secret = null; solved = false;
+    stopTimer();
+    ceiling = null; secret = null; gameOver = false;
     ceilingInput.disabled = false;
     ceilingInput.value = "";
     setRangeBtn.disabled = false;
@@ -334,6 +481,7 @@
     banner.textContent = "";
     playAgainBtn.style.display = "none";
     ceilingInput.focus();
+    startTimer("ceiling", "Set range");
   }
 
   // ---- wire up ----
@@ -350,6 +498,15 @@
   }
 
   playAgainBtn.addEventListener("click", reset);
+  resetStatsBtn.addEventListener("click", function(){
+    stats = {wins:0, losses:0};
+    saveStats();
+    renderStats();
+  });
+
+  // ---- boot ----
+  loadStats();
+  startTimer("ceiling", "Set range");
 })();
 </script>
 </body>
