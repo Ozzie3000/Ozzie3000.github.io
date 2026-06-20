@@ -2,7 +2,17 @@
 <html>
 <head>
 <meta charset="utf-8"></meta>
-<title>JS Guessing game</title>
+<meta property="og:title" content="Guessing game brought to you by Oz">
+<meta property="og:description" content="Oz works on Web Dev mini projects by Oz. Using HTML, Javascript, CSS">
+<meta property="og:image" content="https://ozzie3000.github.io/images/oz.png">
+<meta property="og:url" content="https://ozzie3000.github.io/glass-orb.html">
+<meta property="og:type" content="website">
+<meta name="author" content="Oz">
+<!-- Twitter/X specifically uses these -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://ozzie3000.github.io/images/oz.png">
+<meta name="author" content="Oz">
+<title>Guessing game brought to you by Oz</title>
 <style type="text/css">
 h1{
 	font-size: 26px;
@@ -58,7 +68,7 @@ body{
 	}
 */
 	function picker(){
-		var ceiling = prompt("Pick the highest possible number it could be");
+		var ceiling = prompt("Pick the highest possible number it could be. Only use whole numbers");
 		this.ceiling = parseInt(ceiling);
 	}
 	
