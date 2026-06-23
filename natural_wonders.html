@@ -6,74 +6,8 @@
 <meta name="description" content="HTML5 demos" />
 <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
 <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --gold: #c9a84c;
-    --gold-dim: #7a6230;
-    --gold-glow: rgba(201,168,76,0.15);
-    --night: #0c0e18;
-    --night2: #13162a;
-    --sung: #e8c060;
-    --dim: rgba(255,255,255,0.28);
-    --mid: rgba(255,255,255,0.6);
-  }
-
-  body {
-    background: var(--night);
-    color: white;
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem 1rem;
-    position: relative;
-    overflow-x: hidden;
-  }
-
-  /* Subtle radial glow behind card */
-  body::before {
-    content: '';
-    position: fixed;
-    top: 30%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(ellipse, rgba(201,168,76,0.06) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  /* Stars */
-  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
-  .star {
-    position: absolute; border-radius: 50%; background: white;
-    animation: twinkle var(--d,3s) ease-in-out infinite;
-    animation-delay: var(--dl, 0s);
-    opacity: 0;
-  }
-  @keyframes twinkle {
-    0%,100% { opacity: 0; }
-    50% { opacity: var(--o, 0.5); }
-  }
-
-	@media screen and (max-width: 479px){#map{height: 200px;}}
-	@media screen and (min-width: 480px) and (max-width: 599px){#map{height: 300px;}}
-	@media screen and (min-width: 600px) and (max-width: 720px){#map{height: 400px;}}
-	@media screen and (min-width: 721px) and (max-width: 840px){#map{height: 500px;}}
-	@media screen and (min-width: 841px) and (max-width: 960px){#map{height: 600px;}}
-	@media screen and (min-width: 961px) and (max-width: 1080px){#map{height: 700px;}}
-	.footer{
-		color: white; 
-		font-family: sans-serif; 
-		font-size: 16px; 
-		text-align: center; 
-		height:80px;
-	}
-</style>
+<!-- Gold/starfield styles moved to their own reusable file 2026-06-22 -->
+<link rel="stylesheet" type="text/css" href="stylesheets/star-theme.css" media="screen">
 <!--set the api -->
 <script src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
 <script>

@@ -459,3 +459,158 @@ body.fruit-page .footer a {
   text-shadow: 0 0 6px rgba(104, 182, 255, 0.4);
 }
 body.fruit-page .footer a:hover { color: #fff; }
+
+/* =====================================================================
+   Unified "glass" theme   (gender.html, img_src.html, shoppinglist.html)
+   ---------------------------------------------------------------------
+   Opt-in via <body class="glass">. Same green accent + mono font as the
+   rest of the site so these older demo pages stop looking like one-offs.
+   Scoped under body.glass so it never touches pages without the class.
+   ===================================================================== */
+
+body.glass {
+  margin: 0;
+  min-height: 100vh;
+  text-align: center;
+  color: #eaeaea;
+  padding: 28px 16px 100px;
+  background:
+    radial-gradient(1200px 600px at 20% -10%, rgba(181, 232, 83, 0.10), transparent 60%),
+    radial-gradient(900px 500px at 90% 110%, rgba(99, 192, 245, 0.12), transparent 60%),
+    linear-gradient(160deg, #0e120c 0%, #161b13 45%, #0b0e09 100%);
+  background-attachment: fixed;
+}
+
+body.glass h1, body.glass h2, body.glass h3 {
+  color: #b5e853;
+  text-shadow: 0 0 6px rgba(181, 232, 83, 0.35), 0 0 18px rgba(181, 232, 83, 0.15);
+}
+body.glass h1 { font-size: 26px; margin: 10px 0 6px; }
+body.glass h2 { font-size: 20px; color: #9fb08a; text-shadow: none; margin: 0 0 16px; }
+
+/* Buttons (covers <input type=button>, <button>, .btn, .btn_1) */
+body.glass input[type="button"],
+body.glass button,
+body.glass .btn,
+body.glass .btn_1 {
+  font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: inline-block;
+  color: #b5e853;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1.5px solid rgba(181, 232, 83, 0.35);
+  border-radius: 50px;
+  padding: 10px 22px;
+  margin: 6px;
+  transition: all 0.18s ease;
+  text-shadow: 0 0 6px rgba(181, 232, 83, 0.3);
+}
+body.glass input[type="button"]:hover,
+body.glass button:hover,
+body.glass .btn:hover,
+body.glass .btn_1:hover {
+  background: #b5e853;
+  color: #10140c;
+  text-shadow: none;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(181, 232, 83, 0.25);
+}
+/* .btn_1 wraps an <h2> on img_src.html — keep that text on the button color */
+body.glass .btn_1 h2 { color: inherit; margin: 0; font-size: 16px; text-shadow: none; }
+body.glass .btn_1.active { background: #b5e853; color: #10140c; text-shadow: none; }
+body.glass .btn_1.active h2 { color: #10140c; }
+
+/* Inputs & selects */
+body.glass select,
+body.glass input[type="text"] {
+  font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
+  font-size: 14px;
+  color: #eaeaea;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(181, 232, 83, 0.35);
+  border-radius: 10px;
+  padding: 9px 14px;
+  margin: 4px;
+}
+body.glass select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  padding-right: 30px;
+  background: rgba(0, 0, 0, 0.4)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23b5e853' stroke-width='2' fill='none'/%3E%3C/svg%3E")
+    no-repeat right 12px center;
+}
+body.glass select:focus,
+body.glass input[type="text"]:focus {
+  outline: none;
+  border-color: #b5e853;
+  box-shadow: 0 0 0 3px rgba(181, 232, 83, 0.18);
+}
+body.glass select option { background: #161b13; color: #eaeaea; }
+
+/* Glass panels / cards */
+body.glass .panel,
+body.glass fieldset,
+body.glass #small_wrapper {
+  display: inline-block;
+  text-align: left;
+  color: #eaeaea;
+  background: rgba(20, 24, 18, 0.55);
+  border: 1px solid rgba(181, 232, 83, 0.35);
+  border-radius: 18px;
+  padding: 20px 24px;
+  margin: 14px auto;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+body.glass fieldset legend { color: #b5e853; font-weight: bold; padding: 0 8px; }
+
+/* Lists: drop the terminal ">>" bullets inside glass so panels stay tidy */
+body.glass ul li:before { content: none; }
+body.glass ul { padding-left: 18px; }
+body.glass ul li { list-style: disc; line-height: 1.6; }
+body.glass ol { display: inline-block; text-align: left; }
+body.glass ol li { line-height: 1.7; cursor: pointer; }
+body.glass ol li:hover { color: #b5e853; }
+
+/* Images */
+body.glass img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 14px;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
+}
+
+/* Footer */
+body.glass footer,
+body.glass .ending,
+body.glass .footer {
+  position: static;
+  width: auto;
+  height: auto;
+  color: #b9c4a8;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 48px auto 0;
+  max-width: 640px;
+  border-top: 1px dashed rgba(181, 232, 83, 0.35);
+  padding-top: 20px;
+}
+body.glass footer a,
+body.glass .ending a,
+body.glass .footer a { color: #63c0f5; text-shadow: 0 0 6px rgba(104, 182, 255, 0.4); }
+body.glass footer a:hover,
+body.glass .ending a:hover,
+body.glass .footer a:hover { color: #fff; }
+
+/* hr */
+body.glass hr {
+  border: 0;
+  border-bottom: 1px dashed rgba(181, 232, 83, 0.35);
+  margin: 18px auto;
+  width: 60%;
+}

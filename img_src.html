@@ -8,66 +8,13 @@
 <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css"></link>
 
 <style type="text/css">
-body{ 
-   /* background-color: #eeeeee;
-    background: url("images/background-wallpapers-60.png"); */
-    background-attachment: fixed;
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center center;
-    color: white;
-    font-size: 18px;
-    padding: 0px 10px ;
-  }
-  #submit{
-  	font-size: .8em;
-  }
-  #submit:hover{
-  	opacity: 0.5;
-  	font-size: 1em;
-  }
-	.buttonContainer{
-		float: left;
-		width: 10%;
-	}
-	.btn_1{
-		color: blue;
-		border-radius: 6px;
-		background: lightgrey;
-		text-align: center;
-		font-size: 1em;
-		padding: 4px 0 1px 0;
-		margin-top: 10px;
-		min-width: 100px;
-	}
-	.btn_1:hover{
-		color: white;
-		background-color: red;
-		cursor: pointer;
-	}
-	#change_me{
-		display: absolute;
-		display: table;
-		margin: auto;
-	}
-	.active{
-		background-color: green;
-		color: white;
-	}
-	img{
-		max-height: 600px;
-	}
-  .ending{
-  color: cyan; 
-  font-family: sans-serif; 
-  font-size: 18px; 
-  text-align: center;
-  margin-top: 50px;
-  }
-  h2{ color: blue;}
+  /* Layout-only rules kept inline; colors/buttons come from the glass theme. */
+  .buttonContainer{ display: inline-block; vertical-align: top; margin-right: 16px; }
+  #change_me{ display: inline-block; vertical-align: top; }
+  img{ max-height: 600px; }
   @media screen and (min-width: 400px) and (max-width: 800px){
-		img{ max-width: 500px;}
-	}
+    img{ max-width: 500px; }
+  }
 </style>
 <script src="https://code.jquery.com/jquery-2.1.1.js"></script>
 <script src="https://code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
@@ -89,7 +36,7 @@ body{
 	}); //end doc ready
 </script>
 </head>
-<body>
+<body class="glass">
 	<input type="button" id="submit" class="btn" value="Refreshness" onclick="location.reload();" />
 	<br /><br />
   <h1>Changing img src with jQuery: <br />  Who is Link and who is Zelda</h1>

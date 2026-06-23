@@ -6,37 +6,9 @@
 <meta name="description" content="HTML5, js, jquery demos" />
 <link rel="stylesheet" type="text/css" href="./stylesheets/stylesheet.css"></link>
 <style type="text/css">
-  body{
-    margin: 0 auto;
-    display: table;
-    background: url("http://imagesci.com/img/2013/11/cool-planet-wallpaper-1884-hd-wallpapers.jpg");
-    background-attachment: fixed;
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center center;
-    color: white;
-  }
-
-  h1:hover{
-    color: cyan;
-  }
-  .hide_me{
-    display: none;
-  }
-  #foot1{
-    color: #ff69b4;
-  }
-  #foot2{
-    color: #000000;
-  }
-  #foot3{
-    color: #d3d3d3;
-  }
-  #small_wrapper{
-    font-size: 28px;
-    font-family: "Georgia";
-    background-color: white;
-  }
+  /* Only the JS state hook stays inline; the rest is the unified glass theme. */
+  .hide_me{ display: none; }
+  #small_wrapper{ font-size: 22px; }
 </style>
 <script src="https://code.jquery.com/jquery-2.1.1.js"></script>
 <script src="https://code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
@@ -98,7 +70,7 @@
 	}); //end doc ready
 </script>
 </head>
-<body>
+<body class="glass">
 	<input type="button" id="submit" class="btn" value="Refreshness" onclick="location.reload();" />
 	<br /><br />
   <h1 id="filledPrompt">Please follow instructions and provide a name</h1>

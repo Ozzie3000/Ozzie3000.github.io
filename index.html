@@ -12,41 +12,8 @@
     <title>Oz and github.io</title> 
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
-
-    <style>
-      /* ---- Night campsite scene ---- */
-      body{
-        background: linear-gradient(to bottom,
-          #04060f 0%, #070d1f 30%, #0c1530 55%, #1b2b4d 66%, #0d1526 100%);
-        background-attachment: fixed;
-      }
-      #scene{ position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
-      .star{ position: absolute; border-radius: 50%; background: #fff; opacity: 0;
-        animation: twinkle var(--d,3s) ease-in-out infinite; animation-delay: var(--dl,0s); }
-      @keyframes twinkle{ 0%,100%{ opacity: 0; } 50%{ opacity: var(--o,.7); } }
-      .moon{ position: absolute; top: 8%; right: 12%; width: 74px; height: 74px; border-radius: 50%;
-        background: #f1ecdc; box-shadow: 0 0 46px 14px rgba(241,236,220,.22); }
-      .shooting-star{ position: absolute; width: 130px; height: 2px; border-radius: 2px;
-        background: linear-gradient(90deg, transparent, #fff); transform: rotate(18deg);
-        opacity: 0; animation: shoot 11s linear infinite 5s; }
-      @keyframes shoot{
-        0%,90%{ opacity: 0; top: 9%; left: -12%; }
-        91%{ opacity: .9; }
-        100%{ opacity: 0; top: 30%; left: 72%; }
-      }
-      .mountains{ position: absolute; bottom: 0; left: 0; width: 100%; height: 36vh; display: block; }
-      .tent{ position: absolute; bottom: 1.5vh; right: 3vw; width: clamp(180px, 14vw, 300px); }
-      .tent .glowpart{ animation: lantern 4.5s ease-in-out infinite; }
-      @keyframes lantern{ 0%,100%{ opacity: 1; } 35%{ opacity: .85; } 60%{ opacity: .93; } 80%{ opacity: .88; } }
-      /* readable content panel over the scene */
-      .container{ background: rgba(4,7,16,.55); border-radius: 10px; padding: 6px 40px 28px; }
-      header{ background: rgba(0,0,0,.25); }
-      header .container{ background: none; padding: 0; }
-      @media (prefers-reduced-motion: reduce){
-        .star, .shooting-star, .tent .glowpart{ animation: none; }
-        .star{ opacity: .5; }
-      }
-    </style>
+    <!-- Campsite scene styles moved to their own file 2026-06-22 -->
+    <link rel="stylesheet" type="text/css" href="stylesheets/index.css" media="screen">
 
   </head>
 
