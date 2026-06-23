@@ -20,24 +20,47 @@
 <script type="text/javascript">
 	function store_pic(pic, divnum){
 		var pic_detail = document.getElementById(pic).value; // an emoji, e.g. 🍎
+		var div = document.getElementById("divfruit_" + divnum);
+		if (!pic_detail){            // "— pick —" placeholder: nothing to show/store
+			localStorage.removeItem(pic);
+			div.innerHTML = "";
+			return;
+		}
 		localStorage.setItem(pic, pic_detail);
-		document.getElementById("divfruit_" + divnum).innerHTML='<span class="fruit-emoji">' + pic_detail + '</span>';
+		div.innerHTML = '<span class="fruit-emoji">' + pic_detail + '</span>';
 	}
 	function get_pic(divnum){
 		var the_pic = localStorage.getItem("fruit_" + divnum);
 		document.getElementById("divfruit_" + divnum).innerHTML='<span class="fruit-emoji">' + the_pic + '</span>';
 	}
+	// Soft clear: wipes the tiles + storage, but leaves the dropdowns as-is
+	// (so mousing out of a column can repaint the last pick).
 	function clear_pic() {
 		for (i=1; i<5; i++){
 			localStorage.removeItem('fruit_' + i);
 			document.getElementById('divfruit_' + i).innerHTML="";
 		}
 	}
+	// Hard reset: wipes storage, clears tiles, AND sets every dropdown back to
+	// the "— pick —" placeholder, so mousing over the columns does nothing.
+	function reset_game() {
+		for (var i=1; i<5; i++){
+			localStorage.removeItem('fruit_' + i);
+			document.getElementById('divfruit_' + i).innerHTML="";
+			document.getElementById('fruit_' + i).selectedIndex = 0; // placeholder
+		}
+	}
 </script>
 </head>
 <body class="fruit-page">
-	<h3 style="margin-bottom:2px;">7.2 Fruit arrangement with local storage</h3>
-	<input type="button" class="btn-pop" value="Refreshness" onclick="location.reload()" />
+	<h1>Data persistance even if you refresh browser</h1>
+  <h3 style="margin-bottom:2px;">7.2 Fruit arrangements</h3>
+  <ul>
+    <li>Pick a fruit in each section</li>
+    <li>Press "Clear Graphics", and then mouse over each section</li>
+    <li>Now try "Clear Graphics" and refresh your browser or press "Browser Refresh" </li>
+  </ul>
+	<input type="button" class="btn-pop" value="Browser Refresh" onclick="location.reload()" />
 	<br /><br />
 
 	<div>
@@ -48,6 +71,7 @@
 			<div class="fruitcol">
 				Select
 				<select id="fruit_1" onchange="store_pic('fruit_1',1);" onmouseout="store_pic('fruit_1',1);">
+					<option value="">— pick —</option>
 					<option value="🍎" selected="selected">🍎 apple</option>
 					<option value="🍌">🍌 banana</option>
 					<option value="🍓">🍓 strawberry</option>
@@ -59,6 +83,7 @@
 			<div class="fruitcol">
 				Select
 				<select id="fruit_2" onchange="store_pic('fruit_2',2);" onmouseout="store_pic('fruit_2',2);">
+					<option value="">— pick —</option>
 					<option value="🍎">🍎 apple</option>
 					<option value="🍌" selected="selected">🍌 banana</option>
 					<option value="🍓">🍓 strawberry</option>
@@ -70,6 +95,7 @@
 			<div class="fruitcol">
 				Select
 				<select id="fruit_3" onchange="store_pic('fruit_3',3);" onmouseout="store_pic('fruit_3',3);">
+					<option value="">— pick —</option>
 					<option value="🍎">🍎 apple</option>
 					<option value="🍌">🍌 banana</option>
 					<option value="🍓" selected="selected">🍓 strawberry</option>
@@ -81,6 +107,7 @@
 			<div class="fruitcol">
 				Select
 				<select id="fruit_4" onchange="store_pic('fruit_4',4);" onmouseout="store_pic('fruit_4',4);">
+					<option value="">— pick —</option>
 					<option value="🍎">🍎 apple</option>
 					<option value="🍌">🍌 banana</option>
 					<option value="🍓">🍓 strawberry</option>
@@ -92,6 +119,7 @@
 
 		<br />
 		<input type="button" class="btn-pop ghost" value="Clear Graphics" onclick="clear_pic();">
+		<input type="button" class="btn-pop danger" value="Reset Game" onclick="reset_game();">
 		<br /><br />
 
 	<script type="text/javascript">
@@ -128,7 +156,8 @@
 	</script>
 	</div>
 	<div class="footer">
-		<footer>Ozzie3000. <br />Persistent local storage even when you hit refresh or ALT F5. Select a fruit in each category and watch the fun happen. I even set up JS events to update the image just by your mouse moving out of the category. Try it out.  Hit teh Clear graphic button, then simply move your mouse past each category without clicking anything.  BAM!!!<br /><a href="index.html">Back to Home page</a></footer>
+		<footer>Ozzie3000. <br />Persistent local storage even when you hit refresh or ALT F5. Select a fruit in each category and watch the fun happen. I even set up JS events to update the image just by your mouse moving out of the category. Try it out.  <br /><a href="index.html">Back to Home page</a> <span class="copyright"></span></footer>
 	</div>
+<script src="js/copyright.js"></script>
 </body>
 </html>

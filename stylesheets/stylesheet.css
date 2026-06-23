@@ -365,6 +365,16 @@ body.fruit-page .btn-pop.ghost:hover {
   background: #c9d3bd;
   color: #10140c;
 }
+body.fruit-page .btn-pop.danger {
+  color: #ff9a9a;
+  border-color: rgba(255, 120, 120, 0.4);
+  text-shadow: none;
+}
+body.fruit-page .btn-pop.danger:hover {
+  background: #ff6b6b;
+  color: #1a0c0c;
+  box-shadow: 0 8px 22px rgba(255, 107, 107, 0.25);
+}
 
 /* 4-column fruit layout */
 #fruitcols {
