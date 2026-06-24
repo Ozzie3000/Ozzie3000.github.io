@@ -1,0 +1,353 @@
+/* =====================================================================
+   Cube Tic-Tac-Toe — Version B renderer (Three.js / WebGL)
+   ---------------------------------------------------------------------
+   Renders the shared CubeTicTacToe engine as a real WebGL cube.
+   - Drag / touch-drag to rotate the cube (custom, so no module-only
+     OrbitControls — the page runs straight from file://).
+   - Tap a cell to place your mark (raycasting picks the nearest cell).
+   - Snap-to-face buttons rotate a chosen face toward the camera.
+   Each cell is a small plane carrying a canvas texture we repaint with
+   the X / O mark; each face has a backing plane we tint when it finishes.
+   Pairs with cubetictactoe.js (engine) and the body.cube-page styles.
+   ===================================================================== */
+
+(function () {
+  "use strict";
+
+  if (typeof THREE === "undefined") {
+    document.getElementById("ctt-status").textContent =
+      "Could not load Three.js (needs an internet connection).";
+    return;
+  }
+
+  const $ = function (id) { return document.getElementById(id); };
+  const container = $("ctt-three");
+  const statusEl = $("ctt-status");
+
+  // Colors mirror the CSS theme.
+  const COL = {
+    x: "#ff7676",
+    o: "#74a8ff",
+    tile: "#161b13",
+    border: "rgba(181,232,83,0.45)",
+    faceDefault: 0x0a0d07,
+    faceX: 0x6e1414,
+    faceO: 0x16306e,
+    faceDraw: 0x444444
+  };
+
+  /* ---- Scene setup ------------------------------------------------ */
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.set(0, 0, 6.2);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  const cube = new THREE.Group();
+  scene.add(cube);
+
+  const HALF = 1;        // half the cube edge
+  const STEP = 0.62;     // spacing between cell centres
+  const CELL = 0.56;     // cell tile size
+
+  // Per-face group transforms: local +z points outward from the cube.
+  const FACE_TF = [
+    { pos: [0, 0, HALF],  rot: [0, 0, 0] },          // 0 front
+    { pos: [0, 0, -HALF], rot: [0, Math.PI, 0] },    // 1 back
+    { pos: [HALF, 0, 0],  rot: [0, Math.PI / 2, 0] },// 2 right
+    { pos: [-HALF, 0, 0], rot: [0, -Math.PI / 2, 0] },// 3 left
+    { pos: [0, HALF, 0],  rot: [-Math.PI / 2, 0, 0] },// 4 top
+    { pos: [0, -HALF, 0], rot: [Math.PI / 2, 0, 0] } // 5 bottom
+  ];
+
+  const cellData = []; // cellData[face][idx] = { canvas, ctx, texture }
+  const facePlanes = [];
+  const pickables = []; // cell meshes for raycasting
+
+  function makeCellTexture() {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 160;
+    const ctx = canvas.getContext("2d");
+    const texture = new THREE.CanvasTexture(canvas);
+    const entry = { canvas: canvas, ctx: ctx, texture: texture };
+    paintCell(entry, "");
+    return entry;
+  }
+
+  function paintCell(entry, value) {
+    const ctx = entry.ctx;
+    const s = entry.canvas.width;
+    ctx.clearRect(0, 0, s, s);
+    ctx.fillStyle = COL.tile;
+    ctx.fillRect(0, 0, s, s);
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = COL.border;
+    ctx.strokeRect(3, 3, s - 6, s - 6);
+    if (value) {
+      ctx.fillStyle = value === "X" ? COL.x : COL.o;
+      ctx.font = "bold 110px 'Segoe UI', Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(value, s / 2, s / 2 + 6);
+    }
+    entry.texture.needsUpdate = true;
+  }
+
+  // Build the six faces.
+  for (let f = 0; f < CubeTicTacToe.FACE_COUNT; f++) {
+    const g = new THREE.Group();
+    g.position.set.apply(g.position, FACE_TF[f].pos);
+    g.rotation.set.apply(g.rotation, FACE_TF[f].rot);
+    cube.add(g);
+
+    // Backing plane (tinted when the face finishes).
+    const plane = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.92, 1.92),
+      new THREE.MeshBasicMaterial({ color: COL.faceDefault })
+    );
+    g.add(plane);
+    facePlanes.push(plane);
+
+    cellData.push([]);
+    for (let i = 0; i < 9; i++) {
+      const row = Math.floor(i / 3);
+      const col = i % 3;
+      const entry = makeCellTexture();
+      cellData[f].push(entry);
+
+      const tile = new THREE.Mesh(
+        new THREE.PlaneGeometry(CELL, CELL),
+        new THREE.MeshBasicMaterial({ map: entry.texture, transparent: true })
+      );
+      tile.position.set((col - 1) * STEP, (1 - row) * STEP, 0.02);
+      tile.userData = { face: f, idx: i };
+      g.add(tile);
+      pickables.push(tile);
+    }
+  }
+
+  /* ---- Rotation (drag + snap), with smooth tweening -------------- */
+
+  const ISO = { x: -0.5, y: -0.65 };
+  const SNAP = {
+    "0": { x: 0, y: 0 },
+    "1": { x: 0, y: Math.PI },
+    "2": { x: 0, y: -Math.PI / 2 },
+    "3": { x: 0, y: Math.PI / 2 },
+    "4": { x: Math.PI / 2, y: 0 },
+    "5": { x: -Math.PI / 2, y: 0 }
+  };
+
+  let curX = ISO.x, curY = ISO.y;       // current rotation (radians)
+  let tgtX = ISO.x, tgtY = ISO.y;       // target rotation
+  let dragging = false, moved = false;
+  let lastPX = 0, lastPY = 0, downX = 0, downY = 0;
+
+  const dom = renderer.domElement;
+
+  dom.addEventListener("pointerdown", function (e) {
+    dragging = true;
+    moved = false;
+    lastPX = downX = e.clientX;
+    lastPY = downY = e.clientY;
+    dom.setPointerCapture(e.pointerId);
+  });
+
+  dom.addEventListener("pointermove", function (e) {
+    if (!dragging) return;
+    const dx = e.clientX - lastPX;
+    const dy = e.clientY - lastPY;
+    lastPX = e.clientX;
+    lastPY = e.clientY;
+    if (Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 6) moved = true;
+    tgtY += dx * 0.01;
+    tgtX += dy * 0.01;
+    tgtX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, tgtX));
+    curX = tgtX; curY = tgtY; // follow the finger immediately while dragging
+    clearActiveView();
+  });
+
+  function endPointer(e) {
+    if (!dragging) return;
+    dragging = false;
+    try { dom.releasePointerCapture(e.pointerId); } catch (err) {}
+    if (!moved) handleTap(e);
+  }
+  dom.addEventListener("pointerup", endPointer);
+  dom.addEventListener("pointercancel", endPointer);
+
+  function clearActiveView() {
+    const btns = document.querySelectorAll("#ctt-rotate button");
+    for (let i = 0; i < btns.length; i++) btns[i].classList.remove("ctt-active");
+  }
+
+  $("ctt-rotate").addEventListener("click", function (e) {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    clearActiveView();
+    btn.classList.add("ctt-active");
+    const t = btn.hasAttribute("data-view") ? ISO : SNAP[btn.getAttribute("data-face")];
+    tgtX = t.x;
+    tgtY = t.y;
+  });
+
+  /* ---- Tap → raycast → move -------------------------------------- */
+
+  const raycaster = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+
+  function handleTap(e) {
+    const rect = dom.getBoundingClientRect();
+    ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(ndc, camera);
+    const hits = raycaster.intersectObjects(pickables, false);
+    if (hits.length > 0) {
+      const ud = hits[0].object.userData;
+      game.tryMove(ud.face, ud.idx);
+    }
+  }
+
+  /* ---- Engine + hooks -------------------------------------------- */
+
+  const game = new CubeTicTacToe({
+    onReset: function () {
+      for (let f = 0; f < CubeTicTacToe.FACE_COUNT; f++) {
+        facePlanes[f].material.color.setHex(COL.faceDefault);
+        for (let i = 0; i < 9; i++) paintCell(cellData[f][i], "");
+      }
+    },
+    onCell: function (face, idx, player) {
+      paintCell(cellData[face][idx], player);
+    },
+    onFaceFinish: function (face, status) {
+      const hex = status === "X" ? COL.faceX : status === "O" ? COL.faceO : COL.faceDraw;
+      facePlanes[face].material.color.setHex(hex);
+    },
+    onStatus: function (text) { statusEl.textContent = text; },
+    onScores: function (round, overall) {
+      $("ctt-round-x").textContent = "X: " + round.X;
+      $("ctt-round-draw").textContent = "Draw: " + round.draws;
+      $("ctt-round-o").textContent = "O: " + round.O;
+      $("ctt-overall-x").textContent = "X: " + overall.X;
+      $("ctt-overall-draw").textContent = "Draw: " + overall.draws;
+      $("ctt-overall-o").textContent = "O: " + overall.O;
+    },
+    onCelebrate: function () { triggerFireworks(); }
+  });
+
+  /* ---- UI controls ------------------------------------------------ */
+
+  function setModeUI(mode) {
+    $("ctt-btn-ai").classList.toggle("ctt-active", mode === "ai");
+    $("ctt-btn-local").classList.toggle("ctt-active", mode === "local");
+    $("ctt-settings").style.display = mode === "ai" ? "flex" : "none";
+  }
+  $("ctt-btn-ai").addEventListener("click", function () {
+    setModeUI("ai"); setSymbolUI("X"); game.setMode("ai");
+  });
+  $("ctt-btn-local").addEventListener("click", function () {
+    setModeUI("local"); game.setMode("local");
+  });
+  $("ctt-difficulty").addEventListener("input", function () {
+    $("ctt-difficulty-display").textContent = this.value;
+    game.setDifficulty(this.value);
+  });
+  function setSymbolUI(sym) {
+    $("ctt-sym-x").classList.toggle("ctt-active", sym === "X");
+    $("ctt-sym-o").classList.toggle("ctt-active", sym === "O");
+  }
+  $("ctt-sym-x").addEventListener("click", function () { setSymbolUI("X"); game.setPlayerSymbol("X"); });
+  $("ctt-sym-o").addEventListener("click", function () { setSymbolUI("O"); game.setPlayerSymbol("O"); });
+  $("ctt-next").addEventListener("click", function () { game.nextRound(); });
+  $("ctt-reset").addEventListener("click", function () {
+    if (game.gameMode === "ai") setSymbolUI("X");
+    game.resetAll();
+  });
+
+  /* ---- Resize + render loop -------------------------------------- */
+
+  function resize() {
+    const w = container.clientWidth || 1;
+    const h = container.clientHeight || 1;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  function animate() {
+    // Ease the cube toward its target rotation (snap buttons feel smooth;
+    // drag updates set current == target so it tracks instantly).
+    curX += (tgtX - curX) * 0.18;
+    curY += (tgtY - curY) * 0.18;
+    cube.rotation.x = curX;
+    cube.rotation.y = curY;
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  /* ---- Fireworks (DOM overlay, ported from the original) --------- */
+
+  const fwCanvas = $("fireworks-canvas");
+  const fwCtx = fwCanvas.getContext("2d");
+  let particles = [];
+
+  function sizeCanvas() {
+    fwCanvas.width = window.innerWidth;
+    fwCanvas.height = window.innerHeight;
+  }
+  sizeCanvas();
+  window.addEventListener("resize", sizeCanvas);
+
+  function Particle(x, y) {
+    this.x = x; this.y = y;
+    this.size = Math.random() * 5 + 2;
+    this.speedX = (Math.random() - 0.5) * 12;
+    this.speedY = (Math.random() - 0.5) * 12;
+    this.decay = Math.random() * 0.015 + 0.005;
+    this.alpha = 1;
+    this.color = "hsl(" + (Math.random() * 80 + 70) + ", 100%, 60%)";
+  }
+  Particle.prototype.update = function () {
+    this.x += this.speedX; this.y += this.speedY;
+    this.speedY += 0.2; this.alpha -= this.decay;
+  };
+  Particle.prototype.draw = function (ctx) {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, this.alpha);
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  };
+  function triggerFireworks() {
+    const rect = container.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    for (let i = 0; i < 5; i++) {
+      setTimeout(function () {
+        for (let j = 0; j < 30; j++) particles.push(new Particle(cx, cy));
+      }, i * 120);
+    }
+    animateFireworks();
+  }
+  function animateFireworks() {
+    fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
+    for (let i = particles.length - 1; i >= 0; i--) {
+      particles[i].update();
+      particles[i].draw(fwCtx);
+      if (particles[i].alpha <= 0) particles.splice(i, 1);
+    }
+    if (particles.length > 0) requestAnimationFrame(animateFireworks);
+  }
+
+  /* ---- Kick off --------------------------------------------------- */
+  game.resetAll();
+})();
