@@ -749,6 +749,43 @@ body.cube-page .ctt-sub { color: #9fb08a; margin: 0 0 14px; font-size: 14px; }
   text-align: center;
 }
 
+/* Status bar: the turn/round text with the "current face" pill to its
+   right (gap 20px). The pill is styled to match the six snap-to-face
+   buttons and is color-matched to the viewed face's state. Both versions. */
+.cube-page .ctt-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  max-width: 640px;
+  margin: 6px auto 4px;
+}
+.cube-page .ctt-statusbar .ctt-status { margin: 0; }
+
+.cube-page .ctt-current {
+  display: inline-flex;
+  align-items: center;
+  font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 8px 14px;
+  border-radius: 50px;
+  border: 1.5px solid rgba(181, 232, 83, 0.4);
+  background: rgba(0, 0, 0, 0.35);
+  color: #b5e853;
+  white-space: nowrap;
+  transition: border-color 0.3s, background 0.3s, color 0.3s;
+}
+/* Compact pill: show just the face name; convey state via color. */
+.cube-page .ctt-current .ctt-current-label,
+.cube-page .ctt-current .ctt-current-state { display: none; }
+
+.cube-page .ctt-current.st-open { border-color: rgba(181, 232, 83, 0.55); color: #b5e853; }
+.cube-page .ctt-current.st-x    { border-color: var(--x-color); background: rgba(150, 24, 24, 0.4); color: var(--x-color); }
+.cube-page .ctt-current.st-o    { border-color: var(--o-color); background: rgba(24, 54, 150, 0.4); color: var(--o-color); }
+.cube-page .ctt-current.st-draw { border-color: var(--draw-color); background: rgba(90, 90, 90, 0.45); color: var(--draw-color); }
+
 /* ---- Version A: the CSS 3D cube -------------------------------- */
 .cube-page .ctt-scene {
   width: var(--cube-size);

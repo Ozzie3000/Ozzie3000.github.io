@@ -336,6 +336,30 @@
 
   /* ---- Resize + render loop -------------------------------------- */
 
+  /* ---- "Current face" chip --------------------------------------- */
+  const FACE_NAMES = ["Front", "Back", "Right", "Left", "Top", "Bottom"];
+  const STATE_TEXT = { open: "in play", X: "X won", O: "O won", draw: "drawn" };
+  let curKey = "";
+  function frontFaceIndex(ax, ay) {
+    const ca = Math.cos(ax), sa = Math.sin(ax), cb = Math.cos(ay), sb = Math.sin(ay);
+    const z = [ca * cb, -ca * cb, -ca * sb, ca * sb, sa, -sa];
+    let best = 0;
+    for (let i = 1; i < 6; i++) if (z[i] > z[best]) best = i;
+    return best;
+  }
+  function updateCurrent() {
+    const f = frontFaceIndex(curX, curY);
+    const status = game.faceStatus[f];
+    const key = f + ":" + status;
+    if (key === curKey) return; // only touch the DOM when it actually changes
+    curKey = key;
+    $("ctt-current-face").textContent = FACE_NAMES[f];
+    $("ctt-current-state").textContent = STATE_TEXT[status];
+    const el = $("ctt-current");
+    el.classList.remove("st-open", "st-x", "st-o", "st-draw");
+    el.classList.add(status === "open" ? "st-open" : status === "draw" ? "st-draw" : "st-" + status.toLowerCase());
+  }
+
   function resize() {
     const w = container.clientWidth || 1;
     const h = container.clientHeight || 1;
@@ -354,6 +378,7 @@
     cube.rotation.x = curX;
     cube.rotation.y = curY;
     updatePulse();
+    updateCurrent();
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
   }

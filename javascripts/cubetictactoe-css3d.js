@@ -64,6 +64,7 @@
           cells[f][i].setAttribute("data-idx", String(i));
         }
       }
+      updateCurrent();
     },
     onCell: function (face, idx, player) {
       const cell = cells[face][idx];
@@ -80,6 +81,7 @@
       faceEl.classList.add("finished");
       faceEl.classList.add(status === "draw" ? "draw" : "win-" + status.toLowerCase());
       colorFaceButton(face, status);
+      updateCurrent();
     },
     onStatus: function (text) { statusEl.textContent = text; },
     onScores: function (round, overall) {
@@ -104,7 +106,32 @@
 
   function applyRotation() {
     cubeEl.style.transform = "rotateX(" + rotX + "deg) rotateY(" + rotY + "deg)";
+    updateCurrent();
   }
+
+  // Which face is pointing most toward the viewer for a given rotation
+  // (radians). z-component of each face normal after rotateX·rotateY.
+  const FACE_NAMES = ["Front", "Back", "Right", "Left", "Top", "Bottom"];
+  const STATE_TEXT = { open: "in play", X: "X won", O: "O won", draw: "drawn" };
+  function frontFaceIndex(ax, ay) {
+    const ca = Math.cos(ax), sa = Math.sin(ax), cb = Math.cos(ay), sb = Math.sin(ay);
+    // CSS 3D has Y pointing down, so the Top/Bottom normals are (0,-1,0)/
+    // (0,1,0) — hence -sa / sa here (the reverse of a Y-up system).
+    const z = [ca * cb, -ca * cb, -ca * sb, ca * sb, -sa, sa];
+    let best = 0;
+    for (let i = 1; i < 6; i++) if (z[i] > z[best]) best = i;
+    return best;
+  }
+  function updateCurrent() {
+    const f = frontFaceIndex(rotX * Math.PI / 180, rotY * Math.PI / 180);
+    const status = game.faceStatus[f];
+    $("ctt-current-face").textContent = FACE_NAMES[f];
+    $("ctt-current-state").textContent = STATE_TEXT[status];
+    const el = $("ctt-current");
+    el.classList.remove("st-open", "st-x", "st-o", "st-draw");
+    el.classList.add(status === "open" ? "st-open" : status === "draw" ? "st-draw" : "st-" + status.toLowerCase());
+  }
+
   applyRotation();
 
   sceneEl.addEventListener("pointerdown", function (e) {
