@@ -85,20 +85,10 @@
     onCelebrate: function () { triggerFireworks(); }
   });
 
-  /* ---- Cell taps -------------------------------------------------- */
-
-  // A pointer interaction is a "tap" only if it didn't move far. The
-  // rotate handler sets `dragged` when the pointer travels past a small
-  // threshold, so a rotate gesture never drops a mark.
-  cubeEl.addEventListener("click", function (e) {
-    const cell = e.target.closest(".ctt-cell");
-    if (!cell || dragged) return;
-    const face = parseInt(cell.getAttribute("data-face"), 10);
-    const idx = parseInt(cell.getAttribute("data-idx"), 10);
-    game.tryMove(face, idx);
-  });
-
-  /* ---- Drag-to-rotate -------------------------------------------- */
+  /* ---- Drag-to-rotate + tap-to-place ----------------------------- */
+  // Marks are placed on pointer-up (see endPointer) rather than via a
+  // `click` listener: the cube captures the pointer for drag-to-rotate,
+  // and pointer capture swallows the synthetic click on the cells.
 
   let rotX = ISO_VIEW.x, rotY = ISO_VIEW.y;
   let startX = 0, startY = 0, baseX = 0, baseY = 0;
@@ -138,10 +128,21 @@
     if (!pointerDown) return;
     pointerDown = false;
     cubeEl.classList.remove("ctt-dragging");
+    // Release capture first so elementFromPoint can see the cell below.
     try { sceneEl.releasePointerCapture(e.pointerId); } catch (err) {}
-    // Let the click handler run for this same gesture before we clear the
-    // drag flag, so a real drag never registers as a tap.
-    if (dragged) setTimeout(function () { dragged = false; }, 0);
+
+    // A press that didn't travel is a tap → place a mark on the cell under
+    // the pointer (rotate gestures set `dragged` and are ignored here).
+    if (!dragged) {
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const cell = el && el.closest ? el.closest(".ctt-cell") : null;
+      if (cell) {
+        const face = parseInt(cell.getAttribute("data-face"), 10);
+        const idx = parseInt(cell.getAttribute("data-idx"), 10);
+        game.tryMove(face, idx);
+      }
+    }
+    dragged = false;
   }
   sceneEl.addEventListener("pointerup", endPointer);
   sceneEl.addEventListener("pointercancel", endPointer);
