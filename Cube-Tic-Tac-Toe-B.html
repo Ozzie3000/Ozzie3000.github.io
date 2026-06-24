@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cube Tic-Tac-Toe (Three.js) — Oz</title>
+    <link rel="stylesheet" href="stylesheets/stylesheet.css">
+</head>
+<body class="glass cube-page">
+
+    <h1>Cube Tic-Tac-Toe</h1>
+    <p class="ctt-sub">Six faces, one cube. Win the most faces to win the round. (Three.js — Version B)</p>
+
+    <!-- Mode selection -->
+    <div class="ctt-row" id="ctt-mode">
+        <button id="ctt-btn-ai">vs AI (Computer)</button>
+        <button id="ctt-btn-local" class="ctt-active">2-Player (Local)</button>
+    </div>
+
+    <!-- AI settings: difficulty + which symbol you play -->
+    <div class="ctt-row ctt-settings" id="ctt-settings" style="display: none;">
+        <label>Difficulty:</label>
+        <input type="range" id="ctt-difficulty" min="1" max="10" value="5">
+        <span class="ctt-diff-value" id="ctt-difficulty-display">5</span>
+        <label>You are:</label>
+        <button id="ctt-sym-x" class="ctt-active">X</button>
+        <button id="ctt-sym-o">O</button>
+    </div>
+
+    <!-- Scoreboards -->
+    <div class="ctt-scoreboard">
+        <div class="ctt-sb-title">This Round — faces won</div>
+        <div class="ctt-score x" id="ctt-round-x">X: 0</div>
+        <div class="ctt-score draw" id="ctt-round-draw">Draw: 0</div>
+        <div class="ctt-score o" id="ctt-round-o">O: 0</div>
+    </div>
+    <div class="ctt-scoreboard">
+        <div class="ctt-sb-title">Overall — rounds won</div>
+        <div class="ctt-score x" id="ctt-overall-x">X: 0</div>
+        <div class="ctt-score draw" id="ctt-overall-draw">Draw: 0</div>
+        <div class="ctt-score o" id="ctt-overall-o">O: 0</div>
+    </div>
+
+    <div class="ctt-status" id="ctt-status">Loading…</div>
+
+    <!-- Rotate / snap-to-face controls -->
+    <div class="ctt-row ctt-rotate-row" id="ctt-rotate">
+        <button data-face="0">Front</button>
+        <button data-face="2">Right</button>
+        <button data-face="1">Back</button>
+        <button data-face="3">Left</button>
+        <button data-face="4">Top</button>
+        <button data-face="5">Bottom</button>
+        <button data-view="iso" class="ctt-active">3D View</button>
+    </div>
+
+    <!-- Three.js renders its canvas into this container -->
+    <div class="ctt-three" id="ctt-three"></div>
+
+    <!-- Actions -->
+    <div class="ctt-row">
+        <button id="ctt-next">Next Round</button>
+        <button id="ctt-reset">Reset All Scores</button>
+    </div>
+
+    <canvas id="fireworks-canvas"></canvas>
+
+    <!-- Classic global build so the page also runs from file:// (needs internet) -->
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+    <script src="javascripts/cubetictactoe.js"></script>
+    <script src="javascripts/cubetictactoe-three.js"></script>
+    <script src="js/copyright.js"></script>
+</body>
+</html>

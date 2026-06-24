@@ -631,3 +631,228 @@ body.glass hr {
   margin: 18px auto;
   width: 60%;
 }
+
+/* =====================================================================
+   Cube Tic-Tac-Toe   (Cube-Tic-Tac-Toe-CSS-A.html + ...-CSS-B.html)
+   ---------------------------------------------------------------------
+   Used together with <body class="glass cube-page">. The glass theme
+   above supplies buttons, the dark gradient and the green accent; this
+   block adds the cube, the cells, the face tints and the two scoreboards.
+   Everything is scoped under body.cube-page so it never leaks elsewhere.
+   X = red, O = blue, draw = grey — per the game rules.
+   ===================================================================== */
+
+body.cube-page {
+  --cube-size: clamp(220px, 78vw, 360px);
+  --x-color: #ff7676;
+  --o-color: #74a8ff;
+  --draw-color: #b6b6b6;
+  padding: 18px 14px 120px;
+}
+
+body.cube-page h1 { font-size: clamp(22px, 5vw, 30px); margin: 6px 0 4px; }
+body.cube-page .ctt-sub { color: #9fb08a; margin: 0 0 14px; font-size: 14px; }
+
+/* Generic centered control row (mode toggle, settings, action buttons) */
+.cube-page .ctt-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  max-width: 640px;
+  margin: 0 auto 12px;
+}
+
+/* A button that is currently the chosen mode / symbol. Overrides the
+   glass button's default look with the solid green accent. */
+.cube-page .ctt-active {
+  background: #b5e853 !important;
+  color: #10140c !important;
+  text-shadow: none !important;
+  box-shadow: 0 0 0 2px rgba(181, 232, 83, 0.35) !important;
+}
+
+/* Difficulty slider */
+.cube-page .ctt-settings label { color: #b5e853; font-weight: bold; font-size: 14px; }
+.cube-page input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: clamp(120px, 50vw, 180px);
+  height: 6px;
+  border-radius: 6px;
+  background: rgba(181, 232, 83, 0.25);
+  outline: none;
+  cursor: pointer;
+}
+.cube-page input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #b5e853;
+  box-shadow: 0 0 6px rgba(181, 232, 83, 0.6);
+  cursor: pointer;
+}
+.cube-page input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: #b5e853;
+  cursor: pointer;
+}
+.cube-page .ctt-diff-value {
+  min-width: 28px;
+  font-weight: bold;
+  color: #b5e853;
+  text-align: center;
+}
+
+/* Scoreboards — two panels: faces this round + rounds overall */
+.cube-page .ctt-scoreboard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  justify-content: center;
+  align-items: center;
+  max-width: 520px;
+  margin: 0 auto 10px;
+  padding: 10px 16px;
+  background: rgba(20, 24, 18, 0.55);
+  border: 1px solid rgba(181, 232, 83, 0.35);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.cube-page .ctt-scoreboard .ctt-sb-title {
+  width: 100%;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9fb08a;
+  margin-bottom: 2px;
+}
+.cube-page .ctt-score { font-weight: bold; font-size: clamp(0.85rem, 2.5vw, 1rem); min-width: 90px; text-align: center; }
+.cube-page .ctt-score.x { color: var(--x-color); }
+.cube-page .ctt-score.o { color: var(--o-color); }
+.cube-page .ctt-score.draw { color: var(--draw-color); }
+
+/* Status line */
+.cube-page .ctt-status {
+  min-height: 30px;
+  margin: 6px auto 4px;
+  font-size: clamp(1rem, 3vw, 1.3rem);
+  font-weight: bold;
+  color: #eaeaea;
+  text-align: center;
+}
+
+/* ---- Version A: the CSS 3D cube -------------------------------- */
+.cube-page .ctt-scene {
+  width: var(--cube-size);
+  height: var(--cube-size);
+  margin: calc(var(--cube-size) * 0.18) auto;
+  perspective: 1100px;
+  touch-action: none; /* JS owns drag-to-rotate */
+}
+.cube-page .ctt-cube {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(-22deg) rotateY(-32deg);
+  transition: transform 0.55s ease;
+}
+.cube-page .ctt-cube.ctt-dragging { transition: none; }
+
+.cube-page .ctt-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 4%;
+  padding: 5%;
+  box-sizing: border-box;
+  background: rgba(8, 10, 7, 0.92);
+  border: 2px solid rgba(181, 232, 83, 0.5);
+  border-radius: 10px;
+  backface-visibility: hidden;
+  transition: background 0.3s, border-color 0.3s;
+}
+/* Face placement on the cube. translateZ = half the cube edge. */
+.cube-page .ctt-face[data-face="0"] { transform: rotateY(0deg)    translateZ(calc(var(--cube-size) / 2)); }
+.cube-page .ctt-face[data-face="1"] { transform: rotateY(180deg)  translateZ(calc(var(--cube-size) / 2)); }
+.cube-page .ctt-face[data-face="2"] { transform: rotateY(90deg)   translateZ(calc(var(--cube-size) / 2)); }
+.cube-page .ctt-face[data-face="3"] { transform: rotateY(-90deg)  translateZ(calc(var(--cube-size) / 2)); }
+.cube-page .ctt-face[data-face="4"] { transform: rotateX(90deg)   translateZ(calc(var(--cube-size) / 2)); }
+.cube-page .ctt-face[data-face="5"] { transform: rotateX(-90deg)  translateZ(calc(var(--cube-size) / 2)); }
+
+.cube-page .ctt-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(22, 27, 19, 0.95);
+  border-radius: 5px;
+  font-size: calc(var(--cube-size) / 9);
+  font-weight: bold;
+  line-height: 1;
+  color: #eaeaea;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background 0.15s;
+}
+.cube-page .ctt-cell.x { color: var(--x-color); text-shadow: 0 0 8px rgba(255, 118, 118, 0.6); }
+.cube-page .ctt-cell.o { color: var(--o-color); text-shadow: 0 0 8px rgba(116, 168, 255, 0.6); }
+.cube-page .ctt-cell:hover { background: rgba(181, 232, 83, 0.22); }
+
+/* Finished-face tints */
+.cube-page .ctt-face.win-x { background: rgba(150, 24, 24, 0.55); border-color: var(--x-color); }
+.cube-page .ctt-face.win-o { background: rgba(24, 54, 150, 0.55); border-color: var(--o-color); }
+.cube-page .ctt-face.draw  { background: rgba(90, 90, 90, 0.6);   border-color: var(--draw-color); }
+.cube-page .ctt-face.finished .ctt-cell { cursor: default; background: rgba(0, 0, 0, 0.25); }
+.cube-page .ctt-face.finished .ctt-cell:hover { background: rgba(0, 0, 0, 0.25); }
+
+/* Rotate / snap-to-face controls */
+.cube-page .ctt-rotate-row { gap: 6px; }
+.cube-page .ctt-rotate-row button {
+  min-width: 0;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+/* ---- Version B: the Three.js cube ------------------------------ */
+.cube-page .ctt-three {
+  width: 100%;
+  max-width: 480px;
+  height: clamp(300px, 72vw, 460px);
+  margin: 14px auto;
+  touch-action: none;
+}
+.cube-page .ctt-three canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 14px;
+  cursor: grab;
+}
+.cube-page .ctt-three canvas:active { cursor: grabbing; }
+
+/* Fireworks overlay (shared by both versions) */
+.cube-page #fireworks-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 50;
+}
+
+@media (max-width: 480px) {
+  body.cube-page { padding-bottom: 90px; }
+  .cube-page .ctt-row { gap: 8px; }
+  .cube-page .ctt-score { min-width: 78px; }
+}
