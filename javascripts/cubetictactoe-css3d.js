@@ -51,6 +51,8 @@
 
   const game = new CubeTicTacToe({
     onReset: function () {
+      lastAiCell = null;
+      resetFaceButtons();
       for (let f = 0; f < cells.length; f++) {
         const face = cubeEl.children[f];
         face.className = "ctt-face";
@@ -67,11 +69,17 @@
       const cell = cells[face][idx];
       cell.textContent = player;
       cell.classList.add(player.toLowerCase());
+      // Rotate to show the AI's move + pulse the cell so it's easy to spot.
+      if (game.gameMode === "ai" && player === game.aiSymbol) {
+        snapToFace(face);
+        glowCell(cell);
+      }
     },
     onFaceFinish: function (face, status) {
       const faceEl = cubeEl.children[face];
       faceEl.classList.add("finished");
       faceEl.classList.add(status === "draw" ? "draw" : "win-" + status.toLowerCase());
+      colorFaceButton(face, status);
     },
     onStatus: function (text) { statusEl.textContent = text; },
     onScores: function (round, overall) {
@@ -152,16 +160,54 @@
     for (let i = 0; i < btns.length; i++) btns[i].classList.remove("ctt-active");
   }
 
+  // Rotate the cube to bring a given face head-on, and light up its button.
+  function snapToFace(face) {
+    const target = SNAP[String(face)];
+    if (!target) return;
+    rotX = target.x;
+    rotY = target.y;
+    applyRotation();
+    clearActiveView();
+    const btn = document.querySelector('#ctt-rotate button[data-face="' + face + '"]');
+    if (btn) btn.classList.add("ctt-active");
+  }
+
+  // Pulse the AI's most-recent cell (restarting the CSS animation each time).
+  let lastAiCell = null;
+  function glowCell(cell) {
+    if (lastAiCell) lastAiCell.classList.remove("ctt-last");
+    void cell.offsetWidth; // force reflow so the animation replays
+    cell.classList.add("ctt-last");
+    lastAiCell = cell;
+  }
+
+  // Tint a face's snap button to its result; clear all on reset.
+  function colorFaceButton(face, status) {
+    const btn = document.querySelector('#ctt-rotate button[data-face="' + face + '"]');
+    if (!btn) return;
+    btn.classList.remove("ctt-face-x", "ctt-face-o", "ctt-face-draw");
+    btn.classList.add(status === "draw" ? "ctt-face-draw" : "ctt-face-" + status.toLowerCase());
+  }
+  function resetFaceButtons() {
+    const btns = document.querySelectorAll("#ctt-rotate button[data-face]");
+    for (let i = 0; i < btns.length; i++) {
+      btns[i].classList.remove("ctt-face-x", "ctt-face-o", "ctt-face-draw");
+    }
+  }
+
   // Snap-to-face / iso-view buttons
   $("ctt-rotate").addEventListener("click", function (e) {
     const btn = e.target.closest("button");
     if (!btn) return;
-    clearActiveView();
-    btn.classList.add("ctt-active");
-    const target = btn.hasAttribute("data-view") ? ISO_VIEW : SNAP[btn.getAttribute("data-face")];
-    rotX = target.x;
-    rotY = target.y;
-    applyRotation();
+    if (btn.hasAttribute("data-view")) {
+      clearActiveView();
+      btn.classList.add("ctt-active");
+      rotX = ISO_VIEW.x;
+      rotY = ISO_VIEW.y;
+      applyRotation();
+    } else {
+      snapToFace(parseInt(btn.getAttribute("data-face"), 10));
+    }
   });
 
   /* ---- UI controls ------------------------------------------------ */

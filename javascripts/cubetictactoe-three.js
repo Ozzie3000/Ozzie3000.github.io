@@ -184,14 +184,42 @@
     for (let i = 0; i < btns.length; i++) btns[i].classList.remove("ctt-active");
   }
 
+  // Tint a face's snap button to its result; clear all on reset.
+  function colorFaceButton(face, status) {
+    const btn = document.querySelector('#ctt-rotate button[data-face="' + face + '"]');
+    if (!btn) return;
+    btn.classList.remove("ctt-face-x", "ctt-face-o", "ctt-face-draw");
+    btn.classList.add(status === "draw" ? "ctt-face-draw" : "ctt-face-" + status.toLowerCase());
+  }
+  function resetFaceButtons() {
+    const btns = document.querySelectorAll("#ctt-rotate button[data-face]");
+    for (let i = 0; i < btns.length; i++) {
+      btns[i].classList.remove("ctt-face-x", "ctt-face-o", "ctt-face-draw");
+    }
+  }
+
+  // Rotate the cube to bring a given face toward the camera + light its button.
+  function snapToFace(face) {
+    const t = SNAP[String(face)];
+    if (!t) return;
+    tgtX = t.x;
+    tgtY = t.y;
+    clearActiveView();
+    const btn = document.querySelector('#ctt-rotate button[data-face="' + face + '"]');
+    if (btn) btn.classList.add("ctt-active");
+  }
+
   $("ctt-rotate").addEventListener("click", function (e) {
     const btn = e.target.closest("button");
     if (!btn) return;
-    clearActiveView();
-    btn.classList.add("ctt-active");
-    const t = btn.hasAttribute("data-view") ? ISO : SNAP[btn.getAttribute("data-face")];
-    tgtX = t.x;
-    tgtY = t.y;
+    if (btn.hasAttribute("data-view")) {
+      clearActiveView();
+      btn.classList.add("ctt-active");
+      tgtX = ISO.x;
+      tgtY = ISO.y;
+    } else {
+      snapToFace(parseInt(btn.getAttribute("data-face"), 10));
+    }
   });
 
   /* ---- Tap → raycast → move -------------------------------------- */
@@ -215,6 +243,8 @@
 
   const game = new CubeTicTacToe({
     onReset: function () {
+      clearPulse();
+      resetFaceButtons();
       for (let f = 0; f < CubeTicTacToe.FACE_COUNT; f++) {
         facePlanes[f].material.color.setHex(COL.faceDefault);
         for (let i = 0; i < 9; i++) paintCell(cellData[f][i], "");
@@ -222,10 +252,16 @@
     },
     onCell: function (face, idx, player) {
       paintCell(cellData[face][idx], player);
+      // Rotate to show the AI's move + pulse the cell so it's easy to spot.
+      if (game.gameMode === "ai" && player === game.aiSymbol) {
+        snapToFace(face);
+        startPulse(face, idx);
+      }
     },
     onFaceFinish: function (face, status) {
       const hex = status === "X" ? COL.faceX : status === "O" ? COL.faceO : COL.faceDraw;
       facePlanes[face].material.color.setHex(hex);
+      colorFaceButton(face, status);
     },
     onStatus: function (text) { statusEl.textContent = text; },
     onScores: function (round, overall) {
@@ -268,6 +304,36 @@
     game.resetAll();
   });
 
+  /* ---- AI move pulse --------------------------------------------- */
+  // The just-played cell briefly throbs (scales up + pops toward the
+  // camera), decaying over PULSE_DUR seconds. Driven from the render loop.
+  const PULSE_DUR = 1.4;       // seconds
+  const PULSE_BASE_Z = 0.02;   // matches the cell tile z offset
+  let pulse = null;            // { mesh, start }
+
+  function startPulse(face, idx) {
+    const mesh = pickables[face * 9 + idx];
+    if (pulse && pulse.mesh !== mesh) resetMesh(pulse.mesh);
+    pulse = { mesh: mesh, start: performance.now() };
+  }
+  function resetMesh(mesh) {
+    mesh.scale.setScalar(1);
+    mesh.position.z = PULSE_BASE_Z;
+  }
+  function clearPulse() {
+    if (pulse) { resetMesh(pulse.mesh); pulse = null; }
+  }
+  function updatePulse() {
+    if (!pulse) return;
+    const t = (performance.now() - pulse.start) / 1000;
+    if (t >= PULSE_DUR) { resetMesh(pulse.mesh); pulse = null; return; }
+    const decay = 1 - t / PULSE_DUR;                   // 1 -> 0
+    const throb = Math.abs(Math.sin(t * Math.PI * 3)); // a few beats
+    const amp = 0.22 * decay * throb;
+    pulse.mesh.scale.setScalar(1 + amp);
+    pulse.mesh.position.z = PULSE_BASE_Z + amp * 0.5;
+  }
+
   /* ---- Resize + render loop -------------------------------------- */
 
   function resize() {
@@ -287,6 +353,7 @@
     curY += (tgtY - curY) * 0.18;
     cube.rotation.x = curX;
     cube.rotation.y = curY;
+    updatePulse();
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
   }

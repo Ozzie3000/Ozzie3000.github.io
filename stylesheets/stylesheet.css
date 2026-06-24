@@ -753,7 +753,9 @@ body.cube-page .ctt-sub { color: #9fb08a; margin: 0 0 14px; font-size: 14px; }
 .cube-page .ctt-scene {
   width: var(--cube-size);
   height: var(--cube-size);
-  margin: calc(var(--cube-size) * 0.18) auto;
+  /* Extra bottom room: a rotating cube's faces project past the square, so
+     keep them from covering the action buttons below. */
+  margin: calc(var(--cube-size) * 0.18) auto calc(var(--cube-size) * 0.42);
   perspective: 1100px;
   touch-action: none; /* JS owns drag-to-rotate */
 }
@@ -810,6 +812,14 @@ body.cube-page .ctt-sub { color: #9fb08a; margin: 0 0 14px; font-size: 14px; }
 .cube-page .ctt-cell.o { color: var(--o-color); text-shadow: 0 0 8px rgba(116, 168, 255, 0.6); }
 .cube-page .ctt-cell:hover { background: rgba(181, 232, 83, 0.22); }
 
+/* Glow pulse on the AI's most-recent move (Version A) */
+.cube-page .ctt-cell.ctt-last { animation: ctt-pulse 0.85s ease-out 2; }
+@keyframes ctt-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(181, 232, 83, 0.85); background: rgba(181, 232, 83, 0.4); }
+  70%  { box-shadow: 0 0 13px 9px rgba(181, 232, 83, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(181, 232, 83, 0); }
+}
+
 /* Finished-face tints */
 .cube-page .ctt-face.win-x { background: rgba(150, 24, 24, 0.55); border-color: var(--x-color); }
 .cube-page .ctt-face.win-o { background: rgba(24, 54, 150, 0.55); border-color: var(--o-color); }
@@ -823,6 +833,28 @@ body.cube-page .ctt-sub { color: #9fb08a; margin: 0 0 14px; font-size: 14px; }
   min-width: 0;
   padding: 8px 14px;
   font-size: 13px;
+}
+
+/* A snap-to-face button takes its finished face's color, so players can see
+   at a glance which faces are still open (uncolored). Uses !important +
+   higher specificity to win over the green .ctt-active highlight. */
+.cube-page #ctt-rotate button.ctt-face-x {
+  background: var(--x-color) !important;
+  color: #2a0c0c !important;
+  border-color: var(--x-color) !important;
+  text-shadow: none !important;
+}
+.cube-page #ctt-rotate button.ctt-face-o {
+  background: var(--o-color) !important;
+  color: #0a1530 !important;
+  border-color: var(--o-color) !important;
+  text-shadow: none !important;
+}
+.cube-page #ctt-rotate button.ctt-face-draw {
+  background: var(--draw-color) !important;
+  color: #1a1a1a !important;
+  border-color: var(--draw-color) !important;
+  text-shadow: none !important;
 }
 
 /* ---- Version B: the Three.js cube ------------------------------ */
