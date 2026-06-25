@@ -112,16 +112,22 @@
 
     var selected = null; // null = random colour for the next candle
 
+    // The .candle is a 400px-wide box with the visible flame centred inside,
+    // but `left` positions the box's left edge. Shift by half the box width so
+    // the x we pass is the candle's centre (keeps taps under the finger and
+    // the opening row on-screen, which matters on narrow phones).
+    var CANDLE_HALF = 200;
+
     function rand(a, b) { return a + Math.random() * (b - a); }
 
-    // Place a candle so its base sits on the mantel at horizontal x (px).
+    // Place a candle so its base sits on the mantel, centred at horizontal x (px).
     function lightCandle(xPx, theme) {
       var t = theme ||
         (selected != null ? PALETTE[selected]
                           : PALETTE[Math.floor(Math.random() * PALETTE.length)]);
       Candle.create(stage, {
         scale: rand(0.45, 0.95),
-        left: xPx + "px",
+        left: (xPx - CANDLE_HALF) + "px",
         bottom: rand(7, 11) + "%",   // rest on / just above the mantel
         count: 110,
         flame: t.flame, flameBase: t.flameBase, wax: t.wax
