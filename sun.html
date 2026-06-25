@@ -22,6 +22,7 @@
     color: #e7d9a6;
     font-family: Monaco, Consolas, "Courier New", monospace;
     overflow: hidden;
+    touch-action: manipulation; /* kill the double-tap-zoom delay on taps */
   }
 
   .overlay { position: absolute; left: 0; right: 0; top: 0; z-index: 3; text-align: center;
@@ -59,6 +60,18 @@
 
   /* Copyright line, pinned to the very bottom (filled in by copyright.js). */
   footer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; text-align: center; }
+
+  /* Small screens / touch: roomier tap targets and tighter chrome so the
+     controls don't crowd the suns. (Sun SIZE is handled in JS via scale.) */
+  @media (max-width: 600px) {
+    .overlay { padding: 14px 12px; }
+    .overlay p { font-size: 12px; }
+    .swatches { gap: 11px; max-width: 320px; margin-top: 13px; }
+    .swatch { width: 30px; height: 30px; }
+    .controls { gap: 12px; margin-top: 12px; }
+    .controls button { font-size: 13px; padding: 11px 16px; }
+    .hint { bottom: 13%; }
+  }
 </style>
 </head>
 <body>
@@ -97,6 +110,21 @@
 
     var selected = null; // null = random colour for the next sun
 
+    // Tune for screen size: the gooey blur()+contrast() filter is GPU-heavy
+    // and a base sun is ~1000px, so smaller screens get smaller, fewer,
+    // lighter suns. (min side <= 600px ≈ a phone or small tablet.)
+    var small     = Math.min(window.innerWidth, window.innerHeight) <= 600;
+    var SCALE_MIN = small ? 0.16 : 0.30;
+    var SCALE_MAX = small ? 0.36 : 0.70;
+    var FLAMES    = small ? 60   : 100;
+    var MAX_SUNS  = small ? 8    : 16;
+
+    // On touch devices, say "Tap" instead of "Click".
+    if ("ontouchstart" in window) {
+      var hintEl = document.querySelector(".hint");
+      if (hintEl) hintEl.textContent = "Tap anywhere to spawn a sun";
+    }
+
     function rand(a, b) { return a + Math.random() * (b - a); }
 
     // Spawn a sun centred at (xPx, yPx) on the stage.
@@ -105,11 +133,17 @@
         (selected != null ? PALETTE[selected]
                           : PALETTE[Math.floor(Math.random() * PALETTE.length)]);
       Sun.create(stage, {
-        scale: rand(0.30, 0.70),
+        count: FLAMES,
+        scale: rand(SCALE_MIN, SCALE_MAX),
         left: xPx + "px",
         top:  yPx + "px",
         fire: t.fire, border: t.border, glow: t.glow
       });
+
+      // Cap live suns so the heavy filter can't pile up and choke the device
+      // (tighter on phones); drop the oldest once over the limit.
+      var live = stage.getElementsByClassName("solar");
+      while (live.length > MAX_SUNS) live[0].remove();
     }
 
     /* ---- Swatch row: choose the next sun's colour ------------------- */
@@ -145,11 +179,17 @@
       })(p);
     }
 
-    // Opening scene: a few suns scattered across the sky.
+    // Opening scene: a few suns scattered across the sky (fewer on phones,
+    // kept below the title row up top).
     var w = stage.clientWidth, h = stage.clientHeight;
-    spawnSun(w * 0.30, h * 0.42, PALETTE[0]);
-    spawnSun(w * 0.68, h * 0.58, PALETTE[3]);
-    spawnSun(w * 0.82, h * 0.34, PALETTE[2]);
+    if (small) {
+      spawnSun(w * 0.34, h * 0.52, PALETTE[0]);
+      spawnSun(w * 0.70, h * 0.68, PALETTE[3]);
+    } else {
+      spawnSun(w * 0.30, h * 0.42, PALETTE[0]);
+      spawnSun(w * 0.68, h * 0.58, PALETTE[3]);
+      spawnSun(w * 0.82, h * 0.34, PALETTE[2]);
+    }
 
     // Click the sky to spawn a sun where you clicked.
     stage.addEventListener("click", function (e) {
