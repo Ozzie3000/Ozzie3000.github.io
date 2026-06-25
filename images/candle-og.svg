@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="100%" r="100%">
+      <stop offset="0%" stop-color="#2a1c05"/>
+      <stop offset="55%" stop-color="#0c0900"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+    <linearGradient id="wax" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ca9800"/>
+      <stop offset="55%" stop-color="#573903"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </linearGradient>
+    <radialGradient id="waxtop" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#a46800"/>
+      <stop offset="45%" stop-color="#5c3104"/>
+      <stop offset="100%" stop-color="#905602"/>
+    </radialGradient>
+    <radialGradient id="flame" cx="50%" cy="62%" r="60%">
+      <stop offset="0%" stop-color="#fff7e0"/>
+      <stop offset="35%" stop-color="#ffd24a"/>
+      <stop offset="70%" stop-color="#ff7a18"/>
+      <stop offset="100%" stop-color="#7a1d00"/>
+    </radialGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff9a3a" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ff9a3a" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- candle group, left of centre to leave room for text -->
+  <g transform="translate(360 70)">
+    <!-- glow halo -->
+    <ellipse cx="0" cy="120" rx="190" ry="220" fill="url(#halo)"/>
+
+    <!-- wax body -->
+    <rect x="-70" y="190" width="140" height="330" fill="url(#wax)"/>
+    <!-- wax top -->
+    <ellipse cx="0" cy="190" rx="70" ry="26" fill="url(#waxtop)"/>
+    <!-- wick -->
+    <rect x="-3" y="150" width="6" height="48" rx="3" fill="#1a1208"/>
+
+    <!-- flame -->
+    <path d="M0 30 C 70 120, 60 210, 0 235 C -60 210, -70 120, 0 30 Z"
+          fill="url(#flame)" filter="url(#soft)"/>
+    <path d="M0 95 C 26 140, 22 195, 0 210 C -22 195, -26 140, 0 95 Z"
+          fill="#fff7d6" opacity="0.9"/>
+  </g>
+
+  <!-- title -->
+  <g font-family="Menlo, Monaco, Consolas, monospace" fill="#ffcf73">
+    <text x="640" y="300" font-size="92" font-weight="700"
+          style="text-shadow:0 0 18px rgba(255,160,40,.4)">Candles</text>
+    <text x="642" y="352" font-size="30" fill="#9a8a5d">reusable pure-CSS flames</text>
+    <text x="642" y="398" font-size="24" fill="#6f6238">ozzie3000.github.io</text>
+  </g>
+</svg>

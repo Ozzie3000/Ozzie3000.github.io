@@ -1,0 +1,136 @@
+/* =====================================================================
+   Reusable pure-CSS candle flame
+   ---------------------------------------------------------------------
+   Adapted from Chokcoco's "candle" pen:
+   https://codepen.io/Chokcoco/pen/jJJbmz
+   Refactored from SCSS into a reusable, themeable component so it can be
+   dropped on any page and repeated for one or more background candles.
+
+   MARKUP
+     <div class="candle">
+       <div class="candle__body"></div>
+       <div class="candle__fire-box">
+         <div class="candle__fire">
+           <!-- many <div class="candle__ball"></div> particles -->
+         </div>
+       </div>
+     </div>
+
+   The particles can be written by hand, but it's far easier to let
+   candle.js spawn (and randomise) them:  Candle.create(stage, {...}).
+   Each particle reads three CSS variables, set inline by the spawner:
+     --s  particle size      --x  horizontal offset      --d  delay
+
+   THEME / PLACE a candle by setting these on .candle (inline or in CSS):
+     --candle-scale : overall size  (1 ~= the original ~400px artboard)
+     --flame        : particle / glow colour
+     --flame-base   : dark base of the flame teardrop
+     --wax-light / --wax-dark : candle body gradient colours
+
+   NOTE: the flame relies on a contrast() filter, so it looks best over a
+   DARK background. Place candles inside a positioned, dark container.
+   ===================================================================== */
+
+.candle {
+  --candle-scale: 1;
+  --flame: #fa8763;
+  --flame-base: #761b00;
+  --wax-light: #ca9800;
+  --wax-dark: #573903;
+
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  transform: scale(var(--candle-scale));
+  transform-origin: bottom center;
+  pointer-events: none; /* purely decorative */
+}
+
+/* ---- Wax body, wax top (::before) and wick (::after) ------------- */
+.candle__body {
+  position: relative;
+  width: 100px;
+  height: 300px;
+  margin: 280px auto;
+  background: linear-gradient(230deg, var(--wax-light), var(--wax-dark), #000 70%);
+  z-index: 1;
+}
+.candle__body::before {
+  content: "";
+  position: absolute;
+  width: 100px;
+  height: 40px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  top: -20px;
+  left: 0;                /* explicit, so an inherited text-align can't shift it */
+  background: radial-gradient(#a46800, #5c3104 45%, #905602 100%);
+}
+.candle__body::after {
+  content: "";
+  position: absolute;
+  width: 4px;
+  height: 48px;
+  left: 50%;
+  top: -22px;
+  transform: translate(-50%, -50%);
+  border-radius: 50% 50% 0 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, .3) 0%, rgba(0, 0, 0, .8) 60%, #fff);
+  opacity: .7;
+  filter: blur(1px);
+}
+
+/* ---- Flame --------------------------------------------------------
+   blur + high contrast fuses the blurred particles into one crisp,
+   flickering flame (the "gooey" filter trick). */
+.candle__fire-box {
+  position: absolute;
+  top: 97px;
+  left: 50%;
+  width: 80px;
+  height: 200px;
+  transform: translate(-50%, -50%);
+  filter: blur(2px) contrast(20);
+}
+.candle__fire {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  border-radius: 45%;
+  box-sizing: border-box;
+  border: 120px solid #000;
+  border-bottom: 120px solid transparent;
+  transform: translate(-50%, 0) scaleX(.45);
+  background-color: var(--flame-base);
+}
+
+/* Rising particles. --s/--x/--d are set per-particle by candle.js;
+   the fallbacks keep a lone hand-written particle visible. */
+.candle__ball {
+  position: absolute;
+  display: block;
+  top: 60px;
+  width: var(--s, 20px);
+  height: var(--s, 20px);
+  left: var(--x, -10px);
+  background: var(--flame);
+  border-radius: 50%;
+  z-index: -1;
+  mix-blend-mode: screen;
+  animation: candle-rise 1s linear var(--d, 0s) infinite;
+}
+
+@keyframes candle-rise {
+  0%, 20% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  87.7% {
+    transform: translate(0, -170px);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(0, -170px);
+    opacity: 0;
+  }
+}

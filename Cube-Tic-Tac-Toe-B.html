@@ -15,6 +15,7 @@
 <meta name="twitter:image" content="https://ozzie3000.github.io/images/3D-tic-tac-toe.jpg">
 <title>Cube Tic-Tac-Toe (Three.js) — Oz</title>
 <link rel="stylesheet" href="stylesheets/stylesheet.css">
+<link rel="stylesheet" href="stylesheets/candle.css">
 </head>
 <body class="glass cube-page">
 
@@ -94,6 +95,19 @@
     <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
     <script src="javascripts/cubetictactoe.js"></script>
     <script src="javascripts/cubetictactoe-three.js"></script>
+    <script src="javascripts/candle.js"></script>
+    <script>
+      // Decorative candles tucked in the bottom corners — wide screens only.
+      if (window.innerWidth > 1280) {
+        Candle.create(document.body, {
+          scale: 0.8, left: "2%", count: 90,
+          flame: "#ffb347", flameBase: "#7a2e00", wax: "#b8860b"
+        }).classList.add("cube-candle");
+        var r = Candle.create(document.body, { scale: 0.8, count: 90 });
+        r.style.right = "2%";
+        r.classList.add("cube-candle");
+      }
+    </script>
     <script src="js/copyright.js"></script>
 </body>
 </html>

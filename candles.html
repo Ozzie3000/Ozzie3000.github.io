@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Candles — reusable CSS flames — Oz</title>
+<meta property="og:title" content="Candles — reusable CSS flames — Oz">
+<meta property="og:description" content="A reusable pure-CSS candle flame by Oz. Click the scene to light more candles.">
+<meta property="og:image" content="https://ozzie3000.github.io/images/candle-og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://ozzie3000.github.io/candles.html">
+<meta property="og:type" content="website">
+<meta name="author" content="Oz">
+
+<link rel="stylesheet" href="stylesheets/candle.css">
+<style>
+  /* Page chrome only — the candle itself lives entirely in candle.css. */
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: #000;
+    color: #e7d9a6;
+    font-family: Monaco, Consolas, "Courier New", monospace;
+    overflow: hidden;
+  }
+
+  .candle-stage {
+    position: relative;      /* candles are absolutely placed inside this */
+    height: 100vh;
+    overflow: hidden;
+    cursor: pointer;
+    background: radial-gradient(120% 90% at 50% 100%, #211603 0%, #0a0700 55%, #000 100%);
+  }
+
+  /* A simple mantel the candles sit on. */
+  .mantel {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 9%;
+    background: linear-gradient(180deg, #2a1d0c, #160f06);
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, .6), inset 0 2px 0 rgba(255, 200, 120, .12);
+    z-index: 2;
+  }
+
+  .overlay { position: absolute; left: 0; right: 0; top: 0; z-index: 3; text-align: center;
+             padding: 22px 16px; pointer-events: none; }
+  .overlay h1 { margin: 0; font-size: clamp(20px, 4vw, 28px); letter-spacing: 1px;
+                color: #ffcf73; text-shadow: 0 0 18px rgba(255, 160, 40, .35); }
+  .overlay p  { margin: 8px 0 0; font-size: 13px; color: #9a8a5d; }
+
+  .controls { position: absolute; top: 16px; right: 16px; z-index: 4; display: flex; gap: 8px; }
+  .controls button {
+    font-family: inherit; font-size: 12px; cursor: pointer;
+    color: #ffcf73; background: rgba(0, 0, 0, .45);
+    border: 1px solid rgba(255, 180, 80, .4); border-radius: 6px; padding: 7px 12px;
+  }
+  .controls button:hover { background: rgba(255, 180, 80, .15); }
+
+  .hint { position: absolute; left: 0; right: 0; bottom: 11%; z-index: 3; text-align: center;
+          font-size: 12px; color: #8a7a50; pointer-events: none; }
+</style>
+</head>
+<body>
+
+  <div class="candle-stage" id="stage">
+    <div class="overlay">
+      <h1>Candles</h1>
+      <p>A reusable pure-CSS flame &mdash; one stylesheet, one tiny spawner.</p>
+    </div>
+
+    <div class="controls">
+      <button id="add">Add candle</button>
+      <button id="clear">Clear</button>
+    </div>
+
+    <div class="hint">Click anywhere to light a candle</div>
+    <div class="mantel"></div>
+  </div>
+
+  <script src="javascripts/candle.js"></script>
+  <script>
+    var stage = document.getElementById("stage");
+
+    // A few warm + one cool flame colour to vary new candles.
+    var PALETTE = [
+      { flame: "#fa8763", flameBase: "#761b00", wax: "#ca9800" }, // classic
+      { flame: "#ffb347", flameBase: "#7a2e00", wax: "#b8860b" }, // amber
+      { flame: "#ff7676", flameBase: "#6e1414", wax: "#a8431e" }, // ember red
+      { flame: "#63b8fa", flameBase: "#002a76", wax: "#1e5fa8" }  // spirit blue
+    ];
+
+    function rand(a, b) { return a + Math.random() * (b - a); }
+
+    // Place a candle so its base sits on the mantel at horizontal x (px).
+    function lightCandle(xPx, theme) {
+      var t = theme || PALETTE[Math.floor(Math.random() * PALETTE.length)];
+      Candle.create(stage, {
+        scale: rand(0.45, 0.95),
+        left: xPx + "px",
+        bottom: rand(7, 11) + "%",   // rest on / just above the mantel
+        count: 110,
+        flame: t.flame, flameBase: t.flameBase, wax: t.wax
+      });
+    }
+
+    // Opening scene: a little row of candles.
+    var w = stage.clientWidth;
+    lightCandle(w * 0.50, PALETTE[0]);
+    lightCandle(w * 0.24, PALETTE[1]);
+    lightCandle(w * 0.74, PALETTE[2]);
+    lightCandle(w * 0.86, PALETTE[3]);
+
+    // Click the scene to light a candle where you clicked.
+    stage.addEventListener("click", function (e) {
+      // Ignore clicks on the control buttons.
+      if (e.target.closest(".controls")) return;
+      lightCandle(e.clientX);
+    });
+
+    document.getElementById("add").addEventListener("click", function () {
+      lightCandle(rand(stage.clientWidth * 0.1, stage.clientWidth * 0.9));
+    });
+    document.getElementById("clear").addEventListener("click", function () {
+      var all = stage.querySelectorAll(".candle");
+      for (var i = 0; i < all.length; i++) all[i].remove();
+    });
+  </script>
+  <script src="js/copyright.js"></script>
+</body>
+</html>

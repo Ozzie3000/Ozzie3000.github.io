@@ -171,31 +171,83 @@
   const metalCore = new THREE.Mesh(new THREE.BoxGeometry(1.985, 1.985, 1.985), metalMat);
   cube.add(metalCore);
 
-  // Glowing sun: a hot radial-gradient sphere + an additive corona halo.
+  // Glowing sun: a granulated surface sphere, a churning plasma shell, and
+  // a two-layer corona halo. Textures are baked once; only a few rotations
+  // and sines run per frame, so it stays cheap.
+  const SUN_TEX = 256;
+
+  // Hot radial base + procedural granulation (mottled plasma cells).
   function makeSunTexture() {
     const c = document.createElement("canvas");
-    c.width = c.height = 128;
+    c.width = c.height = SUN_TEX;
     const g = c.getContext("2d");
-    const grad = g.createRadialGradient(64, 64, 4, 64, 64, 64);
+    const grad = g.createRadialGradient(128, 110, 8, 128, 128, 150);
     grad.addColorStop(0.00, "#fff7e0");
     grad.addColorStop(0.35, "#ffd24a");
     grad.addColorStop(0.70, "#ff7a18");
     grad.addColorStop(1.00, "#7a1d00");
     g.fillStyle = grad;
-    g.fillRect(0, 0, 128, 128);
+    g.fillRect(0, 0, SUN_TEX, SUN_TEX);
+    // Speckle with soft light/dark blobs for a granular, living surface.
+    for (let i = 0; i < 320; i++) {
+      const x = Math.random() * SUN_TEX, y = Math.random() * SUN_TEX;
+      const r = Math.random() * 9 + 2;
+      const light = Math.random() > 0.45;
+      const a = Math.random() * 0.25 + 0.05;
+      const bg = g.createRadialGradient(x, y, 0, x, y, r);
+      bg.addColorStop(0, (light ? "rgba(255,244,200," : "rgba(150,40,0,") + a + ")");
+      bg.addColorStop(1, (light ? "rgba(255,244,200,0)" : "rgba(150,40,0,0)"));
+      g.fillStyle = bg;
+      g.beginPath();
+      g.arc(x, y, r, 0, Math.PI * 2);
+      g.fill();
+    }
     return new THREE.CanvasTexture(c);
   }
+
+  // Transparent shell of bright filaments; overlaid + rotated for churn.
+  function makePlasmaTexture() {
+    const c = document.createElement("canvas");
+    c.width = c.height = SUN_TEX;
+    const g = c.getContext("2d");
+    for (let i = 0; i < 60; i++) {
+      const x = Math.random() * SUN_TEX, y = Math.random() * SUN_TEX;
+      const r = Math.random() * 26 + 8;
+      const a = Math.random() * 0.18 + 0.04;
+      const bg = g.createRadialGradient(x, y, 0, x, y, r);
+      bg.addColorStop(0, "rgba(255,210,120," + a + ")");
+      bg.addColorStop(1, "rgba(255,120,30,0)");
+      g.fillStyle = bg;
+      g.beginPath();
+      g.arc(x, y, r, 0, Math.PI * 2);
+      g.fill();
+    }
+    return new THREE.CanvasTexture(c);
+  }
+
   const sunGroup = new THREE.Group();
   const sunMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(0.82, 32, 24),
+    new THREE.SphereGeometry(0.80, 40, 28),
     new THREE.MeshBasicMaterial({ map: makeSunTexture() })
   );
-  const coronaMat = new THREE.MeshBasicMaterial({
-    color: 0xff8a2a, transparent: true, opacity: 0.28,
+  const plasmaShell = new THREE.Mesh(
+    new THREE.SphereGeometry(0.84, 40, 28),
+    new THREE.MeshBasicMaterial({
+      map: makePlasmaTexture(), transparent: true, opacity: 0.9,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    })
+  );
+  const coronaInnerMat = new THREE.MeshBasicMaterial({
+    color: 0xffae3a, transparent: true, opacity: 0.30,
     blending: THREE.AdditiveBlending, depthWrite: false
   });
-  const corona = new THREE.Mesh(new THREE.SphereGeometry(0.98, 32, 24), coronaMat);
-  sunGroup.add(sunMesh, corona);
+  const coronaOuterMat = new THREE.MeshBasicMaterial({
+    color: 0xff6a12, transparent: true, opacity: 0.16,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  });
+  const coronaInner = new THREE.Mesh(new THREE.SphereGeometry(0.93, 32, 24), coronaInnerMat);
+  const coronaOuter = new THREE.Mesh(new THREE.SphereGeometry(0.995, 32, 24), coronaOuterMat);
+  sunGroup.add(sunMesh, plasmaShell, coronaInner, coronaOuter);
   cube.add(sunGroup);
 
   let finish = "chrome";
@@ -475,8 +527,15 @@
     cube.rotation.y = curY;
     if (finish === "sun") {
       const tt = performance.now() * 0.001;
-      corona.scale.setScalar(1 + 0.04 * Math.sin(tt * 2));
-      coronaMat.opacity = 0.24 + 0.06 * Math.sin(tt * 2);
+      // Core and plasma shell rotate opposite ways -> churning surface.
+      sunMesh.rotation.y += 0.0016;
+      plasmaShell.rotation.y -= 0.0026;
+      plasmaShell.rotation.x += 0.0009;
+      // Two coronas breathe on offset phases for a soft, volumetric halo.
+      coronaInner.scale.setScalar(1 + 0.035 * Math.sin(tt * 2));
+      coronaInnerMat.opacity = 0.26 + 0.07 * Math.sin(tt * 2);
+      coronaOuter.scale.setScalar(1 + 0.05 * Math.sin(tt * 1.5 + 1.3));
+      coronaOuterMat.opacity = 0.12 + 0.05 * Math.sin(tt * 1.5 + 1.3);
     }
     updatePulse();
     updateCurrent();
