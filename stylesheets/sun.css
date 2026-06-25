@@ -1,75 +1,1352 @@
-$fireCount: 100;
-$sunSize: 400px;
-
 body {
   background: #000;
   height: 100vh;
   overflow: hidden;
 }
+
 #ui {
   position: absolute;
   top: 50%;
   left: 50%;
-  
-  .cover {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: $sunSize - 20;
-    height: $sunSize - 20;
-    background: #000;
-    transform: translate(-50%, -50%);
-    border-radius: 100%;
-    box-shadow: 0 0 50px 10px rgba(200, 0, 0, 0.5);
-  }
-  .sun {
-    position: absolute;
-    width: 1000px;
-    height: 1000px;
-    transform: translate(-50%, -50%);
-    background: #000;
-    filter: blur(10px) contrast(15);
-    
-    &_border {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: $sunSize;
-      height: $sunSize;
-      border: 15px solid yellow;
-      border-radius: 100%;
-      box-sizing: border-box;
-      transform: translate(-50%, -50%);
-    }
-    &_fire {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform-origin: 0 0;
-      
-      &_inner {
-        box-sizing: border-box;
-      }
-      
-      @for $i from 1 through $fireCount {
-        &:nth-child(#{$i}) {
-          animation: sunFire #{random(10000) + 5000}ms infinite linear;
-          
-          .sun_fire_inner {
-            $size: #{random(100) + 40}px;
-            width: $size;
-            height: $size;
-            border-top: #{random(10) + 5}px solid orange;
-            border-right: #{random(10) + 5}px solid orange;
-            border-bottom: #{random(10) + 5}px solid orange;
-            border-left: #{random(10) + 5}px solid orange;
-            border-radius: #{random(70) + 10 + '%'} #{random(70) + 10 + '%'} #{random(70) + 10 + '%'} #{random(70) + 10 + '%'};
-            animation: sunFireInner #{random(3000) + 2000}ms infinite alternate linear;
-          }
-        }
-      }
-    }    
-  }
+}
+#ui .cover {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 380px;
+  height: 380px;
+  background: #000;
+  transform: translate(-50%, -50%);
+  border-radius: 100%;
+  box-shadow: 0 0 50px 10px rgba(200, 0, 0, 0.5);
+}
+#ui .sun {
+  position: absolute;
+  width: 1000px;
+  height: 1000px;
+  transform: translate(-50%, -50%);
+  background: #000;
+  filter: blur(10px) contrast(15);
+}
+#ui .sun_border {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 400px;
+  height: 400px;
+  border: 15px solid yellow;
+  border-radius: 100%;
+  box-sizing: border-box;
+  transform: translate(-50%, -50%);
+}
+#ui .sun_fire {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: 0 0;
+}
+#ui .sun_fire_inner {
+  box-sizing: border-box;
+}
+#ui .sun_fire:nth-child(1) {
+  animation: sunFire 8248ms infinite linear;
+}
+#ui .sun_fire:nth-child(1) .sun_fire_inner {
+  width: 81px;
+  height: 81px;
+  border-top: 13px solid orange;
+  border-right: 6px solid orange;
+  border-bottom: 6px solid orange;
+  border-left: 6px solid orange;
+  border-radius: 14% 23% 54% 51%;
+  animation: sunFireInner 2099ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(2) {
+  animation: sunFire 14319ms infinite linear;
+}
+#ui .sun_fire:nth-child(2) .sun_fire_inner {
+  width: 116px;
+  height: 116px;
+  border-top: 10px solid orange;
+  border-right: 6px solid orange;
+  border-bottom: 8px solid orange;
+  border-left: 11px solid orange;
+  border-radius: 57% 37% 31% 36%;
+  animation: sunFireInner 2249ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(3) {
+  animation: sunFire 9937ms infinite linear;
+}
+#ui .sun_fire:nth-child(3) .sun_fire_inner {
+  width: 74px;
+  height: 74px;
+  border-top: 13px solid orange;
+  border-right: 8px solid orange;
+  border-bottom: 6px solid orange;
+  border-left: 7px solid orange;
+  border-radius: 73% 63% 16% 14%;
+  animation: sunFireInner 2380ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(4) {
+  animation: sunFire 6103ms infinite linear;
+}
+#ui .sun_fire:nth-child(4) .sun_fire_inner {
+  width: 114px;
+  height: 114px;
+  border-top: 10px solid orange;
+  border-right: 9px solid orange;
+  border-bottom: 12px solid orange;
+  border-left: 10px solid orange;
+  border-radius: 57% 48% 18% 23%;
+  animation: sunFireInner 4578ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(5) {
+  animation: sunFire 14982ms infinite linear;
+}
+#ui .sun_fire:nth-child(5) .sun_fire_inner {
+  width: 60px;
+  height: 60px;
+  border-top: 8px solid orange;
+  border-right: 12px solid orange;
+  border-bottom: 14px solid orange;
+  border-left: 7px solid orange;
+  border-radius: 54% 70% 28% 52%;
+  animation: sunFireInner 4093ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(6) {
+  animation: sunFire 12507ms infinite linear;
+}
+#ui .sun_fire:nth-child(6) .sun_fire_inner {
+  width: 66px;
+  height: 66px;
+  border-top: 15px solid orange;
+  border-right: 7px solid orange;
+  border-bottom: 12px solid orange;
+  border-left: 12px solid orange;
+  border-radius: 43% 63% 39% 12%;
+  animation: sunFireInner 2748ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(7) {
+  animation: sunFire 6662ms infinite linear;
+}
+#ui .sun_fire:nth-child(7) .sun_fire_inner {
+  width: 80px;
+  height: 80px;
+  border-top: 13px solid orange;
+  border-right: 10px solid orange;
+  border-bottom: 13px solid orange;
+  border-left: 10px solid orange;
+  border-radius: 64% 69% 72% 30%;
+  animation: sunFireInner 3149ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(8) {
+  animation: sunFire 12307ms infinite linear;
+}
+#ui .sun_fire:nth-child(8) .sun_fire_inner {
+  width: 82px;
+  height: 82px;
+  border-top: 12px solid orange;
+  border-right: 13px solid orange;
+  border-bottom: 10px solid orange;
+  border-left: 8px solid orange;
+  border-radius: 75% 27% 21% 47%;
+  animation: sunFireInner 2494ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(9) {
+  animation: sunFire 9831ms infinite linear;
+}
+#ui .sun_fire:nth-child(9) .sun_fire_inner {
+  width: 45px;
+  height: 45px;
+  border-top: 13px solid orange;
+  border-right: 15px solid orange;
+  border-bottom: 12px solid orange;
+  border-left: 14px solid orange;
+  border-radius: 31% 64% 12% 57%;
+  animation: sunFireInner 3944ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(10) {
+  animation: sunFire 14532ms infinite linear;
+}
+#ui .sun_fire:nth-child(10) .sun_fire_inner {
+  width: 72px;
+  height: 72px;
+  border-top: 12px solid orange;
+  border-right: 6px solid orange;
+  border-bottom: 7px solid orange;
+  border-left: 15px solid orange;
+  border-radius: 69% 21% 11% 29%;
+  animation: sunFireInner 2936ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(11) {
+  animation: sunFire 10078ms infinite linear;
+}
+#ui .sun_fire:nth-child(11) .sun_fire_inner {
+  width: 55px;
+  height: 55px;
+  border-top: 13px solid orange;
+  border-right: 8px solid orange;
+  border-bottom: 15px solid orange;
+  border-left: 8px solid orange;
+  border-radius: 77% 53% 75% 23%;
+  animation: sunFireInner 4119ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(12) {
+  animation: sunFire 13779ms infinite linear;
+}
+#ui .sun_fire:nth-child(12) .sun_fire_inner {
+  width: 87px;
+  height: 87px;
+  border-top: 10px solid orange;
+  border-right: 10px solid orange;
+  border-bottom: 15px solid orange;
+  border-left: 13px solid orange;
+  border-radius: 44% 53% 17% 18%;
+  animation: sunFireInner 4557ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(13) {
+  animation: sunFire 12385ms infinite linear;
+}
+#ui .sun_fire:nth-child(13) .sun_fire_inner {
+  width: 91px;
+  height: 91px;
+  border-top: 10px solid orange;
+  border-right: 11px solid orange;
+  border-bottom: 8px solid orange;
+  border-left: 14px solid orange;
+  border-radius: 77% 12% 67% 40%;
+  animation: sunFireInner 2617ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(14) {
+  animation: sunFire 14728ms infinite linear;
+}
+#ui .sun_fire:nth-child(14) .sun_fire_inner {
+  width: 93px;
+  height: 93px;
+  border-top: 8px solid orange;
+  border-right: 7px solid orange;
+  border-bottom: 13px solid orange;
+  border-left: 13px solid orange;
+  border-radius: 29% 37% 27% 14%;
+  animation: sunFireInner 4184ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(15) {
+  animation: sunFire 5534ms infinite linear;
+}
+#ui .sun_fire:nth-child(15) .sun_fire_inner {
+  width: 81px;
+  height: 81px;
+  border-top: 14px solid orange;
+  border-right: 11px solid orange;
+  border-bottom: 14px solid orange;
+  border-left: 8px solid orange;
+  border-radius: 65% 11% 50% 78%;
+  animation: sunFireInner 4091ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(16) {
+  animation: sunFire 11743ms infinite linear;
+}
+#ui .sun_fire:nth-child(16) .sun_fire_inner {
+  width: 130px;
+  height: 130px;
+  border-top: 10px solid orange;
+  border-right: 14px solid orange;
+  border-bottom: 9px solid orange;
+  border-left: 9px solid orange;
+  border-radius: 68% 79% 68% 31%;
+  animation: sunFireInner 4736ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(17) {
+  animation: sunFire 10864ms infinite linear;
+}
+#ui .sun_fire:nth-child(17) .sun_fire_inner {
+  width: 70px;
+  height: 70px;
+  border-top: 10px solid orange;
+  border-right: 11px solid orange;
+  border-bottom: 14px solid orange;
+  border-left: 10px solid orange;
+  border-radius: 73% 31% 22% 31%;
+  animation: sunFireInner 3570ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(18) {
+  animation: sunFire 7957ms infinite linear;
+}
+#ui .sun_fire:nth-child(18) .sun_fire_inner {
+  width: 115px;
+  height: 115px;
+  border-top: 7px solid orange;
+  border-right: 8px solid orange;
+  border-bottom: 8px solid orange;
+  border-left: 6px solid orange;
+  border-radius: 70% 11% 28% 41%;
+  animation: sunFireInner 3910ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(19) {
+  animation: sunFire 8162ms infinite linear;
+}
+#ui .sun_fire:nth-child(19) .sun_fire_inner {
+  width: 73px;
+  height: 73px;
+  border-top: 10px solid orange;
+  border-right: 13px solid orange;
+  border-bottom: 6px solid orange;
+  border-left: 11px solid orange;
+  border-radius: 67% 42% 37% 42%;
+  animation: sunFireInner 2925ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(20) {
+  animation: sunFire 7709ms infinite linear;
+}
+#ui .sun_fire:nth-child(20) .sun_fire_inner {
+  width: 92px;
+  height: 92px;
+  border-top: 9px solid orange;
+  border-right: 7px solid orange;
+  border-bottom: 12px solid orange;
+  border-left: 10px solid orange;
+  border-radius: 61% 13% 49% 43%;
+  animation: sunFireInner 3659ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(21) {
+  animation: sunFire 9476ms infinite linear;
+}
+#ui .sun_fire:nth-child(21) .sun_fire_inner {
+  width: 51px;
+  height: 51px;
+  border-top: 13px solid orange;
+  border-right: 15px solid orange;
+  border-bottom: 10px solid orange;
+  border-left: 10px solid orange;
+  border-radius: 79% 41% 63% 45%;
+  animation: sunFireInner 3217ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(22) {
+  animation: sunFire 9123ms infinite linear;
+}
+#ui .sun_fire:nth-child(22) .sun_fire_inner {
+  width: 105px;
+  height: 105px;
+  border-top: 6px solid orange;
+  border-right: 6px solid orange;
+  border-bottom: 12px solid orange;
+  border-left: 8px solid orange;
+  border-radius: 71% 80% 55% 61%;
+  animation: sunFireInner 3396ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(23) {
+  animation: sunFire 10469ms infinite linear;
+}
+#ui .sun_fire:nth-child(23) .sun_fire_inner {
+  width: 112px;
+  height: 112px;
+  border-top: 14px solid orange;
+  border-right: 12px solid orange;
+  border-bottom: 6px solid orange;
+  border-left: 10px solid orange;
+  border-radius: 67% 16% 48% 42%;
+  animation: sunFireInner 4739ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(24) {
+  animation: sunFire 12865ms infinite linear;
+}
+#ui .sun_fire:nth-child(24) .sun_fire_inner {
+  width: 130px;
+  height: 130px;
+  border-top: 14px solid orange;
+  border-right: 15px solid orange;
+  border-bottom: 11px solid orange;
+  border-left: 15px solid orange;
+  border-radius: 58% 28% 53% 48%;
+  animation: sunFireInner 2030ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(25) {
+  animation: sunFire 5902ms infinite linear;
+}
+#ui .sun_fire:nth-child(25) .sun_fire_inner {
+  width: 126px;
+  height: 126px;
+  border-top: 12px solid orange;
+  border-right: 8px solid orange;
+  border-bottom: 13px solid orange;
+  border-left: 8px solid orange;
+  border-radius: 35% 33% 11% 79%;
+  animation: sunFireInner 2507ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(26) {
+  animation: sunFire 8359ms infinite linear;
+}
+#ui .sun_fire:nth-child(26) .sun_fire_inner {
+  width: 137px;
+  height: 137px;
+  border-top: 12px solid orange;
+  border-right: 9px solid orange;
+  border-bottom: 9px solid orange;
+  border-left: 15px solid orange;
+  border-radius: 40% 19% 73% 39%;
+  animation: sunFireInner 2335ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(27) {
+  animation: sunFire 6789ms infinite linear;
+}
+#ui .sun_fire:nth-child(27) .sun_fire_inner {
+  width: 58px;
+  height: 58px;
+  border-top: 15px solid orange;
+  border-right: 8px solid orange;
+  border-bottom: 10px solid orange;
+  border-left: 7px solid orange;
+  border-radius: 14% 50% 48% 34%;
+  animation: sunFireInner 2467ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(28) {
+  animation: sunFire 5261ms infinite linear;
+}
+#ui .sun_fire:nth-child(28) .sun_fire_inner {
+  width: 82px;
+  height: 82px;
+  border-top: 12px solid orange;
+  border-right: 8px solid orange;
+  border-bottom: 14px solid orange;
+  border-left: 10px solid orange;
+  border-radius: 47% 33% 71% 24%;
+  animation: sunFireInner 4444ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(29) {
+  animation: sunFire 5326ms infinite linear;
+}
+#ui .sun_fire:nth-child(29) .sun_fire_inner {
+  width: 114px;
+  height: 114px;
+  border-top: 7px solid orange;
+  border-right: 10px solid orange;
+  border-bottom: 13px solid orange;
+  border-left: 6px solid orange;
+  border-radius: 17% 42% 42% 75%;
+  animation: sunFireInner 4125ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(30) {
+  animation: sunFire 14602ms infinite linear;
+}
+#ui .sun_fire:nth-child(30) .sun_fire_inner {
+  width: 113px;
+  height: 113px;
+  border-top: 7px solid orange;
+  border-right: 10px solid orange;
+  border-bottom: 14px solid orange;
+  border-left: 14px solid orange;
+  border-radius: 76% 27% 62% 35%;
+  animation: sunFireInner 3321ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(31) {
+  animation: sunFire 5667ms infinite linear;
+}
+#ui .sun_fire:nth-child(31) .sun_fire_inner {
+  width: 76px;
+  height: 76px;
+  border-top: 6px solid orange;
+  border-right: 8px solid orange;
+  border-bottom: 6px solid orange;
+  border-left: 11px solid orange;
+  border-radius: 47% 66% 57% 20%;
+  animation: sunFireInner 4737ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(32) {
+  animation: sunFire 5065ms infinite linear;
+}
+#ui .sun_fire:nth-child(32) .sun_fire_inner {
+  width: 127px;
+  height: 127px;
+  border-top: 9px solid orange;
+  border-right: 12px solid orange;
+  border-bottom: 13px solid orange;
+  border-left: 9px solid orange;
+  border-radius: 41% 30% 79% 66%;
+  animation: sunFireInner 4995ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(33) {
+  animation: sunFire 5668ms infinite linear;
+}
+#ui .sun_fire:nth-child(33) .sun_fire_inner {
+  width: 124px;
+  height: 124px;
+  border-top: 15px solid orange;
+  border-right: 13px solid orange;
+  border-bottom: 12px solid orange;
+  border-left: 12px solid orange;
+  border-radius: 60% 26% 78% 43%;
+  animation: sunFireInner 2318ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(34) {
+  animation: sunFire 7234ms infinite linear;
+}
+#ui .sun_fire:nth-child(34) .sun_fire_inner {
+  width: 88px;
+  height: 88px;
+  border-top: 10px solid orange;
+  border-right: 11px solid orange;
+  border-bottom: 9px solid orange;
+  border-left: 10px solid orange;
+  border-radius: 71% 36% 39% 55%;
+  animation: sunFireInner 2925ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(35) {
+  animation: sunFire 7887ms infinite linear;
+}
+#ui .sun_fire:nth-child(35) .sun_fire_inner {
+  width: 43px;
+  height: 43px;
+  border-top: 8px solid orange;
+  border-right: 13px solid orange;
+  border-bottom: 13px solid orange;
+  border-left: 11px solid orange;
+  border-radius: 58% 45% 46% 30%;
+  animation: sunFireInner 2467ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(36) {
+  animation: sunFire 11351ms infinite linear;
+}
+#ui .sun_fire:nth-child(36) .sun_fire_inner {
+  width: 64px;
+  height: 64px;
+  border-top: 6px solid orange;
+  border-right: 7px solid orange;
+  border-bottom: 14px solid orange;
+  border-left: 9px solid orange;
+  border-radius: 21% 26% 13% 57%;
+  animation: sunFireInner 3251ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(37) {
+  animation: sunFire 5013ms infinite linear;
+}
+#ui .sun_fire:nth-child(37) .sun_fire_inner {
+  width: 48px;
+  height: 48px;
+  border-top: 15px solid orange;
+  border-right: 15px solid orange;
+  border-bottom: 10px solid orange;
+  border-left: 7px solid orange;
+  border-radius: 18% 67% 15% 26%;
+  animation: sunFireInner 3498ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(38) {
+  animation: sunFire 5243ms infinite linear;
+}
+#ui .sun_fire:nth-child(38) .sun_fire_inner {
+  width: 127px;
+  height: 127px;
+  border-top: 14px solid orange;
+  border-right: 9px solid orange;
+  border-bottom: 12px solid orange;
+  border-left: 6px solid orange;
+  border-radius: 62% 37% 79% 55%;
+  animation: sunFireInner 3887ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(39) {
+  animation: sunFire 13113ms infinite linear;
+}
+#ui .sun_fire:nth-child(39) .sun_fire_inner {
+  width: 112px;
+  height: 112px;
+  border-top: 10px solid orange;
+  border-right: 14px solid orange;
+  border-bottom: 15px solid orange;
+  border-left: 6px solid orange;
+  border-radius: 13% 56% 38% 17%;
+  animation: sunFireInner 4274ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(40) {
+  animation: sunFire 8688ms infinite linear;
+}
+#ui .sun_fire:nth-child(40) .sun_fire_inner {
+  width: 53px;
+  height: 53px;
+  border-top: 6px solid orange;
+  border-right: 11px solid orange;
+  border-bottom: 12px solid orange;
+  border-left: 9px solid orange;
+  border-radius: 11% 37% 58% 22%;
+  animation: sunFireInner 2486ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(41) {
+  animation: sunFire 12479ms infinite linear;
+}
+#ui .sun_fire:nth-child(41) .sun_fire_inner {
+  width: 69px;
+  height: 69px;
+  border-top: 15px solid orange;
+  border-right: 10px solid orange;
+  border-bottom: 10px solid orange;
+  border-left: 15px solid orange;
+  border-radius: 62% 36% 65% 43%;
+  animation: sunFireInner 2626ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(42) {
+  animation: sunFire 10141ms infinite linear;
+}
+#ui .sun_fire:nth-child(42) .sun_fire_inner {
+  width: 102px;
+  height: 102px;
+  border-top: 10px solid orange;
+  border-right: 15px solid orange;
+  border-bottom: 11px solid orange;
+  border-left: 14px solid orange;
+  border-radius: 57% 20% 74% 25%;
+  animation: sunFireInner 3213ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(43) {
+  animation: sunFire 11212ms infinite linear;
+}
+#ui .sun_fire:nth-child(43) .sun_fire_inner {
+  width: 131px;
+  height: 131px;
+  border-top: 8px solid orange;
+  border-right: 14px solid orange;
+  border-bottom: 13px solid orange;
+  border-left: 13px solid orange;
+  border-radius: 15% 71% 47% 68%;
+  animation: sunFireInner 3704ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(44) {
+  animation: sunFire 14383ms infinite linear;
+}
+#ui .sun_fire:nth-child(44) .sun_fire_inner {
+  width: 88px;
+  height: 88px;
+  border-top: 12px solid orange;
+  border-right: 10px solid orange;
+  border-bottom: 7px solid orange;
+  border-left: 8px solid orange;
+  border-radius: 30% 80% 30% 34%;
+  animation: sunFireInner 4676ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(45) {
+  animation: sunFire 9916ms infinite linear;
+}
+#ui .sun_fire:nth-child(45) .sun_fire_inner {
+  width: 91px;
+  height: 91px;
+  border-top: 10px solid orange;
+  border-right: 10px solid orange;
+  border-bottom: 6px solid orange;
+  border-left: 12px solid orange;
+  border-radius: 48% 36% 22% 38%;
+  animation: sunFireInner 3371ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(46) {
+  animation: sunFire 14828ms infinite linear;
+}
+#ui .sun_fire:nth-child(46) .sun_fire_inner {
+  width: 69px;
+  height: 69px;
+  border-top: 6px solid orange;
+  border-right: 10px solid orange;
+  border-bottom: 11px solid orange;
+  border-left: 14px solid orange;
+  border-radius: 29% 44% 28% 79%;
+  animation: sunFireInner 4883ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(47) {
+  animation: sunFire 13518ms infinite linear;
+}
+#ui .sun_fire:nth-child(47) .sun_fire_inner {
+  width: 138px;
+  height: 138px;
+  border-top: 7px solid orange;
+  border-right: 14px solid orange;
+  border-bottom: 11px solid orange;
+  border-left: 8px solid orange;
+  border-radius: 45% 30% 75% 46%;
+  animation: sunFireInner 4099ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(48) {
+  animation: sunFire 6913ms infinite linear;
+}
+#ui .sun_fire:nth-child(48) .sun_fire_inner {
+  width: 86px;
+  height: 86px;
+  border-top: 10px solid orange;
+  border-right: 11px solid orange;
+  border-bottom: 6px solid orange;
+  border-left: 7px solid orange;
+  border-radius: 52% 67% 71% 51%;
+  animation: sunFireInner 2528ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(49) {
+  animation: sunFire 7282ms infinite linear;
+}
+#ui .sun_fire:nth-child(49) .sun_fire_inner {
+  width: 81px;
+  height: 81px;
+  border-top: 8px solid orange;
+  border-right: 13px solid orange;
+  border-bottom: 10px solid orange;
+  border-left: 6px solid orange;
+  border-radius: 47% 53% 28% 64%;
+  animation: sunFireInner 3343ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(50) {
+  animation: sunFire 13542ms infinite linear;
+}
+#ui .sun_fire:nth-child(50) .sun_fire_inner {
+  width: 66px;
+  height: 66px;
+  border-top: 13px solid orange;
+  border-right: 11px solid orange;
+  border-bottom: 7px solid orange;
+  border-left: 6px solid orange;
+  border-radius: 38% 58% 34% 46%;
+  animation: sunFireInner 3950ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(51) {
+  animation: sunFire 12466ms infinite linear;
+}
+#ui .sun_fire:nth-child(51) .sun_fire_inner {
+  width: 138px;
+  height: 138px;
+  border-top: 12px solid orange;
+  border-right: 10px solid orange;
+  border-bottom: 11px solid orange;
+  border-left: 15px solid orange;
+  border-radius: 35% 70% 79% 40%;
+  animation: sunFireInner 3905ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(52) {
+  animation: sunFire 5545ms infinite linear;
+}
+#ui .sun_fire:nth-child(52) .sun_fire_inner {
+  width: 67px;
+  height: 67px;
+  border-top: 10px solid orange;
+  border-right: 8px solid orange;
+  border-bottom: 12px solid orange;
+  border-left: 11px solid orange;
+  border-radius: 13% 26% 52% 39%;
+  animation: sunFireInner 4308ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(53) {
+  animation: sunFire 9320ms infinite linear;
+}
+#ui .sun_fire:nth-child(53) .sun_fire_inner {
+  width: 113px;
+  height: 113px;
+  border-top: 9px solid orange;
+  border-right: 14px solid orange;
+  border-bottom: 15px solid orange;
+  border-left: 13px solid orange;
+  border-radius: 34% 57% 40% 44%;
+  animation: sunFireInner 2846ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(54) {
+  animation: sunFire 5616ms infinite linear;
+}
+#ui .sun_fire:nth-child(54) .sun_fire_inner {
+  width: 92px;
+  height: 92px;
+  border-top: 10px solid orange;
+  border-right: 11px solid orange;
+  border-bottom: 12px solid orange;
+  border-left: 13px solid orange;
+  border-radius: 57% 77% 48% 45%;
+  animation: sunFireInner 4479ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(55) {
+  animation: sunFire 12329ms infinite linear;
+}
+#ui .sun_fire:nth-child(55) .sun_fire_inner {
+  width: 109px;
+  height: 109px;
+  border-top: 7px solid orange;
+  border-right: 12px solid orange;
+  border-bottom: 14px solid orange;
+  border-left: 13px solid orange;
+  border-radius: 70% 79% 12% 52%;
+  animation: sunFireInner 3101ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(56) {
+  animation: sunFire 5309ms infinite linear;
+}
+#ui .sun_fire:nth-child(56) .sun_fire_inner {
+  width: 98px;
+  height: 98px;
+  border-top: 9px solid orange;
+  border-right: 15px solid orange;
+  border-bottom: 15px solid orange;
+  border-left: 6px solid orange;
+  border-radius: 69% 21% 44% 59%;
+  animation: sunFireInner 3241ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(57) {
+  animation: sunFire 12155ms infinite linear;
+}
+#ui .sun_fire:nth-child(57) .sun_fire_inner {
+  width: 60px;
+  height: 60px;
+  border-top: 6px solid orange;
+  border-right: 8px solid orange;
+  border-bottom: 10px solid orange;
+  border-left: 14px solid orange;
+  border-radius: 77% 24% 70% 29%;
+  animation: sunFireInner 2344ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(58) {
+  animation: sunFire 14443ms infinite linear;
+}
+#ui .sun_fire:nth-child(58) .sun_fire_inner {
+  width: 93px;
+  height: 93px;
+  border-top: 8px solid orange;
+  border-right: 8px solid orange;
+  border-bottom: 6px solid orange;
+  border-left: 10px solid orange;
+  border-radius: 50% 73% 26% 57%;
+  animation: sunFireInner 4481ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(59) {
+  animation: sunFire 8292ms infinite linear;
+}
+#ui .sun_fire:nth-child(59) .sun_fire_inner {
+  width: 133px;
+  height: 133px;
+  border-top: 15px solid orange;
+  border-right: 14px solid orange;
+  border-bottom: 8px solid orange;
+  border-left: 12px solid orange;
+  border-radius: 30% 79% 12% 56%;
+  animation: sunFireInner 3149ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(60) {
+  animation: sunFire 9285ms infinite linear;
+}
+#ui .sun_fire:nth-child(60) .sun_fire_inner {
+  width: 137px;
+  height: 137px;
+  border-top: 8px solid orange;
+  border-right: 8px solid orange;
+  border-bottom: 15px solid orange;
+  border-left: 6px solid orange;
+  border-radius: 43% 40% 36% 63%;
+  animation: sunFireInner 2967ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(61) {
+  animation: sunFire 9927ms infinite linear;
+}
+#ui .sun_fire:nth-child(61) .sun_fire_inner {
+  width: 63px;
+  height: 63px;
+  border-top: 6px solid orange;
+  border-right: 12px solid orange;
+  border-bottom: 12px solid orange;
+  border-left: 12px solid orange;
+  border-radius: 13% 24% 25% 51%;
+  animation: sunFireInner 2118ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(62) {
+  animation: sunFire 6085ms infinite linear;
+}
+#ui .sun_fire:nth-child(62) .sun_fire_inner {
+  width: 84px;
+  height: 84px;
+  border-top: 14px solid orange;
+  border-right: 12px solid orange;
+  border-bottom: 14px solid orange;
+  border-left: 11px solid orange;
+  border-radius: 65% 64% 30% 68%;
+  animation: sunFireInner 4915ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(63) {
+  animation: sunFire 6645ms infinite linear;
+}
+#ui .sun_fire:nth-child(63) .sun_fire_inner {
+  width: 123px;
+  height: 123px;
+  border-top: 8px solid orange;
+  border-right: 15px solid orange;
+  border-bottom: 6px solid orange;
+  border-left: 12px solid orange;
+  border-radius: 74% 69% 31% 16%;
+  animation: sunFireInner 2801ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(64) {
+  animation: sunFire 9402ms infinite linear;
+}
+#ui .sun_fire:nth-child(64) .sun_fire_inner {
+  width: 120px;
+  height: 120px;
+  border-top: 13px solid orange;
+  border-right: 9px solid orange;
+  border-bottom: 10px solid orange;
+  border-left: 11px solid orange;
+  border-radius: 43% 38% 66% 48%;
+  animation: sunFireInner 4821ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(65) {
+  animation: sunFire 5879ms infinite linear;
+}
+#ui .sun_fire:nth-child(65) .sun_fire_inner {
+  width: 102px;
+  height: 102px;
+  border-top: 11px solid orange;
+  border-right: 10px solid orange;
+  border-bottom: 8px solid orange;
+  border-left: 12px solid orange;
+  border-radius: 74% 28% 39% 19%;
+  animation: sunFireInner 3612ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(66) {
+  animation: sunFire 7013ms infinite linear;
+}
+#ui .sun_fire:nth-child(66) .sun_fire_inner {
+  width: 126px;
+  height: 126px;
+  border-top: 13px solid orange;
+  border-right: 7px solid orange;
+  border-bottom: 6px solid orange;
+  border-left: 12px solid orange;
+  border-radius: 24% 11% 23% 29%;
+  animation: sunFireInner 3174ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(67) {
+  animation: sunFire 5609ms infinite linear;
+}
+#ui .sun_fire:nth-child(67) .sun_fire_inner {
+  width: 78px;
+  height: 78px;
+  border-top: 14px solid orange;
+  border-right: 8px solid orange;
+  border-bottom: 7px solid orange;
+  border-left: 15px solid orange;
+  border-radius: 13% 66% 76% 65%;
+  animation: sunFireInner 3378ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(68) {
+  animation: sunFire 12162ms infinite linear;
+}
+#ui .sun_fire:nth-child(68) .sun_fire_inner {
+  width: 90px;
+  height: 90px;
+  border-top: 13px solid orange;
+  border-right: 13px solid orange;
+  border-bottom: 15px solid orange;
+  border-left: 7px solid orange;
+  border-radius: 67% 69% 68% 78%;
+  animation: sunFireInner 4001ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(69) {
+  animation: sunFire 9430ms infinite linear;
+}
+#ui .sun_fire:nth-child(69) .sun_fire_inner {
+  width: 113px;
+  height: 113px;
+  border-top: 6px solid orange;
+  border-right: 12px solid orange;
+  border-bottom: 6px solid orange;
+  border-left: 6px solid orange;
+  border-radius: 23% 65% 38% 74%;
+  animation: sunFireInner 2278ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(70) {
+  animation: sunFire 14188ms infinite linear;
+}
+#ui .sun_fire:nth-child(70) .sun_fire_inner {
+  width: 111px;
+  height: 111px;
+  border-top: 15px solid orange;
+  border-right: 11px solid orange;
+  border-bottom: 11px solid orange;
+  border-left: 10px solid orange;
+  border-radius: 48% 46% 15% 31%;
+  animation: sunFireInner 4275ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(71) {
+  animation: sunFire 6355ms infinite linear;
+}
+#ui .sun_fire:nth-child(71) .sun_fire_inner {
+  width: 122px;
+  height: 122px;
+  border-top: 15px solid orange;
+  border-right: 15px solid orange;
+  border-bottom: 10px solid orange;
+  border-left: 11px solid orange;
+  border-radius: 59% 69% 56% 59%;
+  animation: sunFireInner 3799ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(72) {
+  animation: sunFire 5964ms infinite linear;
+}
+#ui .sun_fire:nth-child(72) .sun_fire_inner {
+  width: 45px;
+  height: 45px;
+  border-top: 11px solid orange;
+  border-right: 7px solid orange;
+  border-bottom: 8px solid orange;
+  border-left: 12px solid orange;
+  border-radius: 44% 38% 78% 43%;
+  animation: sunFireInner 4127ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(73) {
+  animation: sunFire 5580ms infinite linear;
+}
+#ui .sun_fire:nth-child(73) .sun_fire_inner {
+  width: 59px;
+  height: 59px;
+  border-top: 7px solid orange;
+  border-right: 8px solid orange;
+  border-bottom: 10px solid orange;
+  border-left: 11px solid orange;
+  border-radius: 14% 55% 33% 59%;
+  animation: sunFireInner 2502ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(74) {
+  animation: sunFire 6948ms infinite linear;
+}
+#ui .sun_fire:nth-child(74) .sun_fire_inner {
+  width: 91px;
+  height: 91px;
+  border-top: 12px solid orange;
+  border-right: 11px solid orange;
+  border-bottom: 14px solid orange;
+  border-left: 13px solid orange;
+  border-radius: 56% 13% 53% 64%;
+  animation: sunFireInner 2082ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(75) {
+  animation: sunFire 13748ms infinite linear;
+}
+#ui .sun_fire:nth-child(75) .sun_fire_inner {
+  width: 103px;
+  height: 103px;
+  border-top: 11px solid orange;
+  border-right: 15px solid orange;
+  border-bottom: 7px solid orange;
+  border-left: 14px solid orange;
+  border-radius: 73% 31% 18% 29%;
+  animation: sunFireInner 4546ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(76) {
+  animation: sunFire 9981ms infinite linear;
+}
+#ui .sun_fire:nth-child(76) .sun_fire_inner {
+  width: 91px;
+  height: 91px;
+  border-top: 12px solid orange;
+  border-right: 9px solid orange;
+  border-bottom: 11px solid orange;
+  border-left: 6px solid orange;
+  border-radius: 68% 79% 19% 21%;
+  animation: sunFireInner 4022ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(77) {
+  animation: sunFire 10860ms infinite linear;
+}
+#ui .sun_fire:nth-child(77) .sun_fire_inner {
+  width: 106px;
+  height: 106px;
+  border-top: 6px solid orange;
+  border-right: 7px solid orange;
+  border-bottom: 6px solid orange;
+  border-left: 6px solid orange;
+  border-radius: 32% 35% 78% 48%;
+  animation: sunFireInner 3720ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(78) {
+  animation: sunFire 9665ms infinite linear;
+}
+#ui .sun_fire:nth-child(78) .sun_fire_inner {
+  width: 90px;
+  height: 90px;
+  border-top: 11px solid orange;
+  border-right: 8px solid orange;
+  border-bottom: 9px solid orange;
+  border-left: 13px solid orange;
+  border-radius: 60% 43% 48% 18%;
+  animation: sunFireInner 2772ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(79) {
+  animation: sunFire 5350ms infinite linear;
+}
+#ui .sun_fire:nth-child(79) .sun_fire_inner {
+  width: 116px;
+  height: 116px;
+  border-top: 7px solid orange;
+  border-right: 7px solid orange;
+  border-bottom: 15px solid orange;
+  border-left: 7px solid orange;
+  border-radius: 14% 36% 27% 17%;
+  animation: sunFireInner 3757ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(80) {
+  animation: sunFire 14831ms infinite linear;
+}
+#ui .sun_fire:nth-child(80) .sun_fire_inner {
+  width: 125px;
+  height: 125px;
+  border-top: 8px solid orange;
+  border-right: 9px solid orange;
+  border-bottom: 8px solid orange;
+  border-left: 7px solid orange;
+  border-radius: 36% 66% 56% 29%;
+  animation: sunFireInner 3238ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(81) {
+  animation: sunFire 13139ms infinite linear;
+}
+#ui .sun_fire:nth-child(81) .sun_fire_inner {
+  width: 61px;
+  height: 61px;
+  border-top: 9px solid orange;
+  border-right: 8px solid orange;
+  border-bottom: 14px solid orange;
+  border-left: 14px solid orange;
+  border-radius: 30% 50% 36% 63%;
+  animation: sunFireInner 3978ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(82) {
+  animation: sunFire 8115ms infinite linear;
+}
+#ui .sun_fire:nth-child(82) .sun_fire_inner {
+  width: 63px;
+  height: 63px;
+  border-top: 10px solid orange;
+  border-right: 9px solid orange;
+  border-bottom: 8px solid orange;
+  border-left: 7px solid orange;
+  border-radius: 44% 72% 74% 65%;
+  animation: sunFireInner 3586ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(83) {
+  animation: sunFire 7394ms infinite linear;
+}
+#ui .sun_fire:nth-child(83) .sun_fire_inner {
+  width: 84px;
+  height: 84px;
+  border-top: 6px solid orange;
+  border-right: 15px solid orange;
+  border-bottom: 10px solid orange;
+  border-left: 13px solid orange;
+  border-radius: 49% 58% 38% 22%;
+  animation: sunFireInner 3193ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(84) {
+  animation: sunFire 5972ms infinite linear;
+}
+#ui .sun_fire:nth-child(84) .sun_fire_inner {
+  width: 77px;
+  height: 77px;
+  border-top: 12px solid orange;
+  border-right: 6px solid orange;
+  border-bottom: 14px solid orange;
+  border-left: 8px solid orange;
+  border-radius: 50% 53% 54% 46%;
+  animation: sunFireInner 4034ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(85) {
+  animation: sunFire 5074ms infinite linear;
+}
+#ui .sun_fire:nth-child(85) .sun_fire_inner {
+  width: 85px;
+  height: 85px;
+  border-top: 14px solid orange;
+  border-right: 11px solid orange;
+  border-bottom: 6px solid orange;
+  border-left: 8px solid orange;
+  border-radius: 31% 33% 24% 69%;
+  animation: sunFireInner 2007ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(86) {
+  animation: sunFire 13011ms infinite linear;
+}
+#ui .sun_fire:nth-child(86) .sun_fire_inner {
+  width: 56px;
+  height: 56px;
+  border-top: 8px solid orange;
+  border-right: 12px solid orange;
+  border-bottom: 12px solid orange;
+  border-left: 12px solid orange;
+  border-radius: 64% 37% 64% 75%;
+  animation: sunFireInner 3519ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(87) {
+  animation: sunFire 9378ms infinite linear;
+}
+#ui .sun_fire:nth-child(87) .sun_fire_inner {
+  width: 74px;
+  height: 74px;
+  border-top: 7px solid orange;
+  border-right: 12px solid orange;
+  border-bottom: 15px solid orange;
+  border-left: 14px solid orange;
+  border-radius: 18% 52% 37% 78%;
+  animation: sunFireInner 4533ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(88) {
+  animation: sunFire 12252ms infinite linear;
+}
+#ui .sun_fire:nth-child(88) .sun_fire_inner {
+  width: 111px;
+  height: 111px;
+  border-top: 11px solid orange;
+  border-right: 14px solid orange;
+  border-bottom: 13px solid orange;
+  border-left: 6px solid orange;
+  border-radius: 26% 20% 78% 68%;
+  animation: sunFireInner 4836ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(89) {
+  animation: sunFire 11088ms infinite linear;
+}
+#ui .sun_fire:nth-child(89) .sun_fire_inner {
+  width: 134px;
+  height: 134px;
+  border-top: 7px solid orange;
+  border-right: 15px solid orange;
+  border-bottom: 10px solid orange;
+  border-left: 11px solid orange;
+  border-radius: 42% 36% 27% 24%;
+  animation: sunFireInner 2679ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(90) {
+  animation: sunFire 14880ms infinite linear;
+}
+#ui .sun_fire:nth-child(90) .sun_fire_inner {
+  width: 71px;
+  height: 71px;
+  border-top: 8px solid orange;
+  border-right: 9px solid orange;
+  border-bottom: 14px solid orange;
+  border-left: 7px solid orange;
+  border-radius: 66% 23% 75% 21%;
+  animation: sunFireInner 2234ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(91) {
+  animation: sunFire 14713ms infinite linear;
+}
+#ui .sun_fire:nth-child(91) .sun_fire_inner {
+  width: 85px;
+  height: 85px;
+  border-top: 8px solid orange;
+  border-right: 12px solid orange;
+  border-bottom: 10px solid orange;
+  border-left: 8px solid orange;
+  border-radius: 40% 48% 73% 47%;
+  animation: sunFireInner 2044ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(92) {
+  animation: sunFire 13003ms infinite linear;
+}
+#ui .sun_fire:nth-child(92) .sun_fire_inner {
+  width: 104px;
+  height: 104px;
+  border-top: 8px solid orange;
+  border-right: 11px solid orange;
+  border-bottom: 11px solid orange;
+  border-left: 7px solid orange;
+  border-radius: 27% 34% 40% 18%;
+  animation: sunFireInner 3943ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(93) {
+  animation: sunFire 9736ms infinite linear;
+}
+#ui .sun_fire:nth-child(93) .sun_fire_inner {
+  width: 67px;
+  height: 67px;
+  border-top: 7px solid orange;
+  border-right: 14px solid orange;
+  border-bottom: 6px solid orange;
+  border-left: 6px solid orange;
+  border-radius: 73% 18% 48% 68%;
+  animation: sunFireInner 4351ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(94) {
+  animation: sunFire 9938ms infinite linear;
+}
+#ui .sun_fire:nth-child(94) .sun_fire_inner {
+  width: 52px;
+  height: 52px;
+  border-top: 10px solid orange;
+  border-right: 10px solid orange;
+  border-bottom: 15px solid orange;
+  border-left: 14px solid orange;
+  border-radius: 25% 24% 53% 36%;
+  animation: sunFireInner 2442ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(95) {
+  animation: sunFire 9326ms infinite linear;
+}
+#ui .sun_fire:nth-child(95) .sun_fire_inner {
+  width: 130px;
+  height: 130px;
+  border-top: 11px solid orange;
+  border-right: 8px solid orange;
+  border-bottom: 14px solid orange;
+  border-left: 10px solid orange;
+  border-radius: 57% 17% 37% 28%;
+  animation: sunFireInner 4629ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(96) {
+  animation: sunFire 6621ms infinite linear;
+}
+#ui .sun_fire:nth-child(96) .sun_fire_inner {
+  width: 55px;
+  height: 55px;
+  border-top: 13px solid orange;
+  border-right: 15px solid orange;
+  border-bottom: 9px solid orange;
+  border-left: 12px solid orange;
+  border-radius: 18% 36% 22% 76%;
+  animation: sunFireInner 4745ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(97) {
+  animation: sunFire 7032ms infinite linear;
+}
+#ui .sun_fire:nth-child(97) .sun_fire_inner {
+  width: 134px;
+  height: 134px;
+  border-top: 8px solid orange;
+  border-right: 6px solid orange;
+  border-bottom: 13px solid orange;
+  border-left: 9px solid orange;
+  border-radius: 51% 34% 65% 38%;
+  animation: sunFireInner 4384ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(98) {
+  animation: sunFire 14542ms infinite linear;
+}
+#ui .sun_fire:nth-child(98) .sun_fire_inner {
+  width: 50px;
+  height: 50px;
+  border-top: 7px solid orange;
+  border-right: 12px solid orange;
+  border-bottom: 10px solid orange;
+  border-left: 15px solid orange;
+  border-radius: 63% 40% 76% 40%;
+  animation: sunFireInner 2482ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(99) {
+  animation: sunFire 8748ms infinite linear;
+}
+#ui .sun_fire:nth-child(99) .sun_fire_inner {
+  width: 106px;
+  height: 106px;
+  border-top: 8px solid orange;
+  border-right: 12px solid orange;
+  border-bottom: 11px solid orange;
+  border-left: 15px solid orange;
+  border-radius: 53% 18% 12% 48%;
+  animation: sunFireInner 2460ms infinite alternate linear;
+}
+#ui .sun_fire:nth-child(100) {
+  animation: sunFire 11289ms infinite linear;
+}
+#ui .sun_fire:nth-child(100) .sun_fire_inner {
+  width: 121px;
+  height: 121px;
+  border-top: 11px solid orange;
+  border-right: 10px solid orange;
+  border-bottom: 7px solid orange;
+  border-left: 13px solid orange;
+  border-radius: 42% 66% 54% 11%;
+  animation: sunFireInner 4607ms infinite alternate linear;
 }
 
 @keyframes sunFire {
@@ -82,12 +1359,12 @@ body {
 }
 @keyframes sunFireInner {
   0% {
-    transform: translate($sunSize / 2 - 110, -50%) rotateZ(0deg);
+    transform: translate(90px, -50%) rotateZ(0deg);
   }
   50% {
-    transform: translate($sunSize / 2 - 60, -50%) rotateZ(180deg);
+    transform: translate(140px, -50%) rotateZ(180deg);
   }
   100% {
-    transform: translate($sunSize / 2 - 110, -50%) rotateZ(360deg);
+    transform: translate(90px, -50%) rotateZ(360deg);
   }
 }
