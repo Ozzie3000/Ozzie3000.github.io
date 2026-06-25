@@ -40,7 +40,10 @@
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-  camera.position.set(0, 0, 6.2);
+  // Pulled in from 6.2 so the cube fills more of its box (bigger on screen).
+  // 4.9 keeps the worst-case rotated extent (the space diagonal, ~3.46 units)
+  // comfortably inside the view with a small margin, so it never clips.
+  camera.position.set(0, 0, 4.9);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -128,6 +131,99 @@
       pickables.push(tile);
     }
   }
+
+  /* ---- Inner cube finish: Molten Silver vs Mini Sun -------------- */
+  // The cube is six surface planes, so its edges/gutters used to show
+  // straight through to the background. We fill the interior two ways
+  // (UI toggle) so the seams read as a feature instead of a gap:
+  //   - "chrome": a metallic core box reflecting a baked environment.
+  //   - "sun":    a glowing sphere whose light bleeds through the seams.
+
+  // Lights only affect the metal core (every other material is Basic).
+  scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  keyLight.position.set(2, 3, 4);
+  scene.add(keyLight);
+
+  // Baked equirectangular environment (a soft vertical gradient) for the
+  // chrome to reflect — static, so no render-target cost per frame.
+  function makeEnvTexture() {
+    const c = document.createElement("canvas");
+    c.width = 64; c.height = 256;
+    const g = c.getContext("2d");
+    const grad = g.createLinearGradient(0, 0, 0, 256);
+    grad.addColorStop(0.00, "#cdd6e6");
+    grad.addColorStop(0.49, "#6b7382");
+    grad.addColorStop(0.50, "#2a2f25");
+    grad.addColorStop(1.00, "#05070b");
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 256);
+    const tex = new THREE.CanvasTexture(c);
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+    return tex;
+  }
+  const envTex = makeEnvTexture();
+
+  const metalMat = new THREE.MeshStandardMaterial({
+    color: 0xe6e8ec, metalness: 1.0, roughness: 0.18,
+    envMap: envTex, envMapIntensity: 1.1
+  });
+  const metalCore = new THREE.Mesh(new THREE.BoxGeometry(1.985, 1.985, 1.985), metalMat);
+  cube.add(metalCore);
+
+  // Glowing sun: a hot radial-gradient sphere + an additive corona halo.
+  function makeSunTexture() {
+    const c = document.createElement("canvas");
+    c.width = c.height = 128;
+    const g = c.getContext("2d");
+    const grad = g.createRadialGradient(64, 64, 4, 64, 64, 64);
+    grad.addColorStop(0.00, "#fff7e0");
+    grad.addColorStop(0.35, "#ffd24a");
+    grad.addColorStop(0.70, "#ff7a18");
+    grad.addColorStop(1.00, "#7a1d00");
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(c);
+  }
+  const sunGroup = new THREE.Group();
+  const sunMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.82, 32, 24),
+    new THREE.MeshBasicMaterial({ map: makeSunTexture() })
+  );
+  const coronaMat = new THREE.MeshBasicMaterial({
+    color: 0xff8a2a, transparent: true, opacity: 0.28,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  });
+  const corona = new THREE.Mesh(new THREE.SphereGeometry(0.98, 32, 24), coronaMat);
+  sunGroup.add(sunMesh, corona);
+  cube.add(sunGroup);
+
+  let finish = "chrome";
+  function setFinish(name) {
+    finish = name;
+    const sun = name === "sun";
+    metalCore.visible = !sun;
+    sunGroup.visible = sun;
+    // In sun mode let the inner glow bleed through each face a touch.
+    for (let f = 0; f < facePlanes.length; f++) {
+      const m = facePlanes[f].material;
+      m.transparent = sun;
+      m.opacity = sun ? 0.7 : 1;
+      m.needsUpdate = true;
+    }
+    const btns = document.querySelectorAll("#ctt-finish button");
+    for (let i = 0; i < btns.length; i++) {
+      btns[i].classList.toggle("ctt-active", btns[i].getAttribute("data-finish") === name);
+    }
+  }
+  const finishRow = $("ctt-finish");
+  if (finishRow) {
+    finishRow.addEventListener("click", function (e) {
+      const btn = e.target.closest("button[data-finish]");
+      if (btn) setFinish(btn.getAttribute("data-finish"));
+    });
+  }
+  setFinish("chrome");
 
   /* ---- Rotation (drag + snap), with smooth tweening -------------- */
 
@@ -377,6 +473,11 @@
     curY += (tgtY - curY) * 0.18;
     cube.rotation.x = curX;
     cube.rotation.y = curY;
+    if (finish === "sun") {
+      const tt = performance.now() * 0.001;
+      corona.scale.setScalar(1 + 0.04 * Math.sin(tt * 2));
+      coronaMat.opacity = 0.24 + 0.06 * Math.sin(tt * 2);
+    }
     updatePulse();
     updateCurrent();
     renderer.render(scene, camera);

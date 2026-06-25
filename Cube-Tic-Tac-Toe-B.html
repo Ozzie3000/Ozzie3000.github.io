@@ -1,15 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cube Tic-Tac-Toe (Three.js) — Oz</title>
-    <link rel="stylesheet" href="stylesheets/stylesheet.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:title" content="Cube Tic-Tac-Toe (CSS 3D) — Oz">
+<meta property="og:description" content="Cube Tic-Tac-Toe (CSS 3D) by Oz. Rotate the cube to play 6 sides of 3D Tic-Tac-Toe. Pick your flavor Metal or Sun">
+<meta property="og:image" content="https://ozzie3000.github.io/images/3D-tic-tac-toe.jpg">
+<meta property="og:url" content="https://ozzie3000.github.io/Cube-Tic-Tac-Toe-B.html.html">
+<meta property="og:type" content="website">
+<meta name="author" content="Oz">
+
+<!-- Twitter/X specifically uses these -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://ozzie3000.github.io/images/3D-tic-tac-toe.jpg">
+<title>Cube Tic-Tac-Toe (Three.js) — Oz</title>
+<link rel="stylesheet" href="stylesheets/stylesheet.css">
 </head>
 <body class="glass cube-page">
 
     <h1>Cube Tic-Tac-Toe</h1>
-    <p class="ctt-sub">Six faces, one cube. Win the most faces to win the round. (Three.js — Version B)</p>
+    <p class="ctt-sub">Six faces, one cube. Win the most faces to win the round. (JS — Version B)</p>
 
     <!-- Mode selection -->
     <div class="ctt-row" id="ctt-mode">
@@ -39,6 +49,14 @@
         <div class="ctt-score x" id="ctt-overall-x">X: 0</div>
         <div class="ctt-score draw" id="ctt-overall-draw">Draw: 0</div>
         <div class="ctt-score o" id="ctt-overall-o">O: 0</div>
+    </div>
+
+    <!-- Version B only: inner-cube finish, to compare looks. Kept up here
+         (away from the face buttons) since players rarely switch it. -->
+    <div class="ctt-row" id="ctt-finish">
+        <label>Inside:</label>
+        <button data-finish="chrome" class="ctt-active">Molten Silver</button>
+        <button data-finish="sun">Mini Sun</button>
     </div>
 
     <div class="ctt-statusbar">

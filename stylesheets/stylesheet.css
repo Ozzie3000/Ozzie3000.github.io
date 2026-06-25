@@ -908,8 +908,8 @@ body.cube-page .ctt-sub { color: #9fb08a; margin: 0 0 14px; font-size: 14px; }
 /* ---- Version B: the Three.js cube ------------------------------ */
 .cube-page .ctt-three {
   width: 100%;
-  max-width: 480px;
-  height: clamp(300px, 72vw, 460px);
+  max-width: 520px;
+  height: clamp(320px, 78vw, 500px);
   margin: 14px auto;
   touch-action: none;
 }
