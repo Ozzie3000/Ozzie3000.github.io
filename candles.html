@@ -48,7 +48,23 @@
                 color: #ffcf73; text-shadow: 0 0 18px rgba(255, 160, 40, .35); }
   .overlay p  { margin: 8px 0 0; font-size: 13px; color: #9a8a5d; }
 
-  .controls { position: absolute; top: 16px; right: 16px; z-index: 4; display: flex; gap: 8px; }
+  /* Swatch row + buttons live inside the (centered) overlay, stacked
+     under the title. The overlay is click-through, so re-enable pointers. */
+  .swatches { display: flex; flex-wrap: wrap; justify-content: center; gap: 9px;
+              max-width: 380px; margin: 16px auto 0; pointer-events: auto; }
+  .swatch {
+    width: 24px; height: 24px; padding: 0; border-radius: 50%; cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, .2); background-clip: padding-box;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  }
+  .swatch:hover { transform: scale(1.15); }
+  .swatch.selected { border-color: #fff; box-shadow: 0 0 10px rgba(255, 255, 255, .55);
+                     transform: scale(1.15); }
+  .swatch.random { background: conic-gradient(from 0deg,
+      #fa8763, #ffb347, #9dff7a, #5ff0e0, #63b8fa, #c77bff, #ff8ad6, #fa8763); }
+
+  .controls { display: flex; justify-content: center; gap: 14px;
+              margin: 14px auto 0; pointer-events: auto; }
   .controls button {
     font-family: inherit; font-size: 12px; cursor: pointer;
     color: #ffcf73; background: rgba(0, 0, 0, .45);
@@ -66,11 +82,11 @@
     <div class="overlay">
       <h1>Candles</h1>
       <p>A reusable pure-CSS flame &mdash; one stylesheet, one tiny spawner.</p>
-    </div>
-
-    <div class="controls">
-      <button id="add">Add candle</button>
-      <button id="clear">Clear</button>
+      <div class="swatches" id="swatches"></div>
+      <div class="controls">
+        <button id="add">Add candle</button>
+        <button id="clear">Clear</button>
+      </div>
     </div>
 
     <div class="hint">Click anywhere to light a candle</div>
@@ -81,19 +97,28 @@
   <script>
     var stage = document.getElementById("stage");
 
-    // A few warm + one cool flame colour to vary new candles.
+    // Flame palettes. Pick one from the swatch row, or leave it on Random.
     var PALETTE = [
-      { flame: "#fa8763", flameBase: "#761b00", wax: "#ca9800" }, // classic
-      { flame: "#ffb347", flameBase: "#7a2e00", wax: "#b8860b" }, // amber
-      { flame: "#ff7676", flameBase: "#6e1414", wax: "#a8431e" }, // ember red
-      { flame: "#63b8fa", flameBase: "#002a76", wax: "#1e5fa8" }  // spirit blue
+      { name: "Classic", flame: "#fa8763", flameBase: "#761b00", wax: "#ca9800" },
+      { name: "Amber",   flame: "#ffb347", flameBase: "#7a2e00", wax: "#b8860b" },
+      { name: "Ember",   flame: "#ff7676", flameBase: "#6e1414", wax: "#a8431e" },
+      { name: "Spirit",  flame: "#63b8fa", flameBase: "#002a76", wax: "#1e5fa8" },
+      { name: "Wisp",    flame: "#9dff7a", flameBase: "#0a4d00", wax: "#3a7d1f" },
+      { name: "Ghost",   flame: "#ffffff", flameBase: "#5a5a5a", wax: "#cfcfcf" },
+      { name: "Hex",     flame: "#c77bff", flameBase: "#2a0050", wax: "#6a3aa8" },
+      { name: "Frost",   flame: "#5ff0e0", flameBase: "#00484a", wax: "#1f8a8a" },
+      { name: "Rose",    flame: "#ff8ad6", flameBase: "#5a0040", wax: "#a83a86" }
     ];
+
+    var selected = null; // null = random colour for the next candle
 
     function rand(a, b) { return a + Math.random() * (b - a); }
 
     // Place a candle so its base sits on the mantel at horizontal x (px).
     function lightCandle(xPx, theme) {
-      var t = theme || PALETTE[Math.floor(Math.random() * PALETTE.length)];
+      var t = theme ||
+        (selected != null ? PALETTE[selected]
+                          : PALETTE[Math.floor(Math.random() * PALETTE.length)]);
       Candle.create(stage, {
         scale: rand(0.45, 0.95),
         left: xPx + "px",
@@ -101,6 +126,39 @@
         count: 110,
         flame: t.flame, flameBase: t.flameBase, wax: t.wax
       });
+    }
+
+    /* ---- Swatch row: choose the next candle's flame colour ---------- */
+    var swatchRow = document.getElementById("swatches");
+
+    function selectSwatch(btn) {
+      var all = swatchRow.querySelectorAll(".swatch");
+      for (var i = 0; i < all.length; i++) all[i].classList.remove("selected");
+      btn.classList.add("selected");
+    }
+
+    function addSwatch(label, cls, bg, onPick) {
+      var b = document.createElement("button");
+      b.className = "swatch" + (cls ? " " + cls : "");
+      b.title = label;
+      b.setAttribute("aria-label", label);
+      if (bg) b.style.background = bg;
+      b.addEventListener("click", function () { onPick(); selectSwatch(b); });
+      swatchRow.appendChild(b);
+      return b;
+    }
+
+    // "Random" first, selected by default.
+    var randomSwatch = addSwatch("Random colour", "random", "", function () { selected = null; });
+    selectSwatch(randomSwatch);
+
+    // One swatch per palette colour (mini flame: glow centre over the base).
+    for (var p = 0; p < PALETTE.length; p++) {
+      (function (i) {
+        var c = PALETTE[i];
+        var bg = "radial-gradient(circle at 50% 35%, " + c.flame + ", " + c.flameBase + ")";
+        addSwatch(c.name, "", bg, function () { selected = i; });
+      })(p);
     }
 
     // Opening scene: a little row of candles.
@@ -112,8 +170,8 @@
 
     // Click the scene to light a candle where you clicked.
     stage.addEventListener("click", function (e) {
-      // Ignore clicks on the control buttons.
-      if (e.target.closest(".controls")) return;
+      // Ignore clicks on the swatch row / control buttons.
+      if (e.target.closest(".controls") || e.target.closest(".swatches")) return;
       lightCandle(e.clientX);
     });
 

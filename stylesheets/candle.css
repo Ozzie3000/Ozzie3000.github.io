@@ -91,6 +91,10 @@
   height: 200px;
   transform: translate(-50%, -50%);
   filter: blur(2px) contrast(20);
+  /* Screen-blend the whole flame so its black base becomes transparent
+     (instead of a dark halo) and overlapping flames glow rather than
+     stack opaque black boxes. */
+  mix-blend-mode: screen;
 }
 .candle__fire {
   position: absolute;
