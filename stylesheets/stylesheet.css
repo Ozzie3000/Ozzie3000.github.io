@@ -650,6 +650,17 @@ body.cube-page {
   padding: 18px 14px 120px;
 }
 
+/* On smaller screens, cap the cube so it never overflows when rotated.
+   When the cube is turned to the 3D/iso view, its widest projected extent
+   is roughly the cube's diagonal. Instead of computing a square root, we use
+   a flat 1.5 factor (sits between the face diagonal ~1.41 and the space
+   diagonal ~1.73) so the edge stays <= 95vw / 1.5 (~= 63.3vw). */
+@media (max-width: 1279.98px) {
+  body.cube-page {
+    --cube-size: min(360px, calc(95vw / 1.5));
+  }
+}
+
 body.cube-page h1 { font-size: clamp(22px, 5vw, 30px); margin: 6px 0 4px; }
 body.cube-page .ctt-sub { color: #9fb08a; margin: 0 0 14px; font-size: 14px; }
 
