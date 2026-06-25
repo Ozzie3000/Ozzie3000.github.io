@@ -1,10 +1,6 @@
 /* =====================================================================
    Reusable pure-CSS candle flame
    ---------------------------------------------------------------------
-   Adapted from Chokcoco's "candle" pen:
-   https://codepen.io/Chokcoco/pen/jJJbmz
-   Refactored from SCSS into a reusable, themeable component so it can be
-   dropped on any page and repeated for one or more background candles.
 
    MARKUP
      <div class="candle">
