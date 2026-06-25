@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Candles — reusable CSS flames — Oz</title>
-<meta property="og:title" content="Star CSS flames — Oz">
-<meta property="og:description" content="A star, but not any star.">
+<title>Sun — reusable CSS corona — Oz</title>
+<meta property="og:title" content="Sun — reusable CSS corona — Oz">
+<meta property="og:description" content="A reusable pure-CSS solar corona by Oz. Click the scene to spawn more suns.">
 <meta property="og:image" content="https://ozzie3000.github.io/images/sun-og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -15,6 +15,7 @@
 
 <link rel="stylesheet" href="stylesheets/sun.css">
 <style>
+  /* Page chrome only — the sun itself lives entirely in sun.css. */
   html, body { margin: 0; height: 100%; }
   body {
     background: #000;
@@ -22,6 +23,28 @@
     font-family: Monaco, Consolas, "Courier New", monospace;
     overflow: hidden;
   }
+
+  .overlay { position: absolute; left: 0; right: 0; top: 0; z-index: 3; text-align: center;
+             padding: 22px 16px; pointer-events: none; }
+  .overlay h1 { margin: 0; font-size: clamp(20px, 4vw, 28px); letter-spacing: 1px;
+                color: #ffcf73; text-shadow: 0 0 18px rgba(255, 160, 40, .35); }
+  .overlay p  { margin: 8px 0 0; font-size: 13px; color: #9a8a5d; }
+
+  /* Swatch row + buttons live inside the (click-through) overlay, so
+     re-enable pointer events on the interactive bits. */
+  .swatches { display: flex; flex-wrap: wrap; justify-content: center; gap: 9px;
+              max-width: 380px; margin: 16px auto 0; pointer-events: auto; }
+  .swatch {
+    width: 24px; height: 24px; padding: 0; border-radius: 50%; cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, .2); background-clip: padding-box;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  }
+  .swatch:hover { transform: scale(1.15); }
+  .swatch.selected { border-color: #fff; box-shadow: 0 0 10px rgba(255, 255, 255, .55);
+                     transform: scale(1.15); }
+  .swatch.random { background: conic-gradient(from 0deg,
+      #ffd76b, #ff9b3d, #ff5e3a, #fff1b8, #ffd76b); }
+
   .controls { display: flex; justify-content: center; gap: 14px;
               margin: 14px auto 0; pointer-events: auto; }
   .controls button {
@@ -32,12 +55,20 @@
   .controls button:hover { background: rgba(255, 180, 80, .15); }
 
   .hint { position: absolute; left: 0; right: 0; bottom: 11%; z-index: 3; text-align: center;
-         font-size: 12px; color: #8a7a50; pointer-events: none; }
+          font-size: 12px; color: #8a7a50; pointer-events: none; }
+
+  /* Copyright line, pinned to the very bottom (filled in by copyright.js). */
+  footer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; text-align: center; }
 </style>
+</head>
 <body>
+
+  <!-- Stage: suns are spawned in here by the script below. -->
+  <div id="ui"></div>
+
   <div class="overlay">
-    <h1>Oz makes Fancy Sun</h1>
-    <p>A reusable pure-CSS flame &mdash; one tiny spawner.</p>
+    <h1>Oz makes Fancy Suns</h1>
+    <p>A reusable pure-CSS corona &mdash; one tiny spawner.</p>
     <div class="swatches" id="swatches"></div>
     <div class="controls">
       <button id="add">Add a Sun</button>
@@ -45,30 +76,95 @@
     </div>
   </div>
 
-<div id="ui">
-  <div class="sun">
-    <div class="sun_border"></div>
-  </div>
-  <div class="cover"></div>
-</div>
+  <div class="hint">Click anywhere to spawn a sun</div>
+  <footer></footer>
 
+  <script src="javascripts/sun.js"></script>
+  <script>
+    var stage = document.getElementById("ui");
 
-<script>
-  // The CSS defines 100 flame variants (.sun_fire:nth-child(1..100)).
-  // Generate them so the blurred orange blobs merge into a full corona ring.
-  (function () {
-    var sun = document.querySelector('.sun');
-    var border = sun.querySelector('.sun_border');
-    for (var i = 0; i < 100; i++) {
-      var fire = document.createElement('div');
-      fire.className = 'sun_fire';
-      var inner = document.createElement('div');
-      inner.className = 'sun_fire_inner';
-      fire.appendChild(inner);
-      sun.insertBefore(fire, border); // keep .sun_border as the last child
+    // Sun palettes: corona colour / rim colour / outer glow.
+    // Pick one from the swatch row, or leave it on Random.
+    var PALETTE = [
+      { name: "Classic",    fire: "orange",  border: "yellow",  glow: "rgba(200, 0, 0, .5)" },
+      { name: "Amber",      fire: "#ffb347", border: "#ffe08a", glow: "rgba(200, 80, 0, .5)" },
+      { name: "Ember",      fire: "#ff6a3d", border: "#ffd24a", glow: "rgba(190, 20, 0, .55)" },
+      { name: "Blue giant", fire: "#7ec8ff", border: "#dff1ff", glow: "rgba(0, 90, 200, .5)" },
+      { name: "Ghost",      fire: "#fff2c2", border: "#ffffff", glow: "rgba(120, 120, 140, .45)" },
+      { name: "Plasma",     fire: "#ff7bd5", border: "#ffd0f0", glow: "rgba(150, 0, 120, .5)" },
+      { name: "Verdant",    fire: "#9dff7a", border: "#e6ffcf", glow: "rgba(20, 120, 0, .5)" }
+    ];
+
+    var selected = null; // null = random colour for the next sun
+
+    function rand(a, b) { return a + Math.random() * (b - a); }
+
+    // Spawn a sun centred at (xPx, yPx) on the stage.
+    function spawnSun(xPx, yPx, theme) {
+      var t = theme ||
+        (selected != null ? PALETTE[selected]
+                          : PALETTE[Math.floor(Math.random() * PALETTE.length)]);
+      Sun.create(stage, {
+        scale: rand(0.30, 0.70),
+        left: xPx + "px",
+        top:  yPx + "px",
+        fire: t.fire, border: t.border, glow: t.glow
+      });
     }
-  })();
-</script>
-<script src="js/copyright.js"></script>
+
+    /* ---- Swatch row: choose the next sun's colour ------------------- */
+    var swatchRow = document.getElementById("swatches");
+
+    function selectSwatch(btn) {
+      var all = swatchRow.querySelectorAll(".swatch");
+      for (var i = 0; i < all.length; i++) all[i].classList.remove("selected");
+      btn.classList.add("selected");
+    }
+
+    function addSwatch(label, cls, bg, onPick) {
+      var b = document.createElement("button");
+      b.className = "swatch" + (cls ? " " + cls : "");
+      b.title = label;
+      b.setAttribute("aria-label", label);
+      if (bg) b.style.background = bg;
+      b.addEventListener("click", function () { onPick(); selectSwatch(b); });
+      swatchRow.appendChild(b);
+      return b;
+    }
+
+    // "Random" first, selected by default.
+    var randomSwatch = addSwatch("Random colour", "random", "", function () { selected = null; });
+    selectSwatch(randomSwatch);
+
+    // One swatch per palette colour (mini corona: fire centre over the rim).
+    for (var p = 0; p < PALETTE.length; p++) {
+      (function (i) {
+        var c = PALETTE[i];
+        var bg = "radial-gradient(circle at 50% 45%, " + c.fire + ", " + c.border + ")";
+        addSwatch(c.name, "", bg, function () { selected = i; });
+      })(p);
+    }
+
+    // Opening scene: a few suns scattered across the sky.
+    var w = stage.clientWidth, h = stage.clientHeight;
+    spawnSun(w * 0.30, h * 0.42, PALETTE[0]);
+    spawnSun(w * 0.68, h * 0.58, PALETTE[3]);
+    spawnSun(w * 0.82, h * 0.34, PALETTE[2]);
+
+    // Click the sky to spawn a sun where you clicked.
+    stage.addEventListener("click", function (e) {
+      spawnSun(e.clientX, e.clientY);
+    });
+
+    document.getElementById("add").addEventListener("click", function () {
+      spawnSun(rand(stage.clientWidth  * 0.1,  stage.clientWidth  * 0.9),
+               rand(stage.clientHeight * 0.25, stage.clientHeight * 0.85));
+    });
+    document.getElementById("clear").addEventListener("click", function () {
+      var all = stage.querySelectorAll(".solar");
+      for (var i = 0; i < all.length; i++) all[i].remove();
+    });
+  </script>
+  <script src="js/copyright.js"></script>
 </body>
 </html>

@@ -4,11 +4,29 @@ body {
   overflow: hidden;
 }
 
+/* #ui is the full-viewport stage that holds one or more .solar suns. */
 #ui {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  inset: 0;
 }
+
+/* A single, self-contained sun. Place it by setting left/top (its CENTRE)
+   and size it with --sun-scale; colour it with --fire / --border / --glow.
+   Spawned by javascripts/sun.js.
+
+   The sun is composited as an isolated group (isolation), then the whole
+   group is screen-blended onto the scene (mix-blend-mode). Inside the
+   group the opaque .cover still masks the flame roots, but once blended
+   every black area — the cover disk and the 1000px box — drops to
+   transparent, so suns never paint black boxes over each other; overlaps
+   just glow brighter. */
+.solar {
+  position: absolute;
+  transform: translate(-50%, -50%) scale(var(--sun-scale, 1));
+  isolation: isolate;
+  mix-blend-mode: screen;
+}
+
 #ui .cover {
   position: absolute;
   top: 50%;
@@ -18,7 +36,7 @@ body {
   background: #000;
   transform: translate(-50%, -50%);
   border-radius: 100%;
-  box-shadow: 0 0 50px 10px rgba(200, 0, 0, 0.5);
+  box-shadow: 0 0 50px 10px var(--glow, rgba(200, 0, 0, 0.5));
 }
 #ui .sun {
   position: absolute;
@@ -27,6 +45,14 @@ body {
   transform: translate(-50%, -50%);
   background: #000;
   filter: blur(10px) contrast(15);
+  /* Composites normally inside the .solar group so the cover can mask the
+     flame roots; the .solar group is what screen-blends onto the scene. */
+}
+/* Tint every flame from one place. !important beats the per-flame
+   nth-child rules below (which hard-code `orange`); only the colour is
+   overridden, so the per-side border WIDTHS that shape each flame stay. */
+#ui .sun_fire_inner {
+  border-color: var(--fire, orange) !important;
 }
 #ui .sun_border {
   position: absolute;
@@ -34,7 +60,7 @@ body {
   left: 50%;
   width: 400px;
   height: 400px;
-  border: 15px solid yellow;
+  border: 15px solid var(--border, yellow);
   border-radius: 100%;
   box-sizing: border-box;
   transform: translate(-50%, -50%);
