@@ -15,20 +15,59 @@
 
 <link rel="stylesheet" href="stylesheets/sun.css">
 <style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: #000;
+    color: #e7d9a6;
+    font-family: Monaco, Consolas, "Courier New", monospace;
+    overflow: hidden;
+  }
+  .controls { display: flex; justify-content: center; gap: 14px;
+              margin: 14px auto 0; pointer-events: auto; }
+  .controls button {
+    font-family: inherit; font-size: 12px; cursor: pointer;
+    color: #ffcf73; background: rgba(0, 0, 0, .45);
+    border: 1px solid rgba(255, 180, 80, .4); border-radius: 6px; padding: 7px 12px;
+  }
+  .controls button:hover { background: rgba(255, 180, 80, .15); }
+
+  .hint { position: absolute; left: 0; right: 0; bottom: 11%; z-index: 3; text-align: center;
+         font-size: 12px; color: #8a7a50; pointer-events: none; }
 </style>
-<body>  
+<body>
+  <div class="overlay">
+    <h1>Oz makes Fancy Sun</h1>
+    <p>A reusable pure-CSS flame &mdash; one tiny spawner.</p>
+    <div class="swatches" id="swatches"></div>
+    <div class="controls">
+      <button id="add">Add a Sun</button>
+      <button id="clear">Clear</button>
+    </div>
+  </div>
+
 <div id="ui">
   <div class="sun">
-    <div class="sun_fire">
-      <div class="sun_fire_inner"></div>
-    </div>
     <div class="sun_border"></div>
   </div>
   <div class="cover"></div>
 </div>
 
- 
+
 <script>
+  // The CSS defines 100 flame variants (.sun_fire:nth-child(1..100)).
+  // Generate them so the blurred orange blobs merge into a full corona ring.
+  (function () {
+    var sun = document.querySelector('.sun');
+    var border = sun.querySelector('.sun_border');
+    for (var i = 0; i < 100; i++) {
+      var fire = document.createElement('div');
+      fire.className = 'sun_fire';
+      var inner = document.createElement('div');
+      inner.className = 'sun_fire_inner';
+      fire.appendChild(inner);
+      sun.insertBefore(fire, border); // keep .sun_border as the last child
+    }
+  })();
 </script>
 <script src="js/copyright.js"></script>
 </body>
