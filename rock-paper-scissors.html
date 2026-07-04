@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rock Paper Scissors — play the computer — Oz</title>
+<meta property="og:title" content="Rock Paper Scissors — play the computer — Oz">
+<meta property="og:description" content="A quick vanilla-JS Rock Paper Scissors game by Oz. Play against the computer and keep score.">
+<meta property="og:image" content="https://ozzie3000.github.io/images/rock-paper-scissors-og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://ozzie3000.github.io/rock-paper-scissors.html">
+<meta property="og:type" content="website">
+<meta name="author" content="Oz">
+<link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+<link rel="stylesheet" type="text/css" href="stylesheets/rock-paper-scissors.css" media="screen">
+</head>
+
+<body>
+  <header>
+    <div class="container">
+      <h1>Rock Paper Scissors</h1>
+      <h2>Pick a hand and take on the computer</h2>
+    </div>
+  </header>
+
+  <div class="container">
+    <section class="rps">
+      <p class="tagline">Click a move. The computer picks blindly. Score keeps until you reset.</p>
+
+      <div class="rps-choices">
+        <button class="rps-btn" data-move="rock"><span class="emoji">✊</span>Rock</button>
+        <button class="rps-btn" data-move="paper"><span class="emoji">✋</span>Paper</button>
+        <button class="rps-btn" data-move="scissors"><span class="emoji">✌️</span>Scissors</button>
+      </div>
+
+      <div class="rps-hands">
+        <span id="you-hand">❓</span>
+        <span class="vs">vs</span>
+        <span id="cpu-hand">❓</span>
+      </div>
+      <p id="outcome" class="rps-outcome">Make your move</p>
+
+      <div class="rps-score">
+        <div>You<b id="score-win">0</b></div>
+        <div>CPU<b id="score-lose">0</b></div>
+        <div>Ties<b id="score-tie">0</b></div>
+      </div>
+
+      <button id="rps-reset" class="rps-reset">Reset score</button>
+
+      <p style="margin-top:40px;"><a href="index.html">&laquo; back to all projects</a></p>
+    </section>
+  </div>
+
+  <script src="js/rock-paper-scissors.js"></script>
+  <script src="js/copyright.js"></script>
+</body>
+</html>

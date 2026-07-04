@@ -1,0 +1,103 @@
+/* ---------------------------------------------------------------------
+   rock-paper-scissors.css — page-specific styling for the RPS game.
+   Inherits the terminal theme from stylesheet.css (linked first).
+   Palette tokens kept local so the values live in one place.
+   --------------------------------------------------------------------- */
+
+:root {
+  --accent: #b5e853;
+  --link: #63c0f5;
+  --panel: rgba(0, 0, 0, 0.35);
+  --edge: rgba(181, 232, 83, 0.35);
+}
+
+.rps {
+  max-width: 640px;
+  margin: 30px auto 60px;
+  text-align: center;
+}
+
+.rps .tagline {
+  color: #aaa;
+  margin: 0 0 24px;
+  font-size: 14px;
+}
+
+/* Choice buttons */
+.rps-choices {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0 0 28px;
+}
+
+.rps-btn {
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--accent);
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 3px;
+  padding: 16px 20px;
+  min-width: 120px;
+  cursor: pointer;
+  transition: transform .08s ease, background .15s ease, box-shadow .15s ease;
+}
+
+.rps-btn .emoji { display: block; font-size: 30px; margin-bottom: 6px; }
+
+.rps-btn:hover {
+  background: rgba(181, 232, 83, 0.12);
+  box-shadow: 0 0 10px rgba(181, 232, 83, 0.15);
+}
+
+.rps-btn:active { transform: translateY(2px); }
+
+/* Result / hands */
+.rps-hands {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  font-size: 46px;
+  min-height: 64px;
+  margin: 0 0 8px;
+}
+
+.rps-hands .vs { font-size: 16px; color: #888; }
+
+.rps-outcome {
+  font-size: 20px;
+  color: var(--accent);
+  min-height: 28px;
+  margin: 0 0 24px;
+  letter-spacing: -0.02em;
+}
+
+.rps-outcome.win  { color: #b5e853; }
+.rps-outcome.lose { color: #ff9a9a; }
+.rps-outcome.tie  { color: #63c0f5; }
+
+/* Scoreboard */
+.rps-score {
+  display: flex;
+  justify-content: center;
+  gap: 34px;
+  margin: 0 0 22px;
+  font-size: 14px;
+  color: #ccc;
+}
+.rps-score b { color: var(--accent); font-size: 20px; display: block; }
+
+.rps-reset {
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--link);
+  background: none;
+  border: 1px dotted #666;
+  border-radius: 3px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.rps-reset:hover { color: #fff; border-color: var(--accent); }
