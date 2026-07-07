@@ -13,7 +13,8 @@
 <meta name="author" content="Oz">
 <title>Oz flys around at Hogwarts - Broom Flight</title>
 <style>
-  html,body{margin:0;height:100%;overflow:hidden;background:#1a1030;font-family:Georgia,'Times New Roman',serif;}
+  html,body{margin:0;height:100%;overflow:hidden;background:#1a1030;font-family:Georgia,'Times New Roman',serif;overscroll-behavior:none;}
+  body.touch{touch-action:none;}
   #c{display:block;width:100%;height:100%;touch-action:none;}
   #overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
     background:radial-gradient(ellipse at center,rgba(30,18,60,.82),rgba(8,4,20,.94));
@@ -450,51 +451,55 @@ if(TOUCH){
   document.getElementById('clickmsg').innerHTML = '&mdash; Tap to mount your broom &mdash;';
   hint.innerHTML = 'Drag to steer &nbsp;&middot;&nbsp; Hold GO to fly';
 
-  // drag-to-steer on the canvas (one dedicated finger)
+  // drag-to-steer: pointer events on the whole document (touch-event fallback for old browsers)
   let steerId = null, lastTX = 0, lastTY = 0;
-  canvas.addEventListener('touchstart', e => {
-    if(!mobileFlying) return;
-    if(steerId === null){
-      const t = e.changedTouches[0];
-      steerId = t.identifier; lastTX = t.clientX; lastTY = t.clientY;
-    }
-    e.preventDefault();
-  }, {passive:false});
-  canvas.addEventListener('touchmove', e => {
-    if(!mobileFlying) return;
-    for(const t of e.changedTouches){
-      if(t.identifier === steerId){
-        const dx = t.clientX - lastTX, dy = t.clientY - lastTY;
-        lastTX = t.clientX; lastTY = t.clientY;
-        yaw   -= dx * 0.005;
-        pitch -= dy * 0.0045;
-        pitch = THREE.MathUtils.clamp(pitch, -1.35, 1.35);
-        yawVel = yawVel*0.7 + dx*0.0014;
-      }
-    }
-    e.preventDefault();
-  }, {passive:false});
-  const endSteer = e => { for(const t of e.changedTouches){ if(t.identifier === steerId) steerId = null; } };
-  canvas.addEventListener('touchend', endSteer);
-  canvas.addEventListener('touchcancel', endSteer);
+  const steerStart = (id, x, y, target) => {
+    if(!mobileFlying || steerId !== null) return;
+    if(target && target.closest && target.closest('.tbtn')) return; // buttons don't steer
+    steerId = id; lastTX = x; lastTY = y;
+  };
+  const steerMove = (id, x, y) => {
+    if(id !== steerId) return;
+    const dx = x - lastTX, dy = y - lastTY;
+    lastTX = x; lastTY = y;
+    yaw   -= dx * 0.005;
+    pitch -= dy * 0.0045;
+    pitch = THREE.MathUtils.clamp(pitch, -1.35, 1.35);
+    yawVel = yawVel*0.7 + dx*0.0014;
+  };
+  const steerEnd = id => { if(id === steerId) steerId = null; };
+
+  if(window.PointerEvent){
+    document.addEventListener('pointerdown',   e => { if(e.pointerType !== 'mouse') steerStart(e.pointerId, e.clientX, e.clientY, e.target); });
+    document.addEventListener('pointermove',   e => steerMove(e.pointerId, e.clientX, e.clientY));
+    document.addEventListener('pointerup',     e => steerEnd(e.pointerId));
+    document.addEventListener('pointercancel', e => steerEnd(e.pointerId));
+  } else {
+    document.addEventListener('touchstart', e => { const t = e.changedTouches[0]; steerStart(t.identifier, t.clientX, t.clientY, t.target); }, {passive:true});
+    document.addEventListener('touchmove', e => { for(const t of e.changedTouches) steerMove(t.identifier, t.clientX, t.clientY); if(mobileFlying) e.preventDefault(); }, {passive:false});
+    const te = e => { for(const t of e.changedTouches) steerEnd(t.identifier); };
+    document.addEventListener('touchend', te);
+    document.addEventListener('touchcancel', te);
+  }
 
   // hold buttons feed the same keys object the keyboard uses
+  const DOWNEV = window.PointerEvent ? 'pointerdown' : 'touchstart';
+  const UPEVS  = window.PointerEvent ? ['pointerup','pointercancel'] : ['touchend','touchcancel'];
   const holdBtn = (id, code) => {
     const el = document.getElementById(id);
-    el.addEventListener('touchstart', e => { keys[code] = true; e.preventDefault(); }, {passive:false});
-    const off = e => { keys[code] = false; e.preventDefault(); };
-    el.addEventListener('touchend', off);
-    el.addEventListener('touchcancel', off);
+    el.addEventListener(DOWNEV, e => { keys[code] = true; e.preventDefault(); }, {passive:false});
+    UPEVS.forEach(ev => el.addEventListener(ev, () => { keys[code] = false; }));
+    el.addEventListener('contextmenu', e => e.preventDefault());
   };
   holdBtn('btnGo','KeyW'); holdBtn('btnBrake','KeyS');
   holdBtn('btnUp','Space'); holdBtn('btnDown','KeyC');
-  document.getElementById('btnBoost').addEventListener('touchstart', e => {
+  document.getElementById('btnBoost').addEventListener(DOWNEV, e => {
     keys.ShiftLeft = !keys.ShiftLeft;
-    e.target.classList.toggle('on', !!keys.ShiftLeft);
+    e.currentTarget.classList.toggle('on', !!keys.ShiftLeft);
     e.preventDefault();
   }, {passive:false});
-  document.getElementById('btnPause').addEventListener('touchstart', e => { setTouchFlight(false); e.preventDefault(); }, {passive:false});
-  document.getElementById('btnReset').addEventListener('touchstart', e => { reset(); e.preventDefault(); }, {passive:false});
+  document.getElementById('btnPause').addEventListener(DOWNEV, e => { setTouchFlight(false); e.preventDefault(); }, {passive:false});
+  document.getElementById('btnReset').addEventListener(DOWNEV, e => { reset(); e.preventDefault(); }, {passive:false});
 }
 
 // ================= SOFT COLLISION =================
