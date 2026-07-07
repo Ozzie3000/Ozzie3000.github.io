@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hogwarts Broom Flight</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#1a1030;font-family:Georgia,'Times New Roman',serif;}
+  #c{display:block;width:100%;height:100%;}
+  #overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at center,rgba(30,18,60,.82),rgba(8,4,20,.94));
+    color:#e8dcc0;text-align:center;cursor:pointer;z-index:10;user-select:none;}
+  #overlay h1{font-size:42px;margin:0 0 6px;letter-spacing:2px;text-shadow:0 0 24px #b48a3c;}
+  #overlay p.sub{color:#b9a8d8;margin:0 0 26px;font-style:italic;}
+  .controls{display:grid;grid-template-columns:auto auto;gap:6px 18px;text-align:left;font-size:15px;color:#cfc3a8;margin-bottom:30px;}
+  .controls b{color:#f0e6c8;font-family:monospace;background:rgba(255,255,255,.08);padding:1px 8px;border-radius:4px;text-align:center;font-weight:normal;}
+  #clickmsg{font-size:20px;color:#ffd98a;animation:pulse 1.8s infinite;}
+  @keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+  #hud{position:fixed;left:18px;bottom:16px;z-index:5;pointer-events:none;color:#e8dcc0;display:none;}
+  #speedlabel{font-size:11px;letter-spacing:2px;color:#b9a8d8;}
+  #speedbar{width:150px;height:7px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden;margin-top:4px;}
+  #speedfill{height:100%;width:0;background:linear-gradient(90deg,#7fb2ff,#ffd98a);border-radius:4px;}
+  #hint{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:5;pointer-events:none;display:none;
+    font-size:13px;color:#d8cfb4;background:rgba(10,6,24,.55);padding:6px 14px;border-radius:16px;transition:opacity 1.5s;}
+  #dot{position:fixed;left:50%;top:50%;width:4px;height:4px;margin:-2px;border-radius:50%;background:rgba(255,255,255,.6);z-index:5;pointer-events:none;display:none;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="dot"></div>
+<div id="hud">
+  <div id="speedlabel">SPEED</div>
+  <div id="speedbar"><div id="speedfill"></div></div>
+</div>
+<div id="hint">Mouse steer &nbsp;&middot;&nbsp; W/S speed &nbsp;&middot;&nbsp; Shift boost &nbsp;&middot;&nbsp; Space up / C down &nbsp;&middot;&nbsp; R reset</div>
+<div id="overlay">
+  <h1>Hogwarts Broom Flight</h1>
+  <p class="sub">A first-person flight over the castle grounds</p>
+  <div class="controls">
+    <b>Mouse</b><span>Steer the broom</span>
+    <b>W / S</b><span>Speed up / slow down</span>
+    <b>Shift</b><span>Boost</span>
+    <b>Space / C</b><span>Rise / descend</span>
+    <b>A / D</b><span>Drift left / right</span>
+    <b>R</b><span>Reset to start</span>
+    <b>Esc</b><span>Pause</span>
+  </div>
+  <div id="clickmsg">&mdash; Click to mount your broom &mdash;</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+// ================= RENDERER / SCENE =================
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setSize(innerWidth, innerHeight);
+const scene = new THREE.Scene();
+const FOGC = 0x40295c;
+scene.fog = new THREE.Fog(FOGC, 160, 1250);
+const camera = new THREE.PerspectiveCamera(72, innerWidth/innerHeight, 0.1, 4000);
+scene.add(camera);
+addEventListener('resize', () => {
+  renderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+});
+
+// deterministic pseudo-random
+const pr = i => { const v = Math.sin(i*127.1 + 311.7)*43758.5453; return v - Math.floor(v); };
+
+// ================= SKY =================
+(function(){
+  const cv = document.createElement('canvas'); cv.width = 16; cv.height = 256;
+  const g = cv.getContext('2d');
+  const gr = g.createLinearGradient(0,0,0,256);
+  gr.addColorStop(0.00,'#120a2e');
+  gr.addColorStop(0.42,'#3b2266');
+  gr.addColorStop(0.68,'#8a3d6e');
+  gr.addColorStop(0.85,'#e2703a');
+  gr.addColorStop(1.00,'#f2a03c');
+  g.fillStyle = gr; g.fillRect(0,0,16,256);
+  const tex = new THREE.CanvasTexture(cv);
+  const sky = new THREE.Mesh(
+    new THREE.SphereGeometry(1900, 24, 15),
+    new THREE.MeshBasicMaterial({map:tex, side:THREE.BackSide, fog:false}));
+  scene.add(sky);
+})();
+
+// stars (upper sky)
+(function(){
+  const n = 350, pos = new Float32Array(n*3);
+  for(let i=0;i<n;i++){
+    const a = pr(i)*Math.PI*2;
+    const e = Math.acos(0.25 + pr(i+900)*0.75);
+    const r = 1800;
+    pos[i*3]   = r*Math.sin(e)*Math.cos(a);
+    pos[i*3+1] = r*Math.cos(e);
+    pos[i*3+2] = r*Math.sin(e)*Math.sin(a);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+    color:0xffffff, size:2.4, sizeAttenuation:false, transparent:true, opacity:0.7, fog:false})));
+})();
+
+// glow texture helper
+function glowTexture(inner, outer){
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+  const g = cv.getContext('2d');
+  const gr = g.createRadialGradient(32,32,2,32,32,32);
+  gr.addColorStop(0, inner); gr.addColorStop(0.4, outer); gr.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle = gr; g.fillRect(0,0,64,64);
+  return new THREE.CanvasTexture(cv);
+}
+
+// sun glow on horizon + moon
+const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+  map:glowTexture('rgba(255,230,180,1)','rgba(255,140,50,.55)'),
+  transparent:true, fog:false, depthWrite:false}));
+sunGlow.position.set(-700, 130, 1500); sunGlow.scale.set(750,750,1); scene.add(sunGlow);
+const moon = new THREE.Mesh(new THREE.SphereGeometry(38,16,12),
+  new THREE.MeshBasicMaterial({color:0xf4f0e2, fog:false}));
+moon.position.set(1150, 620, -1050); scene.add(moon);
+
+// ================= LIGHTS =================
+scene.add(new THREE.HemisphereLight(0x6a5a9e, 0x1c1428, 0.85));
+const sun = new THREE.DirectionalLight(0xff9a4d, 0.9);
+sun.position.set(-60, 35, 90); scene.add(sun);
+scene.add(new THREE.AmbientLight(0x30244a, 0.6));
+
+// ================= TERRAIN =================
+function groundHeight(x, z){
+  const d = Math.hypot(x, z);
+  const t = THREE.MathUtils.clamp((d-380)/320, 0, 1);
+  return t*(Math.sin(x*0.006)*Math.cos(z*0.006)*22 + Math.sin(x*0.017+z*0.011)*7 + 14*t);
+}
+(function(){
+  const geo = new THREE.PlaneGeometry(2600, 2600, 90, 90);
+  geo.rotateX(-Math.PI/2);
+  const p = geo.attributes.position;
+  for(let i=0;i<p.count;i++) p.setY(i, groundHeight(p.getX(i), p.getZ(i)));
+  geo.computeVertexNormals();
+  scene.add(new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:0x2f4a33})));
+})();
+
+// lake
+(function(){
+  const lake = new THREE.Mesh(new THREE.CircleGeometry(150, 40),
+    new THREE.MeshLambertMaterial({color:0x1e3a5e, emissive:0x0e2038}));
+  lake.rotation.x = -Math.PI/2; lake.position.set(-260, 0.4, 180); scene.add(lake);
+})();
+
+// mountains ring
+(function(){
+  const mat = new THREE.MeshLambertMaterial({color:0x241a3e});
+  for(let i=0;i<16;i++){
+    const a = i/16*Math.PI*2 + pr(i+40)*0.3;
+    const r = 880 + pr(i+70)*140;
+    const h = 170 + pr(i+100)*220, br = 130 + pr(i+130)*110;
+    const m = new THREE.Mesh(new THREE.ConeGeometry(br, h, 7), mat);
+    m.position.set(Math.cos(a)*r, h/2 - 10, Math.sin(a)*r);
+    scene.add(m);
+  }
+})();
+
+// forest cluster
+(function(){
+  const mat = new THREE.MeshLambertMaterial({color:0x18301f});
+  const geo = new THREE.ConeGeometry(7, 22, 6);
+  for(let i=0;i<45;i++){
+    const x = -330 + (pr(i)-0.5)*240;
+    const z = -280 + (pr(i+50)-0.5)*240;
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x, groundHeight(x,z)+10, z);
+    scene.add(m);
+  }
+})();
+
+// ================= BUILD HELPERS =================
+const boxColliders = [], cylColliders = [];
+const MAT = {
+  stone:     new THREE.MeshLambertMaterial({color:0x8d8798}),
+  stoneDark: new THREE.MeshLambertMaterial({color:0x6e6880}),
+  roof:      new THREE.MeshLambertMaterial({color:0x323e58}),
+  wood:      new THREE.MeshLambertMaterial({color:0x5a4028}),
+  woodDark:  new THREE.MeshLambertMaterial({color:0x46311e}),
+  window:    new THREE.MeshBasicMaterial({color:0xffc46a}),
+  path:      new THREE.MeshLambertMaterial({color:0x5e5870})
+};
+const castle = new THREE.Group(); scene.add(castle);
+
+function addBox(w,h,d,x,y,z,mat,collide){
+  if(collide === undefined) collide = true;
+  const seg = v => Math.min(10, Math.max(1, Math.round(v/8)));
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d,seg(w),seg(h),seg(d)), mat);
+  m.position.set(x,y,z); castle.add(m);
+  if(collide) boxColliders.push({minX:x-w/2,maxX:x+w/2,minY:y-h/2,maxY:y+h/2,minZ:z-d/2,maxZ:z+d/2});
+  return m;
+}
+function addTower(x,z,r,h,roofH){
+  const t = new THREE.Mesh(new THREE.CylinderGeometry(r, r*1.12, h, 10), MAT.stone);
+  t.position.set(x, h/2, z); castle.add(t);
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(r*1.35, roofH, 10), MAT.roof);
+  roof.position.set(x, h + roofH/2, z); castle.add(roof);
+  cylColliders.push({x:x, z:z, r:r*1.2, y0:0, y1:h + roofH*0.8});
+  for(let i=0;i<3;i++){
+    const wy = h*0.35 + i*h*0.22;
+    for(let k=0;k<2;k++){
+      const a = Math.PI*0.3 + k*Math.PI;
+      const wm = new THREE.Mesh(new THREE.PlaneGeometry(1.6,3), MAT.window);
+      wm.position.set(x + Math.cos(a)*(r+0.15), wy, z + Math.sin(a)*(r+0.15));
+      wm.lookAt(x + Math.cos(a)*(r+10), wy, z + Math.sin(a)*(r+10));
+      castle.add(wm);
+    }
+  }
+}
+const orbTex = glowTexture('rgba(255,240,200,1)','rgba(255,180,80,.5)');
+const orbs = [];
+function addOrb(x,y,z,s){
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+    map:orbTex, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending}));
+  sp.position.set(x,y,z); sp.scale.set(s||2.2, s||2.2, 1); castle.add(sp);
+  orbs.push({sp:sp, y0:y, ph:Math.random()*6.28, spd:0.5+Math.random()});
+}
+
+// ================= GREAT HALL (x 20..120, z -22..22) =================
+const HX0=20, HX1=120, HZ=22, WH=26, TH=2;
+// floor slab
+addBox(108, 1.2, 52, 70, 0.6, 0, MAT.stoneDark);
+// long side walls
+addBox(HX1-HX0, WH, TH, 70, WH/2, -HZ, MAT.stone);
+addBox(HX1-HX0, WH, TH, 70, WH/2,  HZ, MAT.stone);
+// entrance wall (x=20): door opening z -8..8, height 20
+addBox(TH, WH, HZ-8, HX0, WH/2, -15, MAT.stone);
+addBox(TH, WH, HZ-8, HX0, WH/2,  15, MAT.stone);
+addBox(TH, WH-20, 16, HX0, 23, 0, MAT.stone); // lintel above door
+// far wall (x=120): solid, with glowing rose window
+addBox(TH, WH, HZ*2, HX1, WH/2, 0, MAT.stone);
+(function(){
+  const rose = new THREE.Mesh(new THREE.CircleGeometry(5.5, 24), MAT.window);
+  rose.position.set(HX1-TH/2-0.12, 16, 0); rose.rotation.y = -Math.PI/2; castle.add(rose);
+  const roseOut = rose.clone(); roseOut.position.x = HX1+TH/2+0.12; roseOut.rotation.y = Math.PI/2; castle.add(roseOut);
+})();
+// roof slab (collider) + decorative pitched ridge
+addBox(104, 3, 48, 70, 27.5, 0, MAT.stone);
+(function(){
+  const ridge = new THREE.Mesh(new THREE.BoxGeometry(100, 19, 19), MAT.roof);
+  ridge.position.set(70, 29, 0); ridge.rotation.x = Math.PI/4; castle.add(ridge);
+  boxColliders.push({minX:20,maxX:120,minY:29,maxY:41,minZ:-7,maxZ:7}); // ridge approx
+})();
+// hall corner turrets
+addTower(HX0, -HZ, 4.5, 34, 10);
+addTower(HX0,  HZ, 4.5, 34, 10);
+addTower(HX1, -HZ, 4.5, 34, 10);
+addTower(HX1,  HZ, 4.5, 34, 10);
+// glowing windows along both sides (outer + inner faces)
+for(let wx=32; wx<=108; wx+=12){
+  for(const s of [-1,1]){
+    const wo = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 9), MAT.window);
+    wo.position.set(wx, 15, s*(HZ+TH/2+0.12)); wo.rotation.y = s>0 ? 0 : Math.PI; castle.add(wo);
+    const wi = wo.clone(); wi.position.z = s*(HZ-TH/2-0.12); wi.rotation.y = s>0 ? Math.PI : 0; castle.add(wi);
+  }
+}
+// enchanted star ceiling (interior, faces down)
+(function(){
+  const cv = document.createElement('canvas'); cv.width=512; cv.height=256;
+  const g = cv.getContext('2d');
+  const gr = g.createLinearGradient(0,0,512,0);
+  gr.addColorStop(0,'#0d1030'); gr.addColorStop(0.5,'#1a1440'); gr.addColorStop(1,'#251043');
+  g.fillStyle = gr; g.fillRect(0,0,512,256);
+  for(let i=0;i<300;i++){
+    g.fillStyle = 'rgba(255,255,230,' + (0.3+Math.random()*0.7) + ')';
+    const s = Math.random()<0.9 ? 1 : 2;
+    g.fillRect(Math.random()*512, Math.random()*256, s, s);
+  }
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(96, 40),
+    new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv)}));
+  ceil.rotation.x = Math.PI/2; ceil.position.set(70, 25.7, 0); castle.add(ceil);
+})();
+// four long house tables + benches
+for(const tz of [-14,-6,6,14]){
+  addBox(80, 0.7, 3.4, 68, 3, tz, MAT.wood);            // top (collides)
+  addBox(80, 3, 1.2, 68, 1.5, tz, MAT.woodDark, false); // support
+  addBox(80, 1.6, 1, 68, 1.4, tz-2.4, MAT.woodDark, false); // benches
+  addBox(80, 1.6, 1, 68, 1.4, tz+2.4, MAT.woodDark, false);
+}
+// head table on dais at far end
+addBox(10, 1.5, 36, 113, 1.35, 0, MAT.stoneDark);
+addBox(3.4, 0.7, 30, 113, 2.85, 0, MAT.wood);
+// floating orbs above the tables
+for(let i=0;i<40;i++){
+  addOrb(30 + pr(i*3+1)*80, 13 + pr(i*3+2)*7, -16 + pr(i*3+3)*32, 1.8 + pr(i)*1.4);
+}
+// interior warm lights
+(function(){
+  const l1 = new THREE.PointLight(0xffb56a, 1.4, 80, 2); l1.position.set(45,15,0); scene.add(l1);
+  const l2 = new THREE.PointLight(0xffb56a, 1.4, 80, 2); l2.position.set(95,15,0); scene.add(l2);
+  const l3 = new THREE.PointLight(0xffc98a, 0.7, 60, 2); l3.position.set(6,12,0);  scene.add(l3); // courtyard
+})();
+
+// ================= MAIN KEEP + TOWERS =================
+addBox(44, 48, 44, -30, 24, 0, MAT.stone); // keep block
+(function(){ // pyramid cap
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(31, 18, 4), MAT.roof);
+  cap.position.set(-30, 57, 0); cap.rotation.y = Math.PI/4; castle.add(cap);
+})();
+addTower(-52,-22, 6, 62, 16);
+addTower(-52, 22, 6, 62, 16);
+addTower( -8,-22, 6, 62, 16);
+addTower( -8, 22, 6, 62, 16);
+addTower(-30,-45, 9, 95, 24);   // grand spire behind keep
+addTower( 10,  -90, 11, 105, 26); // astronomy tower (north landmark)
+addTower( 60,  90, 7, 45, 14);   // owlery (south of hall)
+// keep windows (courtyard face + sides)
+for(let wy=12; wy<=42; wy+=10){
+  for(let wz=-14; wz<=14; wz+=9){
+    const wm = new THREE.Mesh(new THREE.PlaneGeometry(2, 4.5), MAT.window);
+    wm.position.set(-7.85, wy, wz); wm.rotation.y = Math.PI/2; castle.add(wm);
+  }
+  for(let wx=-46; wx<=-14; wx+=9){
+    const wa = new THREE.Mesh(new THREE.PlaneGeometry(2, 4.5), MAT.window);
+    wa.position.set(wx, wy, 22.15); castle.add(wa);
+    const wb = wa.clone(); wb.position.z = -22.15; wb.rotation.y = Math.PI; castle.add(wb);
+  }
+}
+// curtain walls enclosing courtyard (fly over them, or through the hall door)
+addBox(28, 16, 3, 6, 8, -20, MAT.stoneDark);
+addBox(28, 16, 3, 6, 8,  20, MAT.stoneDark);
+// courtyard floor
+(function(){
+  const cf = new THREE.Mesh(new THREE.PlaneGeometry(28, 40), MAT.path);
+  cf.rotation.x = -Math.PI/2; cf.position.set(6, 0.15, 0); castle.add(cf);
+})();
+
+// ================= LAMP PATH + GATEHOUSE =================
+for(let i=0;i<8;i++){
+  const z = 40 + i*18, x = 6 + Math.sin(i*0.7)*6;
+  addBox(0.8, 7, 0.8, x, 3.5, z, MAT.stoneDark, false);
+  addOrb(x, 7.6, z, 2.4);
+}
+addTower(-6, 185, 4, 26, 9);
+addTower(20, 185, 4, 26, 9);
+addBox(26, 6, 5, 7, 20, 185, MAT.stone); // gate arch lintel — fly under it
+// a few ambient orbs drifting around the towers
+for(let i=0;i<14;i++){
+  addOrb(-70 + pr(i*7+2)*160, 30 + pr(i*7+3)*50, -70 + pr(i*7+4)*140, 2 + pr(i*7+5)*1.5);
+}
+
+// ================= BROOM (visible in first person) =================
+(function(){
+  const broom = new THREE.Group();
+  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.09, 4.6, 7),
+    new THREE.MeshLambertMaterial({color:0x7a5230}));
+  handle.rotation.x = -Math.PI/2 + 0.15;
+  handle.position.set(0, -0.55, -1.4);
+  const bristles = new THREE.Mesh(new THREE.ConeGeometry(0.34, 1.5, 8),
+    new THREE.MeshLambertMaterial({color:0xb08d4f}));
+  bristles.rotation.x = Math.PI/2 - 0.3;
+  bristles.position.set(0, -0.72, 0.95);
+  broom.add(handle, bristles);
+  camera.add(broom);
+})();
+
+// ================= FLIGHT STATE / INPUT =================
+const pos = new THREE.Vector3();
+let yaw = 0, pitch = 0, bank = 0, yawVel = 0, speed = 0;
+function reset(){ pos.set(0, 55, 300); yaw = 0; pitch = -0.06; speed = 18; }
+reset();
+
+const keys = {};
+addEventListener('keydown', e => { keys[e.code] = true; if(e.code === 'KeyR') reset(); });
+addEventListener('keyup',   e => { keys[e.code] = false; });
+
+const overlay = document.getElementById('overlay');
+const hud = document.getElementById('hud');
+const dot = document.getElementById('dot');
+const hint = document.getElementById('hint');
+const speedfill = document.getElementById('speedfill');
+let hintT = 0;
+
+overlay.addEventListener('click', () => canvas.requestPointerLock());
+document.addEventListener('pointerlockchange', () => {
+  const locked = document.pointerLockElement === canvas;
+  overlay.style.display = locked ? 'none' : 'flex';
+  hud.style.display = locked ? 'block' : 'none';
+  dot.style.display = locked ? 'block' : 'none';
+  if(locked){ hint.style.display = 'block'; hint.style.opacity = 1; hintT = performance.now(); }
+});
+document.addEventListener('mousemove', e => {
+  if(document.pointerLockElement !== canvas) return;
+  yaw   -= e.movementX * 0.0021;
+  pitch -= e.movementY * 0.0019;
+  pitch = THREE.MathUtils.clamp(pitch, -1.35, 1.35);
+  yawVel = yawVel*0.7 + e.movementX*0.0006;
+});
+
+// ================= SOFT COLLISION =================
+function collideSoft(p, dt){
+  const r = 1.5;
+  let hit = false;
+  const gh = groundHeight(p.x, p.z);
+  if(p.y < gh + 2.2){ p.y = gh + 2.2; hit = true; }
+  for(let i=0;i<boxColliders.length;i++){
+    const b = boxColliders[i];
+    if(p.x > b.minX-r && p.x < b.maxX+r &&
+       p.y > b.minY-r && p.y < b.maxY+r &&
+       p.z > b.minZ-r && p.z < b.maxZ+r){
+      let pen = p.x-(b.minX-r), ax = 'x', dir = -1;
+      let v;
+      v = (b.maxX+r)-p.x; if(v < pen){ pen = v; ax = 'x'; dir = 1; }
+      v = p.y-(b.minY-r); if(v < pen){ pen = v; ax = 'y'; dir = -1; }
+      v = (b.maxY+r)-p.y; if(v < pen){ pen = v; ax = 'y'; dir = 1; }
+      v = p.z-(b.minZ-r); if(v < pen){ pen = v; ax = 'z'; dir = -1; }
+      v = (b.maxZ+r)-p.z; if(v < pen){ pen = v; ax = 'z'; dir = 1; }
+      p[ax] += dir * Math.min(pen, Math.max(pen*10*dt, pen*0.35));
+      hit = true;
+    }
+  }
+  for(let i=0;i<cylColliders.length;i++){
+    const c = cylColliders[i];
+    if(p.y < c.y1 + r && p.y > c.y0){
+      const dx = p.x-c.x, dz = p.z-c.z, d = Math.hypot(dx, dz);
+      if(d < c.r + r && d > 0.001){
+        const pen = c.r + r - d;
+        const push = Math.min(pen, Math.max(pen*10*dt, pen*0.35));
+        p.x += dx/d*push; p.z += dz/d*push;
+        hit = true;
+      }
+    }
+  }
+  if(hit) speed *= Math.pow(0.5, dt*3); // scrub speed while rubbing a surface
+}
+
+// ================= MAIN LOOP =================
+const clock = new THREE.Clock();
+const fwd = new THREE.Vector3(), rightV = new THREE.Vector3(), UP = new THREE.Vector3(0,1,0);
+const eul = new THREE.Euler(0,0,0,'YXZ');
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const flying = document.pointerLockElement === canvas;
+
+  // throttle
+  const maxS = (keys.ShiftLeft || keys.ShiftRight) ? 95 : 55;
+  if(flying){
+    if(keys.KeyW) speed += 45*dt;
+    else if(keys.KeyS) speed -= 55*dt;
+    else speed *= (1 - 0.25*dt);
+    speed = THREE.MathUtils.clamp(speed, -12, maxS);
+  }
+
+  // banking into turns
+  bank = THREE.MathUtils.lerp(bank, THREE.MathUtils.clamp(-yawVel*6, -0.5, 0.5), 1 - Math.pow(0.001, dt));
+  yawVel *= Math.pow(0.0001, dt);
+
+  eul.set(pitch, yaw, bank);
+  camera.quaternion.setFromEuler(eul);
+  camera.getWorldDirection(fwd);
+  rightV.crossVectors(fwd, UP).normalize();
+
+  const vel = fwd.clone().multiplyScalar(speed);
+  if(flying){
+    if(keys.Space) vel.y += 16;
+    if(keys.KeyC)  vel.y -= 16;
+    if(keys.KeyA)  vel.addScaledVector(rightV, -14);
+    if(keys.KeyD)  vel.addScaledVector(rightV, 14);
+  }
+  pos.addScaledVector(vel, dt);
+  collideSoft(pos, dt);
+  collideSoft(pos, dt); // second pass for stability at boost speed
+
+  // broom bob
+  const bob = Math.sin(performance.now()*0.0021) * 0.15 * (0.4 + Math.min(Math.abs(speed)/55, 1));
+  camera.position.set(pos.x, pos.y + bob, pos.z);
+
+  // orb drift
+  const tt = performance.now()*0.001;
+  for(let i=0;i<orbs.length;i++){
+    const o = orbs[i];
+    o.sp.position.y = o.y0 + Math.sin(tt*o.spd + o.ph)*0.6;
+  }
+
+  // HUD
+  speedfill.style.width = (Math.max(speed,0)/95*100) + '%';
+  if(hintT && performance.now()-hintT > 7000){ hint.style.opacity = 0; hintT = 0; }
+
+  renderer.render(scene, camera);
+}
+animate();
+
+</script>
+</body>
+</html>
