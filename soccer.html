@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:title" content="2D Soccer — Argentina vs Spain — Oz">
+<meta property="og:description" content="2D Soccer by Oz. 3v3 top-down football vs the AI. Mouse to move, click to kick. Two timed halves, difficulty slider, and four candles burning at the corner flags.">
+<meta property="og:image" content="https://ozzie3000.github.io/images/grass2.png">
+<meta property="og:url" content="https://ozzie3000.github.io/soccer.html">
+<meta property="og:type" content="website">
+<meta name="author" content="Oz">
+
+<!-- Twitter/X specifically uses these -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://ozzie3000.github.io/images/grass2.png">
+<title>2D Soccer — Argentina vs Spain — Oz</title>
+<link rel="stylesheet" href="stylesheets/stylesheet.css">
+<link rel="stylesheet" href="stylesheets/candle.css">
+<style>
+/* =====================================================================
+   2D Soccer (soccer.html only)
+   ---------------------------------------------------------------------
+   Rides on the glass theme + the cube-page control styles (rows,
+   sliders, scoreboards, .ctt-active) so it matches the Cube games.
+   This block only adds the pitch canvas and the corner candles.
+   ===================================================================== */
+.soccer-page .pitch-wrap {
+  position: relative;
+  max-width: 960px;
+  margin: 10px auto 4px;
+}
+.soccer-page #pitch {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+  cursor: crosshair;
+}
+
+/* Team colors on the scoreboards */
+.soccer-page .ctt-score.arg  { color: #7ec8ff; }
+.soccer-page .ctt-score.esp  { color: #ff7676; }
+.soccer-page .ctt-score.draw { color: #b6b6b6; }
+
+/* Corner-flag candles. candle.css draws the candle; here we pin one to
+   each corner of the pitch. The candle artboard is 400x400 with the
+   visible candle spanning y 0..580 and its base centered at x=200, so
+   at scale 0.26 the base center sits (52px, 151px) from the top-left of
+   the element — the calc() offsets park that base on the corner point.
+   Field corners: x = 45/960 = 4.687% / 95.313%, y = 45/600 = 7.5% / 92.5%. */
+.soccer-page .field-candle {
+  transform-origin: top left;
+  margin: 0;
+  z-index: 3;
+  opacity: 0.95;
+}
+.soccer-page .fc-tl { left: calc(4.687% - 52px);  top: calc(7.5% - 151px);  }
+.soccer-page .fc-tr { left: calc(95.313% - 52px); top: calc(7.5% - 151px);  }
+.soccer-page .fc-bl { left: calc(4.687% - 52px);  top: calc(92.5% - 151px); }
+.soccer-page .fc-br { left: calc(95.313% - 52px); top: calc(92.5% - 151px); }
+@media (max-width: 760px) {
+  .soccer-page .field-candle { display: none; }
+}
+
+.soccer-page .soc-help { color: #9fb08a; font-size: 13px; margin: 2px auto 10px; max-width: 640px; }
+</style>
+</head>
+<body class="glass cube-page soccer-page">
+
+    <h1>2D Soccer</h1>
+    <p class="ctt-sub">Argentina vs Spain — 3v3. Your nearest player (green ring) follows the mouse. Click to kick toward the cursor.</p>
+
+    <!-- Settings: your team, AI difficulty, half length -->
+    <div class="ctt-row ctt-settings">
+        <label>You are:</label>
+        <button id="soc-team-arg" class="ctt-active">Argentina</button>
+        <button id="soc-team-esp">Spain</button>
+    </div>
+    <div class="ctt-row ctt-settings">
+        <label>Difficulty:</label>
+        <input type="range" id="soc-difficulty" min="1" max="10" value="5">
+        <span class="ctt-diff-value" id="soc-difficulty-display">5</span>
+        <label>Half length:</label>
+        <input type="range" id="soc-halflen" min="1" max="45" value="2">
+        <span class="ctt-diff-value" id="soc-halflen-display">2 min</span>
+    </div>
+
+    <!-- Scoreboards -->
+    <div class="ctt-scoreboard">
+        <div class="ctt-sb-title">This Match — goals</div>
+        <div class="ctt-score arg" id="soc-goals-arg">Argentina: 0</div>
+        <div class="ctt-score esp" id="soc-goals-esp">Spain: 0</div>
+    </div>
+    <div class="ctt-scoreboard">
+        <div class="ctt-sb-title">Overall — matches won</div>
+        <div class="ctt-score arg" id="soc-overall-arg">Argentina: 0</div>
+        <div class="ctt-score draw" id="soc-overall-draw">Draw: 0</div>
+        <div class="ctt-score esp" id="soc-overall-esp">Spain: 0</div>
+    </div>
+
+    <!-- Status + match clock -->
+    <div class="ctt-statusbar">
+        <span class="ctt-status" id="soc-status">Pick a team, set your sliders, then Start Match.</span>
+        <span class="ctt-current st-open" title="Match clock">
+            <span class="ctt-current-label">Clock</span>
+            <span class="ctt-current-face" id="soc-clock">1st 02:00</span>
+        </span>
+    </div>
+
+    <!-- Pitch (candles are appended into this wrapper by the script) -->
+    <div class="pitch-wrap" id="pitch-wrap">
+        <canvas id="pitch" width="960" height="600"></canvas>
+    </div>
+    <p class="soc-help">Dribble by running into the ball. Click to shoot — the ball flies toward your cursor. Teams switch ends at halftime.</p>
+
+    <!-- Actions -->
+    <div class="ctt-row">
+        <button id="soc-start">Start Match</button>
+        <button id="soc-next">Next Match</button>
+        <button id="soc-reset">Reset All Scores</button>
+    </div>
+
+    <script src="javascripts/candle.js"></script>
+    <script src="javascripts/soccer.js"></script>
+    <script src="js/copyright.js"></script>
+</body>
+</html>
