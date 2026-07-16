@@ -36,6 +36,7 @@
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
   cursor: crosshair;
+  touch-action: none;   /* finger drags steer the player, not the page */
 }
 
 /* Team colors on the scoreboards */
@@ -82,7 +83,7 @@
 <body class="glass cube-page soccer-page">
 
     <h1>2D Soccer</h1>
-    <p class="ctt-sub">Argentina vs Spain — 3v3. Mouse to move, click to kick, spacebar to switch players.</p>
+    <p class="ctt-sub">Argentina vs Spain — 3v3. Mouse or finger to move, click/tap to kick.</p>
 
     <!-- Settings: your team, AI difficulty, half length -->
     <div class="ctt-row ctt-settings">
@@ -135,9 +136,9 @@
     <div class="ctt-scoreboard soc-instructions" id="soc-instructions">
         <div class="ctt-sb-title">How to Play</div>
         <ul>
-            <li><b>Move:</b> your highlighted player (green ring) follows the mouse.</li>
-            <li><b>Kick:</b> click to fire the ball toward your cursor (you must be next to the ball).</li>
-            <li><b>Switch player:</b> spacebar cycles through your three players. Auto-switch (nearest to ball) resumes a few seconds later.</li>
+            <li><b>Move:</b> your highlighted player (green ring) follows the mouse — or your finger on touch screens.</li>
+            <li><b>Kick:</b> click (or quick-tap) to fire the ball toward that spot — you must be next to the ball.</li>
+            <li><b>Switch player:</b> spacebar cycles your three players; on touch, tap the player you want. Auto-switch (nearest to ball) resumes a few seconds later.</li>
             <li><b>Dribble:</b> just run into the ball to push it along.</li>
             <li><b>Kickoff:</b> both teams hold their own half until the kicking team touches the ball.</li>
             <li><b>Match:</b> two halves (length slider), 1-minute halftime, teams swap ends.</li>

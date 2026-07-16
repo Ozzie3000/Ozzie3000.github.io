@@ -20,7 +20,13 @@
   var CX = W / 2, CY = H / 2;
   var GOAL_HW = 80;              // goal mouth half-width (vertical)
   var GOAL_D = 28;               // net depth behind the goal line
-  var PR = 14, BR = 9;           // player / ball radii
+  /* Player size: 14 with a mouse, 21 (+50%) on touch-first devices,
+     where fingers need a bigger target. pointer:coarse means the
+     PRIMARY input is touch, so touchscreen laptops still get 14. */
+  var IS_TOUCH = (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) ||
+                 !window.matchMedia && "ontouchstart" in window;
+  var PR = IS_TOUCH ? 21 : 14;   // player radius
+  var BR = 9;                    // ball radius
 
   /* ---- Teams -------------------------------------------------------
      dir = +1 attacks the RIGHT goal, -1 attacks the LEFT goal.
@@ -368,7 +374,6 @@
   }
 
   btnStart.addEventListener("click", function () {
-    startMusic();
     if (state === "setup" || state === "fulltime") {
       if (state === "fulltime") resetMatch();          // Start after FT = new match
       remaining = halfMin * 60;
@@ -387,6 +392,9 @@
     } else if (state === "halftime") {
       startSecondHalf();                     // skip the rest of the break
     }
+    /* Music follows the button: playing = music on, paused = music off. */
+    if (state === "play") startMusic();
+    else if (state === "paused") music.pause();
   });
 
   function startSecondHalf() {
@@ -404,6 +412,7 @@
         state = "paused";
         btnStart.textContent = "Resume";
         setStatus("Paused — read up, then hit Resume.");
+        music.pause();                       // pausing the game pauses the tune
       }
     } else {
       panel.style.display = "none";
@@ -422,23 +431,65 @@
   btnArg.addEventListener("click", function () { chooseTeam(0); });
   btnEsp.addEventListener("click", function () { chooseTeam(1); });
 
-  /* Background music (Dragon Roost Island). Browsers refuse autoplay
-     before a user gesture, so playback kicks in with the Start button;
-     the slider is live from then on. */
+  /* Background music (Dragon Roost Island).
+     Mobile quirks handled here:
+     - iOS ignores audioElement.volume, so once a user gesture arrives we
+       route the sound through a Web Audio GainNode, which iOS respects.
+     - Mobile browsers pause audio on their own (interruptions, screen
+       lock, tab switches) and don't resume — so we remember the user's
+       intent (wantMusic) and restart on the next tap / return to tab.
+     - Autoplay is blocked pre-gesture, so playback starts with Start. */
   var music = document.getElementById("soc-music");
   var slVol = document.getElementById("soc-volume");
-  music.volume = slVol.value / 100;
-  function startMusic() {
-    if (music.paused && music.volume > 0) {
-      music.play().catch(function () { /* file missing or blocked — play on */ });
-    }
+  var wantMusic = +slVol.value > 0;   // user intent: should music be on?
+  var musicStarted = false;           // has a gesture unlocked audio yet?
+  var actx = null, gain = null;
+
+  function hookWebAudio() {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC || actx) return;
+    try {
+      actx = new AC();
+      var src = actx.createMediaElementSource(music);
+      gain = actx.createGain();
+      src.connect(gain);
+      gain.connect(actx.destination);
+    } catch (e) { actx = null; gain = null; }  // fall back to element volume
   }
+
+  function applyVolume() {
+    var v = +slVol.value / 100;
+    if (gain) { gain.gain.value = v; music.volume = 1; }
+    else music.volume = v;
+  }
+
+  function startMusic() {
+    if (!wantMusic) return;
+    hookWebAudio();
+    if (actx && actx.state !== "running") actx.resume().catch(function () {});
+    applyVolume();
+    if (music.paused) music.play().catch(function () {});
+    musicStarted = true;
+  }
+
   slVol.addEventListener("input", function () {
-    music.volume = slVol.value / 100;
+    wantMusic = +slVol.value > 0;
     document.getElementById("soc-volume-display").textContent = slVol.value + "%";
-    if (slVol.value > 0) startMusic();        // slider counts as a gesture too
+    applyVolume();
+    if (wantMusic) startMusic();              // slider counts as a gesture too
     else music.pause();
   });
+
+  /* Recover from browser-initiated pauses (mobile) — but only while the
+     game is actually playing, so a user pause stays paused. */
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && musicStarted && wantMusic && state === "play") startMusic();
+  });
+  document.addEventListener("touchend", function () {
+    if (musicStarted && wantMusic && music.paused && state === "play") startMusic();
+  }, { passive: true });
+
+  music.volume = +slVol.value / 100;          // pre-gesture default
 
   slDiff.addEventListener("input", function () {
     diff = +slDiff.value;
@@ -456,6 +507,49 @@
     return { x: (e.clientX - r.left) * (W / r.width), y: (e.clientY - r.top) * (H / r.height) };
   }
   canvas.addEventListener("mousemove", function (e) { mouse = toCanvas(e); });
+
+  /* Touch controls: drag anywhere on the pitch to steer your player;
+     a quick tap kicks toward the tap point; tapping one of your own
+     players takes control of him. touch-action:none in the CSS stops
+     the page from scrolling while you play. */
+  var touchStart = null;
+  canvas.addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    var pos = toCanvas(e.changedTouches[0]);   // Touch has clientX/Y too
+    mouse = pos;
+    touchStart = { x: pos.x, y: pos.y, time: performance.now() };
+  }, { passive: false });
+  canvas.addEventListener("touchmove", function (e) {
+    e.preventDefault();
+    mouse = toCanvas(e.changedTouches[0]);
+  }, { passive: false });
+  canvas.addEventListener("touchend", function (e) {
+    e.preventDefault();
+    if (!touchStart) return;
+    var pos = toCanvas(e.changedTouches[0]);
+    var quick = performance.now() - touchStart.time < 260 &&
+                dist(pos.x, pos.y, touchStart.x, touchStart.y) < 20;
+    touchStart = null;
+    if (!quick || state !== "play") return;
+    /* Tap on one of your players: take control of him. */
+    for (var i = userTeam * 3; i < userTeam * 3 + 3; i++) {
+      if (dist(pos.x, pos.y, players[i].x, players[i].y) < PR + 12) {
+        controlled = i;
+        manualUntil = performance.now() / 1000 + 4;
+        return;
+      }
+    }
+    /* Otherwise: kick toward the tap point (same rules as a click). */
+    if (controlled < 0) return;
+    var p = players[controlled];
+    if (dist(p.x, p.y, ball.x, ball.y) < PR + BR + 12) {
+      if (kickoffPending) {
+        if (userTeam !== kickTeam) return;
+        kickoffPending = false;
+      }
+      kickBall(ball.x, ball.y, pos.x, pos.y, 540);
+    }
+  }, { passive: false });
 
   /* Spacebar: cycle through your three players. Player order in the
      players[] array is [team][role], so your men sit at userTeam*3..+2. */
