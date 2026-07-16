@@ -368,6 +368,7 @@
   }
 
   btnStart.addEventListener("click", function () {
+    startMusic();
     if (state === "setup" || state === "fulltime") {
       if (state === "fulltime") resetMatch();          // Start after FT = new match
       remaining = halfMin * 60;
@@ -420,6 +421,24 @@
   }
   btnArg.addEventListener("click", function () { chooseTeam(0); });
   btnEsp.addEventListener("click", function () { chooseTeam(1); });
+
+  /* Background music (Dragon Roost Island). Browsers refuse autoplay
+     before a user gesture, so playback kicks in with the Start button;
+     the slider is live from then on. */
+  var music = document.getElementById("soc-music");
+  var slVol = document.getElementById("soc-volume");
+  music.volume = slVol.value / 100;
+  function startMusic() {
+    if (music.paused && music.volume > 0) {
+      music.play().catch(function () { /* file missing or blocked — play on */ });
+    }
+  }
+  slVol.addEventListener("input", function () {
+    music.volume = slVol.value / 100;
+    document.getElementById("soc-volume-display").textContent = slVol.value + "%";
+    if (slVol.value > 0) startMusic();        // slider counts as a gesture too
+    else music.pause();
+  });
 
   slDiff.addEventListener("input", function () {
     diff = +slDiff.value;

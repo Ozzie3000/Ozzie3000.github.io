@@ -98,6 +98,15 @@
         <input type="range" id="soc-halflen" min="1" max="45" value="2">
         <span class="ctt-diff-value" id="soc-halflen-display">2 min</span>
     </div>
+    <div class="ctt-row ctt-settings">
+        <label>Music:</label>
+        <input type="range" id="soc-volume" min="0" max="100" value="40">
+        <span class="ctt-diff-value" id="soc-volume-display">40%</span>
+    </div>
+
+    <!-- Background music: starts with the first kickoff (browsers block
+         autoplay until the user interacts), loops for the whole session -->
+    <audio id="soc-music" src="audio/16-Dragon_Roost_Island.mp3" loop preload="auto"></audio>
 
     <!-- Scoreboards -->
     <div class="ctt-scoreboard">
