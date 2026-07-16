@@ -49,6 +49,7 @@
 
   var mouse = { x: CX, y: CY };
   var controlled = -1;           // index into players[] (user's active man)
+  var manualUntil = 0;           // spacebar override: auto-switch sleeps until then
 
   var ball = { x: CX, y: CY, vx: 0, vy: 0 };
   var players = [];              // {t, role, x, y, vx, vy, cd}
@@ -111,8 +112,11 @@
   }
 
   /* Pick the user's controlled player: nearest to the ball, with
-     hysteresis so control doesn't flicker between two teammates. */
+     hysteresis so control doesn't flicker between two teammates.
+     A spacebar pick (manualUntil) suspends auto-switching briefly. */
   function pickControlled() {
+    if (performance.now() / 1000 < manualUntil &&
+        controlled >= 0 && players[controlled] && players[controlled].t === userTeam) return;
     var bestI = -1, bestD = Infinity;
     for (var i = 0; i < players.length; i++) {
       if (players[i].t !== userTeam) continue;
@@ -329,6 +333,7 @@
     firstKick = Math.random() < 0.5 ? 0 : 1;
     setupKickoff(firstKick);
     state = "setup";
+    panel.style.display = "";                // instructions back for pre-match
     btnStart.textContent = "Start Match";
     setStatus("Pick a team, set your sliders, then Start Match.");
     updateBoards();
@@ -388,6 +393,22 @@
     btnStart.textContent = "Pause";
     setStatus("Second half — ends have switched!");
   }
+  /* Instructions panel: visible in setup, auto-hidden while the ball is
+     in play (see frame loop); the button brings it back and pauses. */
+  var panel = document.getElementById("soc-instructions");
+  document.getElementById("soc-instr").addEventListener("click", function () {
+    if (panel.style.display === "none") {
+      panel.style.display = "";
+      if (state === "play") {
+        state = "paused";
+        btnStart.textContent = "Resume";
+        setStatus("Paused — read up, then hit Resume.");
+      }
+    } else {
+      panel.style.display = "none";
+    }
+  });
+
   btnNext.addEventListener("click", resetMatch);
   btnReset.addEventListener("click", function () { overall = [0, 0, 0]; resetMatch(); });
 
@@ -416,6 +437,20 @@
     return { x: (e.clientX - r.left) * (W / r.width), y: (e.clientY - r.top) * (H / r.height) };
   }
   canvas.addEventListener("mousemove", function (e) { mouse = toCanvas(e); });
+
+  /* Spacebar: cycle through your three players. Player order in the
+     players[] array is [team][role], so your men sit at userTeam*3..+2. */
+  window.addEventListener("keydown", function (e) {
+    if (e.code !== "Space") return;
+    if (state !== "play") return;
+    e.preventDefault();                      // no page scroll / button re-click
+    if (e.target && e.target.blur) e.target.blur();
+    var base = userTeam * 3;
+    controlled = (controlled >= base && controlled < base + 3)
+      ? base + ((controlled - base + 1) % 3)
+      : base;
+    manualUntil = performance.now() / 1000 + 4;   // hold your pick for 4s
+  });
   canvas.addEventListener("mousedown", function (e) {
     mouse = toCanvas(e);
     if (state !== "play" || controlled < 0) return;
@@ -524,6 +559,9 @@
   function frame(now) {
     var dt = Math.min(0.033, (now - last) / 1000);
     last = now;
+    if ((state === "play" || state === "goal") && panel.style.display !== "none") {
+      panel.style.display = "none";          // hide instructions during play
+    }
     update(dt);
     updateClock();
     draw();

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta property="og:title" content="2D Soccer — Argentina vs Spain — Oz">
 <meta property="og:description" content="2D Soccer by Oz. 3v3 top-down football vs the AI. Mouse to move, click to kick. Two timed halves, difficulty slider, and four candles burning at the corner flags.">
-<meta property="og:image" content="https://ozzie3000.github.io/images/grass2.png">
+<meta property="og:image" content="https://ozzie3000.github.io/images/soccer_field.png">
 <meta property="og:url" content="https://ozzie3000.github.io/soccer.html">
 <meta property="og:type" content="website">
 <meta name="author" content="Oz">
@@ -64,12 +64,25 @@
 }
 
 .soccer-page .soc-help { color: #9fb08a; font-size: 13px; margin: 2px auto 10px; max-width: 640px; }
+
+/* Instructions panel: shown before kickoff / via the Instructions
+   button; auto-hidden whenever the ball is in play. */
+.soccer-page .soc-instructions { max-width: 640px; }
+.soccer-page .soc-instructions ul {
+  text-align: left;
+  margin: 4px 0;
+  padding-left: 22px;
+  font-size: 13.5px;
+  color: #cfe0bd;
+}
+.soccer-page .soc-instructions li { margin: 4px 0; }
+.soccer-page .soc-instructions b { color: #b5e853; }
 </style>
 </head>
 <body class="glass cube-page soccer-page">
 
     <h1>2D Soccer</h1>
-    <p class="ctt-sub">Argentina vs Spain — 3v3. Your nearest player (green ring) follows the mouse. Click to kick toward the cursor.</p>
+    <p class="ctt-sub">Argentina vs Spain — 3v3. Mouse to move, click to kick, spacebar to switch players.</p>
 
     <!-- Settings: your team, AI difficulty, half length -->
     <div class="ctt-row ctt-settings">
@@ -108,15 +121,30 @@
         </span>
     </div>
 
+    <!-- Instructions: visible before kickoff, hidden during play,
+         brought back (game paused) by the Instructions button -->
+    <div class="ctt-scoreboard soc-instructions" id="soc-instructions">
+        <div class="ctt-sb-title">How to Play</div>
+        <ul>
+            <li><b>Move:</b> your highlighted player (green ring) follows the mouse.</li>
+            <li><b>Kick:</b> click to fire the ball toward your cursor (you must be next to the ball).</li>
+            <li><b>Switch player:</b> spacebar cycles through your three players. Auto-switch (nearest to ball) resumes a few seconds later.</li>
+            <li><b>Dribble:</b> just run into the ball to push it along.</li>
+            <li><b>Kickoff:</b> both teams hold their own half until the kicking team touches the ball.</li>
+            <li><b>Match:</b> two halves (length slider), 1-minute halftime, teams swap ends.</li>
+            <li><b>Difficulty:</b> 1–10 slider changes AI speed and shot accuracy.</li>
+        </ul>
+    </div>
+
     <!-- Pitch (candles are appended into this wrapper by the script) -->
     <div class="pitch-wrap" id="pitch-wrap">
         <canvas id="pitch" width="960" height="600"></canvas>
     </div>
-    <p class="soc-help">Dribble by running into the ball. Click to shoot — the ball flies toward your cursor. Teams switch ends at halftime.</p>
 
     <!-- Actions -->
     <div class="ctt-row">
         <button id="soc-start">Start Match</button>
+        <button id="soc-instr">Instructions</button>
         <button id="soc-next">Next Match</button>
         <button id="soc-reset">Reset All Scores</button>
     </div>
