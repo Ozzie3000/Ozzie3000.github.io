@@ -42,6 +42,10 @@
   var goalTimer = 0;             // freeze-frame after a goal
   var lastConceder = 0;          // who kicks off after a goal
   var diff = 5;
+  var kickTeam = 0;              // team taking the current kickoff
+  var kickoffPending = false;    // true until kickTeam touches the ball
+  var htTimer = 0;               // halftime break countdown (seconds)
+  var HT_BREAK = 60;             // halftime lasts 1 minute
 
   var mouse = { x: CX, y: CY };
   var controlled = -1;           // index into players[] (user's active man)
@@ -67,8 +71,14 @@
     };
   }
 
-  /* Reset everyone for a kickoff; kickTeam's striker starts on the ball. */
-  function setupKickoff(kickTeam) {
+  /* Reset everyone for a kickoff; the kicking team's striker starts on
+     the ball. Kickoff law: nobody may cross the halfway line (and the
+     defending side must stay out of the center circle) until the
+     kicking team touches the ball — enforced each frame while
+     kickoffPending is true. */
+  function setupKickoff(kt) {
+    kickTeam = kt;
+    kickoffPending = true;
     players.length = 0;
     for (var t = 0; t < 2; t++) {
       for (var r = 0; r < 3; r++) {
@@ -82,6 +92,22 @@
       if (p.t === kickTeam && p.role === 2) { p.x = CX - TEAMS[kickTeam].dir * 42; p.y = CY; }
     }
     controlled = -1;
+  }
+
+  /* While a kickoff is pending: everyone on his own half, and the team
+     NOT kicking off also outside the center circle. */
+  function enforceKickoffLaw() {
+    for (var i = 0; i < players.length; i++) {
+      var p = players[i];
+      if (TEAMS[p.t].dir === 1) p.x = Math.min(p.x, CX - PR);
+      else                      p.x = Math.max(p.x, CX + PR);
+      if (p.t !== kickTeam) {
+        var dx = p.x - CX, dy = p.y - CY;
+        var d = Math.sqrt(dx * dx + dy * dy);
+        var min = 62 + PR;                      // center circle + body
+        if (d > 0 && d < min) { p.x = CX + dx / d * min; p.y = CY + dy / d * min; }
+      }
+    }
   }
 
   /* Pick the user's controlled player: nearest to the ball, with
@@ -125,8 +151,16 @@
       if (goalTimer <= 0) {
         setupKickoff(lastConceder);
         state = "play";
-        setStatus("Play on!");
+        setStatus("Kickoff: " + TEAMS[lastConceder].name +
+          (lastConceder === userTeam ? " — that's you, touch the ball to restart." : ""));
       }
+      return;
+    }
+    if (state === "halftime") {
+      htTimer -= dt;
+      if (htTimer <= 0) { startSecondHalf(); return; }
+      var s = Math.ceil(htTimer);
+      setStatus("Half Time (" + scoreLine() + ") — 2nd half in 0:" + (s < 10 ? "0" : "") + s);
       return;
     }
     if (state !== "play") return;
@@ -190,6 +224,8 @@
       }
     }
 
+    if (kickoffPending) enforceKickoffLaw();
+
     /* Ball-player contact: AI shoots on touch (with aim noise scaled by
        difficulty); everyone also nudges the ball by running into it. */
     for (i = 0; i < players.length; i++) {
@@ -197,6 +233,10 @@
       var bdx = ball.x - p.x, bdy = ball.y - p.y;
       d = Math.sqrt(bdx * bdx + bdy * bdy);
       if (d > 0 && d < PR + BR + 2) {
+        if (kickoffPending) {
+          if (p.t !== kickTeam) continue;       // only the kicking team may play it
+          kickoffPending = false;               // ball is in play
+        }
         var nx = bdx / d, ny = bdy / d;
         ball.x = p.x + nx * (PR + BR + 2);
         ball.y = p.y + ny * (PR + BR + 2);
@@ -262,8 +302,9 @@
       TEAMS[1].dir *= -1;
       setupKickoff(1 - firstKick);           // other team kicks off the 2nd
       state = "halftime";
-      setStatus("Half Time — " + scoreLine());
-      btnStart.textContent = "Start 2nd Half";
+      htTimer = HT_BREAK;                    // 1-minute break, then auto-restart
+      setStatus("Half Time (" + scoreLine() + ") — 2nd half in 1:00");
+      btnStart.textContent = "Skip Break";
     } else {
       state = "fulltime";
       if (score[0] > score[1]) overall[0]++;
@@ -338,11 +379,15 @@
       btnStart.textContent = "Pause";
       setStatus("Play on!");
     } else if (state === "halftime") {
-      state = "play";
-      btnStart.textContent = "Pause";
-      setStatus("Second half — ends have switched!");
+      startSecondHalf();                     // skip the rest of the break
     }
   });
+
+  function startSecondHalf() {
+    state = "play";
+    btnStart.textContent = "Pause";
+    setStatus("Second half — ends have switched!");
+  }
   btnNext.addEventListener("click", resetMatch);
   btnReset.addEventListener("click", function () { overall = [0, 0, 0]; resetMatch(); });
 
@@ -376,6 +421,10 @@
     if (state !== "play" || controlled < 0) return;
     var p = players[controlled];
     if (dist(p.x, p.y, ball.x, ball.y) < PR + BR + 12) {
+      if (kickoffPending) {
+        if (userTeam !== kickTeam) return;   // not your kickoff
+        kickoffPending = false;
+      }
       kickBall(ball.x, ball.y, mouse.x, mouse.y, 540);
     }
   });
